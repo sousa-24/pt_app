@@ -4,6 +4,7 @@ import 'progression_screen.dart';
 import 'main.dart';
 import 'create_workout_plan_screen.dart';
 import 'schedule_session_screen.dart';
+import 'sessions_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String token;
@@ -129,9 +130,15 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.calendar_today),
-                title: const Text('Sessions'),
+                title: const Text('My Sessions'),
                 onTap: () {
                   Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SessionsScreen(token: token),
+                    ),
+                  );
                 },
               ),
             ],
