@@ -5,6 +5,7 @@ import 'main.dart';
 import 'create_workout_plan_screen.dart';
 import 'schedule_session_screen.dart';
 import 'sessions_screen.dart';
+import 'invite_code_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String token;
@@ -97,6 +98,19 @@ class HomeScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ScheduleSessionScreen(token: token),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.qr_code),
+                title: const Text('Generate Invite Code'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InviteCodeScreen(token: token),
                     ),
                   );
                 },
