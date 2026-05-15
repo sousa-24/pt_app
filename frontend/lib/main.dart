@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
               'FITPRO',
               style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 2),
             ),
-            const Text('Welcome back', style: TextStyle(color: Colors.grey)),
+            const Text('Bem Vindo', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 60),
             
             TextField(
