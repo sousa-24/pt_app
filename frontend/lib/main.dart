@@ -16,7 +16,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.light;
+  // Começa em Dark Mode por padrão para o estilo FITPRO
+  ThemeMode _themeMode = ThemeMode.dark; 
 
   void toggleTheme() {
     setState(() {
@@ -29,18 +30,35 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PT App',
+      title: 'FITPRO App',
+      debugShowCheckedModeBanner: false,
+      
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: const Color(0xFFD0FD3E),
+          brightness: Brightness.light,
+        ),
+      ),
+
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFF1C1C1E), 
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFD0FD3E), 
+          primary: const Color(0xFFD0FD3E),
+          onPrimary: Colors.black,
+          surface: const Color(0xFF2C2C2E),
           brightness: Brightness.dark,
         ),
-        useMaterial3: true,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF2C2C2E),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          labelStyle: const TextStyle(color: Colors.white70),
+        ),
       ),
+      
       themeMode: _themeMode,
       home: LoginScreen(onToggleTheme: toggleTheme, themeMode: _themeMode),
     );
@@ -69,8 +87,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
             icon: Icon(
@@ -82,21 +104,26 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(32.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'PT App',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
             const SizedBox(height: 40),
+            Icon(Icons.fitness_center, size: 80, color: primaryColor),
+            const SizedBox(height: 16),
+            const Text(
+              'FITPRO',
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 2),
+            ),
+            const Text('Welcome back', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 60),
+            
             TextField(
               controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Email',
-                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
             const SizedBox(height: 16),
@@ -105,20 +132,28 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock_outline),
               ),
             ),
+            
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
-              Text(errorMessage, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 8),
+              Text(errorMessage, style: const TextStyle(color: Colors.redAccent)),
+            
+            const SizedBox(height: 16),
+            
             SizedBox(
               width: double.infinity,
+              height: 55,
               child: ElevatedButton(
                 onPressed: isLoading ? null : login,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
                 child: isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Login'),
+                    ? const CircularProgressIndicator(color: Colors.black)
+                    : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
             SizedBox(
@@ -165,6 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final token = data['access_token'];
         final role = data['role'];
 
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
