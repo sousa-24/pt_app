@@ -11,6 +11,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: RoleEnum
+    invite_code: str | None = None
 
 class UserResponse(BaseModel):
     id: int
@@ -98,6 +99,19 @@ class UserProgressionResponse(BaseModel):
     weight: float | None = None
     body_fat_percentage: float | None = None
     notes: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class InviteCodeCreate(BaseModel):
+    pass
+
+class InviteCodeResponse(BaseModel):
+    id: int
+    code: str
+    used: bool
+    expires_at: datetime
     created_at: datetime
 
     class Config:

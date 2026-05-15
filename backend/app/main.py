@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
+import random , string
 
 # Carrega variáveis de ambiente do ficheiro .env
 load_dotenv()
@@ -79,6 +80,25 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email já registrado")
+
+    # validate invite code for clients
+    if user.role == "client":
+        if not user.invite_code:
+            raise HTTPException(status_code=400, detail="Clients need an invite code to register")
+        
+        invite = db.query(models.InviteCodes).filter(
+            models.InviteCodes.code == user.invite_code,
+            models.InviteCodes.used == False
+        ).first()
+
+        if not invite:
+            raise HTTPException(status_code=400, detail="Invalid invite code")
+        #nao funciona >>>>
+        if invite.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="Invite code has expired")
+        
+        invite.used = True
+        db.add(invite)
 
     hashed_password = pwd_context.hash(user.password)
 
@@ -191,8 +211,35 @@ def get_progression(db: Session = Depends(get_db), current_user: models.User = D
             models.UserProgression.client_id == current_user.id
         ).all()
     else:
-        # trainer sees all their clients' progression
         progression = db.query(models.UserProgression).filter(
             models.UserProgression.trainer_id == current_user.id
         ).all()
     return progression
+
+
+
+#Criação code de convite para registo de clientes por parte dos treinadores
+def generate_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+@app.post("/invite-codes/", response_model=schemas.InviteCodeResponse)
+def create_invite_code(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "trainer":
+        raise HTTPException(status_code=403, detail="Only trainers can generate invite codes")
+
+    code = generate_code()
+    
+    new_code = models.InviteCodes(
+        code=code,
+        trainer_id=current_user.id,
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
+    )
+    
+    db.add(new_code)
+    db.commit()
+    db.refresh(new_code)
+    
+    return new_code

@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +21,9 @@ class _MyAppState extends State<MyApp> {
 
   void toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode = _themeMode == ThemeMode.light
+          ? ThemeMode.dark
+          : ThemeMode.light;
     });
   }
 
@@ -66,7 +69,11 @@ class LoginScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final ThemeMode themeMode;
 
-  const LoginScreen({super.key, required this.onToggleTheme, required this.themeMode});
+  const LoginScreen({
+    super.key,
+    required this.onToggleTheme,
+    required this.themeMode,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -88,7 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(widget.themeMode == ThemeMode.light ? Icons.dark_mode : Icons.light_mode),
+            icon: Icon(
+              widget.themeMode == ThemeMode.light
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
             onPressed: widget.onToggleTheme,
           ),
         ],
@@ -143,6 +154,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.black)
                     : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterScreen(
+                        onToggleTheme: widget.onToggleTheme,
+                        themeMode: widget.themeMode,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Create Account'),
               ),
             ),
           ],
