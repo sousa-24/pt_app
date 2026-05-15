@@ -72,3 +72,40 @@ class InviteCodes(Base):
     used = Column(Boolean, default=False)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+class NutriPlan(Base):
+    __tablename__ = "nutri_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    meals = relationship("Meal", back_populates="nutri_plan")
+
+class Meal(Base):
+    __tablename__ = "meals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nutri_plan_id = Column(Integer, ForeignKey("nutri_plans.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    food_items = relationship("FoodItem", back_populates="meal")
+    nutri_plan = relationship("NutriPlan", back_populates="meals")
+
+class FoodItem(Base):
+    __tablename__ = "food_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    meal_id = Column(Integer, ForeignKey("meals.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    weight = Column(Float, nullable=False)
+    calories = Column(Float, nullable=False)
+    protein = Column(Float, nullable=False)
+    carbs = Column(Float, nullable=False)
+    fats = Column(Float, nullable=False)
+    notes = Column(String(255), nullable=True)
+
+    meal = relationship("Meal", back_populates="food_items")
