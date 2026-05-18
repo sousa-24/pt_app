@@ -116,3 +116,53 @@ class InviteCodeResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class FoodItemCreate(BaseModel):
+    name: str
+    weight: float
+    calories: float
+    protein: float
+    carbs: float
+    fats: float
+    notes: str | None = None
+
+class FoodItemResponse(BaseModel):
+    id: int
+    name: str
+    weight: float
+    calories: float
+    protein: float
+    carbs: float
+    fats: float
+    notes: str | None = None
+
+    class Config:
+        from_attributes = True
+
+class MealCreate(BaseModel):
+    name: str
+    food_items: list[FoodItemCreate]
+
+class MealResponse(BaseModel):
+    id: int
+    name: str
+    food_items: list[FoodItemResponse]
+
+    class Config:
+        from_attributes = True
+
+class NutriPlanCreate(BaseModel):
+    title: str
+    client_id: int
+    meals: list[MealCreate]
+
+class NutriPlanResponse(BaseModel):
+    id: int
+    title: str
+    trainer_id: int
+    client_id: int
+    meals: list[MealResponse]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

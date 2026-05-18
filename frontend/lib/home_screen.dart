@@ -6,6 +6,8 @@ import 'create_workout_plan_screen.dart';
 import 'schedule_session_screen.dart';
 import 'sessions_screen.dart';
 import 'invite_code_screen.dart';
+import 'nutri_plans_screen.dart';
+import 'create_nutri_plans_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String token;
@@ -115,6 +117,32 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.restaurant_menu),
+                title: const Text('View Nutrition Plans'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NutriPlansScreen(token: token),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.add_circle),
+                title: const Text('Create Nutrition Plan'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreateNutriPlanScreen(token: token),
+                    ),
+                  );
+                },
+              ),
             ] else ...[
               ListTile(
                 leading: const Icon(Icons.fitness_center),
@@ -151,6 +179,19 @@ class HomeScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => SessionsScreen(token: token),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.restaurant_menu),
+                title: const Text('Nutrition Plans'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NutriPlansScreen(token: token),
                     ),
                   );
                 },

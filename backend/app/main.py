@@ -228,7 +228,7 @@ def create_invite_code(
     current_user: models.User = Depends(get_current_user)
 ):
     if current_user.role != "trainer":
-        raise HTTPException(status_code=403, detail="Only trainers can generate invite codes")
+        raise HTTPException(status_code=403, detail="Apenas trainers podem gerar códigos de convite")
 
     code = generate_code()
     
@@ -243,3 +243,57 @@ def create_invite_code(
     db.refresh(new_code)
     
     return new_code
+
+
+@app.post("/nutri_plans/", response_model=schemas.NutriPlanResponse)
+def create_nutri_plan(
+    plan: schemas.NutriPlanCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "trainer":
+        raise HTTPException(status_code=403, detail="Only trainers can create nutrition plans")
+
+    new_plan = models.NutriPlan(
+        title=plan.title,
+        trainer_id=current_user.id,
+        client_id=plan.client_id
+    )
+    db.add(new_plan)
+    db.commit()
+    db.refresh(new_plan)
+
+    for meal_data in plan.meals:
+        new_meal = models.Meal(
+            nutri_plan_id=new_plan.id,
+            name=meal_data.name
+        )
+        db.add(new_meal)
+        db.commit()
+        db.refresh(new_meal)
+
+        for food_data in meal_data.food_items:
+            new_food = models.FoodItem(
+                meal_id=new_meal.id,
+                **food_data.model_dump()
+            )
+            db.add(new_food)
+
+    db.commit()
+    db.refresh(new_plan)
+    return new_plan
+
+@app.get("/nutri_plans/", response_model=list[schemas.NutriPlanResponse])
+def get_nutri_plans(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role == "trainer":
+        plans = db.query(models.NutriPlan).filter(
+            models.NutriPlan.trainer_id == current_user.id
+        ).all()
+    else:
+        plans = db.query(models.NutriPlan).filter(
+            models.NutriPlan.client_id == current_user.id
+        ).all()
+    return plans
