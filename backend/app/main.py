@@ -1,26 +1,18 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from app.database import engine, get_db, Base
 from app import models, schemas
-from passlib.context import CryptContext
-from jose import jwt
-from datetime import datetime, timedelta, timezone
 import os
-from dotenv import load_dotenv
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
-import random , string
-
-# Carrega variáveis de ambiente do ficheiro .env
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+import random, string
+from datetime import datetime, timedelta, timezone
+from app.websocket_manager import manager
+from app.auth import pwd_context, create_access_token, get_current_user, get_user_from_token
 
 # Cria as tabelas no banco de dados se ainda não existirem
 Base.metadata.create_all(bind=engine)
 
+# Cria a instância FastAPI e configura CORS para permitir chamadas do frontend
 app = FastAPI()
 
 app.add_middleware(
@@ -30,39 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configuração para hash de passwords usando bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-# Define um esquema OAuth2 para usar com tokens Bearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except jwt.JWTError:
-        raise credentials_exception
-
-    # Carrega o utilizador da base de dados usando o email presente no token JWT
-    user = db.query(models.User).filter(models.User.email == email).first()
-    if user is None:
-        raise credentials_exception
-    return user
 
 # Endpoint de login: valida as credenciais e devolve um token JWT válido
 @app.post("/login/", response_model=schemas.Token)
@@ -81,11 +40,11 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email já registrado")
 
-    # validate invite code for clients
+    # Se o registo for para um cliente, valida o código de convite fornecido
     if user.role == "client":
         if not user.invite_code:
             raise HTTPException(status_code=400, detail="Clients need an invite code to register")
-        
+
         invite = db.query(models.InviteCodes).filter(
             models.InviteCodes.code == user.invite_code,
             models.InviteCodes.used == False
@@ -93,10 +52,11 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
         if not invite:
             raise HTTPException(status_code=400, detail="Invalid invite code")
-        #nao funciona >>>>
+
+        # Verifica se o código de convite ainda é válido
         if invite.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Invite code has expired")
-        
+
         invite.used = True
         db.add(invite)
 
@@ -114,12 +74,12 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
-#Teste do token
+# Endpoint protegido para obter os dados do utilizador autenticado
 @app.get("/me", response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-# Workout Plan Endpoints
+# Endpoints de planos de treino: criação e listagem de planos para treinador ou cliente
 @app.post("/workout_plans/", response_model=schemas.WorkoutPlanResponse)
 def create_workout_plan(plan: schemas.WorkoutPlanCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "trainer":
@@ -159,6 +119,7 @@ def get_workout_plans(db: Session = Depends(get_db), current_user: models.User =
     return plans
 
 
+# Endpoints de sessões de treino: criação e listagem de sessões para treinador ou cliente
 @app.post("/training_sessions/", response_model=schemas.TrainingSessionResponse)
 def create_training_session(session: schemas.TrainingSessionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "trainer":
@@ -178,6 +139,7 @@ def create_training_session(session: schemas.TrainingSessionCreate, db: Session 
 
 @app.get("/training_sessions/", response_model=list[schemas.TrainingSessionResponse])
 def get_training_sessions(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # Retorna sessões de treino para o treinador ou para o cliente autenticado
     if current_user.role == "trainer":
         sessions = db.query(models.TrainingSession).filter(models.TrainingSession.trainer_id == current_user.id).all()
     else:
@@ -185,6 +147,7 @@ def get_training_sessions(db: Session = Depends(get_db), current_user: models.Us
     return sessions
 
 
+# Endpoints de progressão: criação e visualização de dados de progresso do utilizador
 @app.post("/progression/", response_model=schemas.UserProgressionResponse)
 def create_progression(
     progression: schemas.UserProgressionCreate,
@@ -206,6 +169,7 @@ def create_progression(
 
 @app.get("/progression/", response_model=list[schemas.UserProgressionResponse])
 def get_progression(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # Retorna a progressão do cliente ou todos os clientes atribuídos a um treinador
     if current_user.role == "client":
         progression = db.query(models.UserProgression).filter(
             models.UserProgression.client_id == current_user.id
@@ -218,7 +182,8 @@ def get_progression(db: Session = Depends(get_db), current_user: models.User = D
 
 
 
-#Criação code de convite para registo de clientes por parte dos treinadores
+# Gera um código de convite aleatório para permitir registos de clientes
+# Apenas treinadores podem criar códigos de convite e partilhá-los com clientes
 def generate_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
@@ -245,6 +210,7 @@ def create_invite_code(
     return new_code
 
 
+# Endpoints de planos nutricionais: criação e listagem para treinadores e clientes
 @app.post("/nutri_plans/", response_model=schemas.NutriPlanResponse)
 def create_nutri_plan(
     plan: schemas.NutriPlanCreate,
@@ -288,6 +254,7 @@ def get_nutri_plans(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # Lista planos nutricionais do treinador ou do cliente autenticado
     if current_user.role == "trainer":
         plans = db.query(models.NutriPlan).filter(
             models.NutriPlan.trainer_id == current_user.id
@@ -297,3 +264,81 @@ def get_nutri_plans(
             models.NutriPlan.client_id == current_user.id
         ).all()
     return plans
+
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = Depends(get_db)):
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=1008)
+        return
+
+    try:
+        auth_user = get_user_from_token(token, db)
+    except HTTPException:
+        await websocket.close(code=1008)
+        return
+
+    if auth_user.id != user_id:
+        await websocket.close(code=1008)
+        return
+
+    await manager.connect(websocket, user_id)
+
+    try:
+        while True:
+            try:
+                data = await websocket.receive_json()
+            except Exception:
+                await websocket.send_json({"type": "error", "detail": "Invalid JSON payload"})
+                continue
+
+            receiver_id = data.get("receiver_id")
+            content = data.get("content")
+            if receiver_id is None or content is None:
+                await websocket.send_json({"type": "error", "detail": "receiver_id and content are required"})
+                continue
+
+            try:
+                receiver_id = int(receiver_id)
+            except (TypeError, ValueError):
+                await websocket.send_json({"type": "error", "detail": "receiver_id must be an integer"})
+                continue
+
+            new_message = models.Message(
+                sender_id=auth_user.id,
+                receiver_id=receiver_id,
+                content=content,
+            )
+            db.add(new_message)
+            db.commit()
+            db.refresh(new_message)
+
+            payload = {
+                "type": "message",
+                "id": new_message.id,
+                "sender_id": auth_user.id,
+                "receiver_id": receiver_id,
+                "content": new_message.content,
+                "created_at": new_message.created_at.isoformat(),
+            }
+
+            await manager.send_message(payload, receiver_id)
+            await websocket.send_json({"type": "sent", "message": payload})
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
+        await manager.broadcast({"type": "user_left", "user_id": user_id})
+
+
+@app.get("/messages/{other_user_id}", response_model=list[schemas.MessageResponse])
+def get_messages(
+    other_user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    messages = db.query(models.Message).filter(
+        ((models.Message.sender_id == current_user.id) & (models.Message.receiver_id == other_user_id)) |
+        ((models.Message.sender_id == other_user_id) & (models.Message.receiver_id == current_user.id))
+    ).order_by(models.Message.created_at).all()
+    return messages

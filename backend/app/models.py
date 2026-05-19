@@ -4,6 +4,7 @@ from app.database import Base
 from datetime import datetime, timezone
 
 
+# Modelo de utilizador do sistema, com email, password e papel (treinador ou cliente).
 class User(Base):
     __tablename__ = "users"
 
@@ -12,8 +13,10 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     role = Column(Enum("trainer", "client"), nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
+# Plano de treino atribuído por um treinador a um cliente.
 class WorkoutPlan(Base):
     __tablename__ = "workout_plans"
 
@@ -23,9 +26,11 @@ class WorkoutPlan(Base):
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Relação com os exercícios deste plano de treino.
     exercises = relationship("Exercise", back_populates="workout_plan")
 
 
+# Exercício dentro de um plano de treino.
 class Exercise(Base):
     __tablename__ = "exercises"
 
@@ -37,8 +42,11 @@ class Exercise(Base):
     rest_time = Column(Integer, nullable=True)
     notes = Column(String(255), nullable=True)
 
+    # Relação inversa para recuperar o plano de treino.
     workout_plan = relationship("WorkoutPlan", back_populates="exercises")
 
+
+# Sessão de treino agendada entre um cliente e um treinador.
 class TrainingSession(Base):
     __tablename__ = "training_sessions"
 
@@ -51,6 +59,8 @@ class TrainingSession(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
+# Registos de progressão do cliente, usados para acompanhar peso e composição corporal.
 class UserProgression(Base):
     __tablename__ = "user_progression"
 
@@ -63,6 +73,8 @@ class UserProgression(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
+# Códigos de convite usados para permitir que clientes se registem via treinador.
 class InviteCodes(Base):
     __tablename__ = "invite_codes"
 
@@ -73,6 +85,8 @@ class InviteCodes(Base):
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
+# Plano nutricional atribuído a um cliente por um treinador.
 class NutriPlan(Base):
     __tablename__ = "nutri_plans"
 
@@ -82,8 +96,11 @@ class NutriPlan(Base):
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Relação com as refeições deste plano nutricional.
     meals = relationship("Meal", back_populates="nutri_plan")
 
+
+# Refeição dentro de um plano nutricional.
 class Meal(Base):
     __tablename__ = "meals"
 
@@ -95,6 +112,8 @@ class Meal(Base):
     food_items = relationship("FoodItem", back_populates="meal")
     nutri_plan = relationship("NutriPlan", back_populates="meals")
 
+
+# Item alimentar associado a uma refeição do plano nutricional.
 class FoodItem(Base):
     __tablename__ = "food_items"
 
@@ -109,3 +128,17 @@ class FoodItem(Base):
     notes = Column(String(255), nullable=True)
 
     meal = relationship("Meal", back_populates="food_items")
+
+
+# Mensagens enviadas entre utilizadores dentro da aplicação.
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
