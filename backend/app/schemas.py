@@ -26,8 +26,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema de login que apenas recebe email e password.
@@ -60,9 +59,7 @@ class ExerciseResponse(BaseModel):
     reps: int
     rest_time: int | None = None
     notes: str | None = None
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para criar um plano de treino com vários exercícios.
@@ -80,9 +77,7 @@ class WorkoutPlanResponse(BaseModel):
     client_id: int
     exercises: list[ExerciseResponse]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para agendar ou atualizar uma sessão de treino.
@@ -103,9 +98,7 @@ class TrainingSessionResponse(BaseModel):
     status: str
     notes: str | None = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para registar um novo registo de progressão do cliente.
@@ -126,9 +119,7 @@ class UserProgressionResponse(BaseModel):
     body_fat_percentage: float | None = None
     notes: str | None = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para criação de código de convite (pode ser preenchido no servidor).
@@ -143,9 +134,7 @@ class InviteCodeResponse(BaseModel):
     used: bool
     expires_at: datetime
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para adicionar um item alimentar a uma refeição.
@@ -169,9 +158,7 @@ class FoodItemResponse(BaseModel):
     carbs: float
     fats: float
     notes: str | None = None
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para criar uma refeição com vários itens alimentares.
@@ -185,9 +172,7 @@ class MealResponse(BaseModel):
     id: int
     name: str
     food_items: list[FoodItemResponse]
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para criar um plano nutricional completo.
@@ -205,9 +190,7 @@ class NutriPlanResponse(BaseModel):
     client_id: int
     meals: list[MealResponse]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Esquema para criar uma mensagem entre utilizadores.
@@ -223,6 +206,4 @@ class MessageResponse(BaseModel):
     receiver_id: int
     content: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
