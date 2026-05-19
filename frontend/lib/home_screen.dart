@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'workout_plans_screen.dart';
+import 'chat_screen.dart'; // Import do teu chat já incluído!
 import 'progression_screen.dart';
 import 'main.dart';
 import 'create_workout_plan_screen.dart';
@@ -56,6 +57,8 @@ class HomeScreen extends StatelessWidget {
                 style: const TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
+            
+            // MENU DO TREINADOR (TRAINER)
             if (role == 'trainer') ...[
               ListTile(
                 leading: const Icon(Icons.fitness_center),
@@ -78,8 +81,7 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CreateWorkoutPlanScreen(token: token),
+                      builder: (context) => CreateWorkoutPlanScreen(token: token),
                     ),
                   );
                 },
@@ -143,6 +145,22 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
+              // O TEU CHAT ADICIONADO PARA O PT:
+              ListTile(
+                leading: const Icon(Icons.chat, color: Color(0xFFD0FD3E)),
+                title: const Text('Chat com Alunos'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(token: token, role: role),
+                    ),
+                  );
+                },
+              ),
+              
+            // MENU DO ALUNO (CLIENT)
             ] else ...[
               ListTile(
                 leading: const Icon(Icons.fitness_center),
@@ -196,7 +214,22 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
+              // O TEU CHAT ADICIONADO PARA O CLIENTE:
+              ListTile(
+                leading: const Icon(Icons.chat, color: Color(0xFFD0FD3E)),
+                title: const Text('Chat com o PT'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(token: token, role: role),
+                    ),
+                  );
+                },
+              ),
             ],
+            
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
