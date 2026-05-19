@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import 'screens/student/student_home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,14 +17,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Começa em Dark Mode por padrão para o estilo FITPRO
-  ThemeMode _themeMode = ThemeMode.dark; 
+  ThemeMode _themeMode = ThemeMode.dark;
 
   void toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light
-          ? ThemeMode.dark
-          : ThemeMode.light;
+      _themeMode =
+          _themeMode == ThemeMode.light
+              ? ThemeMode.dark
+              : ThemeMode.light;
     });
   }
 
@@ -32,7 +33,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'FITPRO App',
       debugShowCheckedModeBanner: false,
-      
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -43,9 +44,9 @@ class _MyAppState extends State<MyApp> {
 
       darkTheme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF1C1C1E), 
+        scaffoldBackgroundColor: const Color(0xFF1C1C1E),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFD0FD3E), 
+          seedColor: const Color(0xFFD0FD3E),
           primary: const Color(0xFFD0FD3E),
           onPrimary: Colors.black,
           surface: const Color(0xFF2C2C2E),
@@ -54,13 +55,19 @@ class _MyAppState extends State<MyApp> {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF2C2C2E),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           labelStyle: const TextStyle(color: Colors.white70),
         ),
       ),
-      
+
       themeMode: _themeMode,
-      home: LoginScreen(onToggleTheme: toggleTheme, themeMode: _themeMode),
+      home: LoginScreen(
+        onToggleTheme: toggleTheme,
+        themeMode: _themeMode,
+      ),
     );
   }
 }
@@ -82,6 +89,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
   bool isLoading = false;
   String errorMessage = '';
 
@@ -104,20 +112,38 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(32.0),
+
         child: Column(
           children: [
             const SizedBox(height: 40),
-            Icon(Icons.fitness_center, size: 80, color: primaryColor),
+
+            Icon(
+              Icons.fitness_center,
+              size: 80,
+              color: primaryColor,
+            ),
+
             const SizedBox(height: 16),
+
             const Text(
               'FITPRO',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
             ),
-            const Text('Bem Vindo', style: TextStyle(color: Colors.grey)),
+
+            const Text(
+              'Bem Vindo',
+              style: TextStyle(color: Colors.grey),
+            ),
+
             const SizedBox(height: 60),
-            
+
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
@@ -126,7 +152,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
+
             const SizedBox(height: 16),
+
             TextField(
               controller: passwordController,
               obscureText: true,
@@ -135,42 +163,86 @@ class _LoginScreenState extends State<LoginScreen> {
                 prefixIcon: Icon(Icons.lock_outline),
               ),
             ),
-            
+
             const SizedBox(height: 24),
+
             if (errorMessage.isNotEmpty)
-              Text(errorMessage, style: const TextStyle(color: Colors.redAccent)),
-            
+              Text(
+                errorMessage,
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+
             const SizedBox(height: 16),
-            
+
             SizedBox(
               width: double.infinity,
               height: 55,
+
               child: ElevatedButton(
                 onPressed: isLoading ? null : login,
+
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                 ),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.black)
-                    : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+
+                child:
+                    isLoading
+                        ? const CircularProgressIndicator(
+                          color: Colors.black,
+                        )
+                        : const Text(
+                          'LOGIN',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
               ),
             ),
+
+            const SizedBox(height: 12),
+
             SizedBox(
               width: double.infinity,
+
               child: OutlinedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RegisterScreen(
-                        onToggleTheme: widget.onToggleTheme,
-                        themeMode: widget.themeMode,
-                      ),
+                      builder:
+                          (context) => RegisterScreen(
+                            onToggleTheme: widget.onToggleTheme,
+                            themeMode: widget.themeMode,
+                          ),
                     ),
                   );
                 },
+
                 child: const Text('Create Account'),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => const StudentHomeScreen(),
+                    ),
+                  );
+                },
+
+                child: const Text('Abrir Student Screen'),
               ),
             ),
           ],
@@ -188,7 +260,11 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8000/login/'),
-        headers: {'Content-Type': 'application/json'},
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
         body: jsonEncode({
           'email': emailController.text,
           'password': passwordController.text,
@@ -197,19 +273,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         final token = data['access_token'];
         final role = data['role'];
 
         if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
+
           MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              token: token,
-              role: role,
-              onToggleTheme: widget.onToggleTheme,
-              themeMode: widget.themeMode,
-            ),
+            builder:
+                (context) => HomeScreen(
+                  token: token,
+                  role: role,
+                  onToggleTheme: widget.onToggleTheme,
+                  themeMode: widget.themeMode,
+                ),
           ),
         );
       } else {
