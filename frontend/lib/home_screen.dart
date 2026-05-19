@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'workout_plans_screen.dart';
 import 'chat_screen.dart'; // Import do teu chat já incluído!
+import 'feed_screen.dart';
 import 'progression_screen.dart';
 import 'main.dart';
 import 'create_workout_plan_screen.dart';
@@ -128,6 +129,19 @@ class HomeScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => NutriPlansScreen(token: token),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.star, color: Color(0xFFD0FD3E)), // Ícone de estrela em verde neon
+                title: const Text('Feed & Desafios'),
+                onTap: () {
+                  Navigator.pop(context); // Fecha o menu lateral
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FeedScreen(token: token), // Abre o teu novo ecrã
                     ),
                   );
                 },
