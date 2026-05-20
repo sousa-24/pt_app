@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import '../student_theme.dart';
 
 class StudentHeader extends StatelessWidget {
-  const StudentHeader({super.key});
+  final String studentName;
+
+  const StudentHeader({
+    super.key,
+    required this.studentName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -89,8 +94,8 @@ class StudentHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'bruna cardoso raimondi',
+            Text(
+              studentName,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -98,10 +103,10 @@ class StudentHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Boa tarde, Alex!',
+                'Boa tarde, ${_firstName(studentName)}!',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -113,5 +118,11 @@ class StudentHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _firstName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'Aluno';
+    return trimmed.split(' ').first;
   }
 }

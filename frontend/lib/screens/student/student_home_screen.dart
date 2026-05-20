@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../api_service.dart';
+import '../../chat_screen.dart';
+import '../../main.dart';
 import 'student_models.dart';
 import 'student_theme.dart';
 import 'widgets/student_bottom_nav.dart';
@@ -14,7 +17,18 @@ import 'widgets/student_section_title.dart';
 import 'widgets/student_workout_card.dart';
 
 class StudentHomeScreen extends StatefulWidget {
-  const StudentHomeScreen({super.key});
+  final String? token;
+  final String role;
+  final VoidCallback? onToggleTheme;
+  final ThemeMode themeMode;
+
+  const StudentHomeScreen({
+    super.key,
+    this.token,
+    this.role = 'client',
+    this.onToggleTheme,
+    this.themeMode = ThemeMode.dark,
+  });
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -56,12 +70,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   final Set<String> _completedWorkoutIds = {'lower-a'};
   int _selectedNavIndex = 0;
+  String _studentName = 'Aluno';
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = _dateOnly(DateTime.now());
+    _loadStudentData();
   }
 
   @override
@@ -81,7 +97,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isMenuArea) const StudentHeader(),
+            if (!isMenuArea) StudentHeader(studentName: _studentName),
             Transform.translate(
               offset: Offset(0, isMenuArea ? 0 : -18),
               child: SafeArea(
@@ -154,8 +170,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     return [
       StudentMenuScreen(
+        studentName: _studentName,
         onBack: () => setState(() => _selectedNavIndex = 0),
-        onLogout: () => Navigator.of(context).maybePop(),
+        onLogout: _logout,
+        onOpenChat: _openChat,
         onOpenSection: (index) => setState(() => _selectedNavIndex = index),
       ),
     ];
@@ -228,6 +246,57 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         _completedWorkoutIds.add(workout.id);
       }
     });
+  }
+
+  Future<void> _loadStudentData() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    final userData = await ApiService.get(context, '/me', token);
+    if (!mounted || userData == null) return;
+
+    final name = userData['name'];
+    if (name is String && name.trim().isNotEmpty) {
+      setState(() {
+        _studentName = name.trim();
+      });
+    }
+  }
+
+  void _openChat() {
+    final token = widget.token;
+
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Entre com login para acessar o chat.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          token: token,
+          role: widget.role,
+        ),
+      ),
+    );
+  }
+
+  void _logout() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(
+          onToggleTheme: widget.onToggleTheme ?? () {},
+          themeMode: widget.themeMode,
+        ),
+      ),
+      (route) => false,
+    );
   }
 
   static DateTime _dateOnly(DateTime date) {
