@@ -122,7 +122,7 @@ class StudentMenuScreen extends StatelessWidget {
             style: TextStyle(
               color: StudentTheme.mutedText,
               fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ),
@@ -133,8 +133,8 @@ class StudentMenuScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: StudentTheme.darkText,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -189,56 +189,38 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: item.onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: StudentTheme.blue.withOpacity(0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    item.icon,
-                    color: StudentTheme.blue,
-                    size: 27,
-                  ),
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: const TextStyle(
-                      color: StudentTheme.darkText,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const Icon(
-                  Icons.chevron_right,
-                  color: StudentTheme.mutedText,
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        ListTile(
+          onTap: item.onTap,
+          leading: Icon(
+            item.icon,
+            color: StudentTheme.darkText,
           ),
-          if (showDivider)
-            const Divider(
-              height: 1,
-              thickness: 1,
-              indent: 84,
-              endIndent: 18,
-              color: Color(0xFF3A3A3D),
-            ),
-        ],
-      ),
+          title: Text(item.label),
+          textColor: StudentTheme.darkText,
+          iconColor: StudentTheme.darkText,
+          titleTextStyle: const TextStyle(
+            color: StudentTheme.darkText,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          minLeadingWidth: 33,
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: StudentTheme.mutedText,
+          ),
+        ),
+        if (showDivider)
+          const Divider(
+            height: 1,
+            thickness: 1,
+            indent: 65,
+            endIndent: 16,
+            color: Color(0xFF3A3A3D),
+          ),
+      ],
     );
   }
 }
