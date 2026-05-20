@@ -25,6 +25,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+    trainer_id: int | None = None
 
     model_config = {"from_attributes": True}
 

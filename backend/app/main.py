@@ -54,7 +54,7 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Invalid invite code")
 
         # Verifica se o código de convite ainda é válido
-        if invite.expires_at < datetime.now(timezone.utc):
+        if invite.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Invite code has expired")
 
         invite.used = True
@@ -66,7 +66,8 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
         name=user.name,
         email=user.email,
         password=hashed_password,
-        role=user.role
+        role=user.role,
+        trainer_id=None if user.role == "trainer" else invite.trainer_id     
     )
     db.add(new_user)
     db.commit()
@@ -195,8 +196,14 @@ def create_invite_code(
     if current_user.role != "trainer":
         raise HTTPException(status_code=403, detail="Apenas trainers podem gerar códigos de convite")
 
-    code = generate_code()
-    
+    # Ensure generated code is unique (retry a few times to avoid DB unique constraint errors)
+    for _ in range(5):
+        code = generate_code()
+        if not db.query(models.InviteCodes).filter(models.InviteCodes.code == code).first():
+            break
+    else:
+        raise HTTPException(status_code=500, detail="Unable to generate unique invite code")
+
     new_code = models.InviteCodes(
         code=code,
         trainer_id=current_user.id,
@@ -267,7 +274,9 @@ def get_nutri_plans(
 
 
 @app.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = Depends(get_db)):
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    db = next(get_db())
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=1008)
@@ -329,6 +338,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
         await manager.broadcast({"type": "user_left", "user_id": user_id})
+    finally:
+        db.close()
 
 
 @app.get("/messages/{other_user_id}", response_model=list[schemas.MessageResponse])
@@ -342,3 +353,20 @@ def get_messages(
         ((models.Message.sender_id == other_user_id) & (models.Message.receiver_id == current_user.id))
     ).order_by(models.Message.created_at).all()
     return messages
+
+#endpoint para receber lista de "contactos" (trainer ver os clientes todos/ clientes veem o trainer)
+@app.get("/my-contacts/", response_model=list[schemas.UserResponse])
+def get_contacts(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role == "trainer":
+        clients = db.query(models.User).filter(
+            models.User.trainer_id == current_user.id
+        ).all()
+        return clients
+    else:
+        trainer = db.query(models.User).filter(
+            models.User.id == current_user.trainer_id
+        ).first()
+        return [trainer] if trainer else []

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'api_service.dart';
@@ -16,17 +15,31 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _receiverController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   WebSocketChannel? channel;
   int? currentUserId;
   bool _connected = false;
   final List<Map<String, dynamic>> _messages = [];
+  List<Map<String, dynamic>> _contacts = [];
+  Map<String, dynamic>? _selectedContact;
 
   @override
   void initState() {
     super.initState();
     _initChat();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _initChat() async {
@@ -37,7 +50,16 @@ class _ChatScreenState extends State<ChatScreen> {
       currentUserId = userData['id'];
     });
 
-    final uri = Uri.parse('ws://10.0.2.2:8000/ws/$currentUserId?token=${widget.token}');
+    final contacts = await ApiService.get(context, '/my-contacts/', widget.token);
+    if (contacts != null) {
+      setState(() {
+        _contacts = List<Map<String, dynamic>>.from(contacts);
+      });
+    }
+
+    if (currentUserId == null) return;
+
+    final uri = Uri.parse('ws://127.0.0.1:8000/ws/$currentUserId?token=${widget.token}');
     channel = WebSocketChannel.connect(uri);
 
     channel!.stream.listen((message) {
@@ -50,22 +72,24 @@ class _ChatScreenState extends State<ChatScreen> {
               'isMe': data['sender_id'] == currentUserId,
             });
           });
+          _scrollToBottom();
         } else if (data is Map<String, dynamic> && data['type'] == 'sent') {
-          // Mensagem já é mostrada localmente no envio.
+          final msg = data['message'];
+          setState(() {
+            _messages.add({
+              'text': msg['content'],
+              'isMe': true,
+            });
+          });
+          _scrollToBottom();
         } else if (data is Map<String, dynamic> && data['detail'] != null) {
           setState(() {
             _messages.add({
-              'text': 'Erro: ${data['detail']}',
+              'text': 'Error: ${data['detail']}',
               'isMe': false,
             });
           });
-        } else {
-          setState(() {
-            _messages.add({
-              'text': message.toString(),
-              'isMe': false,
-            });
-          });
+          _scrollToBottom();
         }
       } catch (_) {
         setState(() {
@@ -74,11 +98,12 @@ class _ChatScreenState extends State<ChatScreen> {
             'isMe': false,
           });
         });
+        _scrollToBottom();
       }
     }, onError: (error) {
       setState(() {
         _messages.add({
-          'text': 'Erro de conexão: $error',
+          'text': 'Connection error: $error',
           'isMe': false,
         });
       });
@@ -93,14 +118,33 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Future<void> _loadHistory() async {
+    if (_selectedContact == null) return;
+    final receiverId = _selectedContact!['id'];
+    final history = await ApiService.get(
+      context,
+      '/messages/$receiverId',
+      widget.token,
+    );
+    if (history != null) {
+      setState(() {
+        _messages.clear();
+        _messages.addAll(List<Map<String, dynamic>>.from(
+          history.map((msg) => {
+            'text': msg['content'],
+            'isMe': msg['sender_id'] == currentUserId,
+          }),
+        ));
+      });
+      _scrollToBottom();
+    }
+  }
+
   void _sendMessage() {
     final text = _messageController.text.trim();
-    final receiverText = _receiverController.text.trim();
+    if (text.isEmpty || _selectedContact == null || currentUserId == null || channel == null) return;
 
-    if (text.isEmpty || receiverText.isEmpty || currentUserId == null || channel == null) return;
-
-    final receiverId = int.tryParse(receiverText);
-    if (receiverId == null) return;
+    final receiverId = _selectedContact!['id'];
 
     final payload = jsonEncode({
       'receiver_id': receiverId,
@@ -108,14 +152,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     channel!.sink.add(payload);
-
-    setState(() {
-      _messages.add({
-        'text': text,
-        'isMe': true,
-      });
-    });
-
     _messageController.clear();
   }
 
@@ -123,7 +159,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     channel?.sink.close();
     _messageController.dispose();
-    _receiverController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -147,71 +183,87 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: const Color(0xFF2C2C2E),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _receiverController,
-                    style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: 'Receiver ID',
-                      hintStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: const Color(0xFF1C1C1E),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                        borderSide: BorderSide.none,
+            child: _contacts.isEmpty
+                ? const Text(
+                    'No contacts yet',
+                    style: TextStyle(color: Colors.white54),
+                  )
+                : DropdownButtonHideUnderline(
+                    child: DropdownButton<Map<String, dynamic>>(
+                      value: _selectedContact,
+                      dropdownColor: const Color(0xFF2C2C2E),
+                      hint: const Text(
+                        'Select a contact',
+                        style: TextStyle(color: Colors.white54),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
+                      isExpanded: true,
+                      items: _contacts.map((contact) {
+                        return DropdownMenuItem<Map<String, dynamic>>(
+                          value: contact,
+                          child: Text(
+                            contact['name'],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (contact) {
+                        setState(() {
+                          _selectedContact = contact;
+                          _messages.clear();
+                        });
+                        _loadHistory();
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  currentUserId != null ? 'You: $currentUserId' : 'A carregar...',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
           ),
-          const SizedBox(height: 8),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-
-                return Align(
-                  alignment: msg['isMe'] ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(14),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    decoration: BoxDecoration(
-                      color: msg['isMe'] ? primaryColor : const Color(0xFF2C2C2E),
-                      borderRadius: BorderRadius.circular(16).copyWith(
-                        bottomRight: msg['isMe'] ? const Radius.circular(0) : const Radius.circular(16),
-                        bottomLeft: msg['isMe'] ? const Radius.circular(16) : const Radius.circular(0),
-                      ),
-                    ),
+            child: _selectedContact == null
+                ? const Center(
                     child: Text(
-                      msg['text'],
-                      style: TextStyle(
-                        color: msg['isMe'] ? Colors.black : Colors.white,
-                        fontSize: 15,
-                      ),
+                      'Select a contact to start chatting',
+                      style: TextStyle(color: Colors.white54),
                     ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index];
+                      return Align(
+                        alignment: msg['isMe']
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(14),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.75,
+                          ),
+                          decoration: BoxDecoration(
+                            color: msg['isMe']
+                                ? primaryColor
+                                : const Color(0xFF2C2C2E),
+                            borderRadius: BorderRadius.circular(16).copyWith(
+                              bottomRight: msg['isMe']
+                                  ? const Radius.circular(0)
+                                  : const Radius.circular(16),
+                              bottomLeft: msg['isMe']
+                                  ? const Radius.circular(16)
+                                  : const Radius.circular(0),
+                            ),
+                          ),
+                          child: Text(
+                            msg['text'],
+                            style: TextStyle(
+                              color: msg['isMe'] ? Colors.black : Colors.white,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           Container(
             padding: const EdgeInsets.all(16),
@@ -222,8 +274,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     style: const TextStyle(color: Colors.white),
+                    enabled: _connected && _selectedContact != null,
+                    onSubmitted: (_) => _sendMessage(),
                     decoration: InputDecoration(
-                      hintText: _connected ? 'Escreve uma mensagem...' : 'A conectar...',
+                      hintText: _selectedContact == null
+                          ? 'Select a contact first'
+                          : _connected
+                              ? 'Write a message...'
+                              : 'Connecting...',
                       hintStyle: const TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: const Color(0xFF2C2C2E),
@@ -236,7 +294,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         vertical: 10,
                       ),
                     ),
-                    enabled: _connected,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -244,7 +301,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   backgroundColor: primaryColor,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.black),
-                    onPressed: _connected ? _sendMessage : null,
+                    onPressed: _connected && _selectedContact != null
+                        ? _sendMessage
+                        : null,
                   ),
                 ),
               ],

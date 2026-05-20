@@ -9,11 +9,12 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     role = Column(Enum("trainer", "client"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 # Plano de treino atribuído por um treinador a um cliente.
@@ -24,7 +25,7 @@ class WorkoutPlan(Base):
     title = Column(String(100), nullable=False)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relação com os exercícios deste plano de treino.
     exercises = relationship("Exercise", back_populates="workout_plan")
@@ -57,7 +58,7 @@ class TrainingSession(Base):
     date = Column(DateTime, nullable=False)
     status = Column(Enum("scheduled", "completed", "cancelled"), default="scheduled")
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 # Registos de progressão do cliente, usados para acompanhar peso e composição corporal.
@@ -82,8 +83,8 @@ class InviteCodes(Base):
     code = Column(String(100), unique=True, nullable=False)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     used = Column(Boolean, default=False)
-    expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 # Plano nutricional atribuído a um cliente por um treinador.
@@ -94,7 +95,7 @@ class NutriPlan(Base):
     title = Column(String(100), nullable=False)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relação com as refeições deste plano nutricional.
     meals = relationship("Meal", back_populates="nutri_plan")
@@ -107,7 +108,7 @@ class Meal(Base):
     id = Column(Integer, primary_key=True, index=True)
     nutri_plan_id = Column(Integer, ForeignKey("nutri_plans.id"), nullable=False)
     name = Column(String(100), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     food_items = relationship("FoodItem", back_populates="meal")
     nutri_plan = relationship("NutriPlan", back_populates="meals")
@@ -138,7 +139,7 @@ class Message(Base):
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])

@@ -62,3 +62,23 @@ def get_user_from_token(token: str, db: Session):
     if user is None:
         raise credentials_exception
     return user
+
+#Validação de token para WebSocket, sem dependência do FastAPI, para ser usada no WebSocketManager
+def get_user_from_token(token: str, db: Session):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except jwt.JWTError:
+        raise credentials_exception
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
