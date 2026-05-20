@@ -1,0 +1,121 @@
+import 'package:flutter/material.dart';
+
+import '../student_theme.dart';
+
+class StudentMenuGrid extends StatelessWidget {
+  final ValueChanged<int> onOpenSection;
+
+  const StudentMenuGrid({
+    super.key,
+    required this.onOpenSection,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _MenuItem(
+        icon: Icons.fitness_center,
+        label: 'Treinos',
+        onTap: () => onOpenSection(1),
+      ),
+      _MenuItem(
+        icon: Icons.note_add_outlined,
+        label: 'Treinos\nExtras',
+        onTap: () => onOpenSection(1),
+      ),
+      _MenuItem(
+        icon: Icons.assignment_outlined,
+        label: 'Avaliações',
+        onTap: () {},
+      ),
+      _MenuItem(
+        icon: Icons.fact_check_outlined,
+        label: 'O Meu\nProgresso',
+        onTap: () => onOpenSection(3),
+      ),
+      _MenuItem(
+        icon: Icons.calendar_month,
+        label: 'Calendario',
+        onTap: () => onOpenSection(2),
+      ),
+      _MenuItem(
+        icon: Icons.folder_outlined,
+        label: 'Ficheiros',
+        onTap: () {},
+      ),
+    ];
+
+    return GridView.builder(
+      itemCount: items.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.65,
+      ),
+      itemBuilder: (context, index) {
+        return _MenuTile(item: items[index]);
+      },
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  final _MenuItem item;
+
+  const _MenuTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: StudentTheme.navy,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: item.onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  color: StudentTheme.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(item.icon, color: Colors.black, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  item.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+}
