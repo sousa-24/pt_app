@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           MaterialPageRoute(
             builder:
-                (context) => HomeScreen(
+                (context) => StudentHomeScreen(
                   token: token,
                   role: role,
                   onToggleTheme: widget.onToggleTheme,

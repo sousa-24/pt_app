@@ -10,6 +10,7 @@ import 'sessions_screen.dart';
 import 'invite_code_screen.dart';
 import 'nutri_plans_screen.dart';
 import 'create_nutri_plans_screen.dart';
+import 'screens/student/student_home_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String token;
@@ -274,6 +275,36 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const Text('Use the menu on the top left to navigate.'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: role == 'client'
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StudentHomeScreen(
+                              token: token,
+                              role: role,
+                              onToggleTheme: onToggleTheme,
+                              themeMode: themeMode,
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
+                icon: const Icon(Icons.school_outlined),
+                label: const Text('Abrir area do aluno'),
+              ),
+            ),
+            if (role == 'trainer') ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Disponivel apenas para usuarios client.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
           ],
         ),
       ),

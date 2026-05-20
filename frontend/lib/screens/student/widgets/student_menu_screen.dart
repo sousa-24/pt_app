@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import '../student_theme.dart';
 
 class StudentMenuScreen extends StatelessWidget {
+  final String studentName;
   final ValueChanged<int> onOpenSection;
   final VoidCallback onBack;
   final VoidCallback onLogout;
+  final VoidCallback onOpenChat;
 
   const StudentMenuScreen({
     super.key,
+    required this.studentName,
     required this.onOpenSection,
     required this.onBack,
     required this.onLogout,
+    required this.onOpenChat,
   });
 
   @override
@@ -46,6 +50,11 @@ class StudentMenuScreen extends StatelessWidget {
         icon: Icons.attach_money,
         label: 'Faturas',
         onTap: () => onOpenSection(4),
+      ),
+      _MenuRowItem(
+        icon: Icons.chat,
+        label: 'Chat com Personal',
+        onTap: onOpenChat,
       ),
       _MenuRowItem(
         icon: Icons.folder_outlined,
@@ -127,9 +136,9 @@ class StudentMenuScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        const Center(
+        Center(
           child: Text(
-            'Alex Oliveira da Silva',
+            studentName,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: StudentTheme.darkText,
