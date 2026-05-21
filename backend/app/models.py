@@ -60,6 +60,9 @@ class TrainingSession(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    feedback = relationship("ClientSessionFeedback", back_populates="session")
+    performance = relationship("SessionPerformance", back_populates="session")
+
 
 # Registos de progressão do cliente, usados para acompanhar peso e composição corporal.
 class UserProgression(Base):
@@ -145,3 +148,34 @@ class Message(Base):
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
 
+# Avalição de um cliente à sessao de treino, usada para feedback e melhoria contínua.
+class ClientSessionFeedback(Base):
+    __tablename__ = "client_session_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("training_sessions.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating = Column(Integer, nullable=False)  # Classificação de 1 a 5
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    session = relationship("TrainingSession", back_populates="feedback")
+    client = relationship("User", foreign_keys=[client_id])
+    trainer = relationship("User", foreign_keys=[trainer_id])
+
+# Avaliação da performance do cliente durante a sessão de treino, usada para acompanhamento e ajustes futuros.
+class SessionPerformance(Base):
+    __tablename__ = "session_performance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("training_sessions.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    performance_rating = Column(Integer, nullable=False)  # Classificação de 1 a 5
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    session = relationship("TrainingSession", back_populates="performance")
+    client = relationship("User", foreign_keys=[client_id])
+    trainer = relationship("User", foreign_keys=[trainer_id])

@@ -236,3 +236,42 @@ class UserProgressionResponse(BaseModel):
         if self.weight is not None and self.body_fat_percentage is not None:
             self.muscle_mass = round(self.weight * (1 - self.body_fat_percentage / 100), 2)
         return self
+    
+#Esquema para criação do feedback do cliente
+class ClientSessionFeedbackCreate(BaseModel):
+    session_id: int
+    rating: int
+    notes: str | None = None
+
+# Esquema de resposta para o feedback do cliente.
+class ClientSessionFeedbackResponse(BaseModel):
+    id: int
+    session_id: int
+    cliente_id: int
+    trainer_id: int
+    rating: int
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+# Esquema para criação da performance da sessão de treino
+class SessionPerformanceCreate(BaseModel):
+    session_id: int
+    client_id: int
+    performance_rating: int
+    notes: str | None = None
+
+# Esquema de resposta para a performance da sessão de treino
+class SessionPerformanceResponse(BaseModel):
+    id: int
+    session_id: int
+    cliente_id: int
+    trainer_id: int
+    performance_rating: int
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+

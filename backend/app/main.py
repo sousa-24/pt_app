@@ -385,3 +385,103 @@ def get_contacts(
             models.User.id == current_user.trainer_id
         ).first()
         return [trainer] if trainer else []
+
+# Endpoint para dar feedback sobre uma sessão de treino, permitindo que o cliente avalie a sessão e forneça notas para o treinador.
+@app.post("/session-feedback/", response_model=schemas.ClientSessionFeedbackResponse)
+def create_session_feedback(
+    feedback: schemas.ClientSessionFeedbackCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Only clients can provide session feedback")
+
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == feedback.session_id,
+        models.TrainingSession.client_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+
+    new_feedback = models.ClientSessionFeedback(
+        session_id=feedback.session_id,
+        client_id=current_user.id,
+        trainer_id=session.trainer_id,
+        rating=feedback.rating,
+        notes=feedback.notes
+    )
+    db.add(new_feedback)
+    db.commit()
+    db.refresh(new_feedback)
+    return new_feedback
+
+# Endpoint para avaliar a performance do cliente durante a sessão de treino, permitindo que o treinador forneça uma avaliação da performance do cliente para acompanhamento e ajustes futuros.
+@app.post("/session-performance/", response_model=schemas.SessionPerformanceResponse)
+def create_session_performance(
+    performance: schemas.SessionPerformanceCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "trainer":
+        raise HTTPException(status_code=403, detail="Only trainers can provide session performance evaluations")
+
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == performance.session_id,
+        models.TrainingSession.trainer_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+
+    new_performance = models.SessionPerformance(
+        session_id=performance.session_id,
+        client_id=performance.client_id,
+        trainer_id=current_user.id,
+        performance_rating=performance.performance_rating,
+        notes=performance.notes
+    )
+    db.add(new_performance)
+    db.commit()
+    db.refresh(new_performance)
+    return new_performance
+
+# Endpoint para obter o feedback de uma sessão de treino, permitindo que o treinador veja a avaliação do cliente sobre a sessão.
+@app.get("/session-feedback/{session_id}", response_model=list[schemas.ClientSessionFeedbackResponse])
+def get_session_feedback(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == session_id,
+        models.TrainingSession.trainer_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+
+    feedback = db.query(models.ClientSessionFeedback).filter(
+        models.ClientSessionFeedback.session_id == session_id
+    ).all()
+    return feedback
+
+# Endpoint para obter a avaliação de performance de uma sessão de treino, permitindo que o cliente veja a avaliação do treinador sobre a sua performance durante a sessão.
+@app.get("/session-performance/{session_id}", response_model=list[schemas.SessionPerformanceResponse])
+def get_session_performance(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == session_id,
+        models.TrainingSession.client_id == current_user.id
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+
+    performance = db.query(models.SessionPerformance).filter(
+        models.SessionPerformance.session_id == session_id
+    ).all()
+    return performance
