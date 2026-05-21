@@ -181,7 +181,22 @@ def get_progression(db: Session = Depends(get_db), current_user: models.User = D
         ).all()
     return progression
 
-
+#Permite que um treinador veja a progressão de um cliente específico, filtrando por cliente_id e trainer_id para garantir que o treinador só vê os dados dos seus clientes atribuídos.
+@app.get("/progression/{client_id}", response_model=list[schemas.UserProgressionResponse])
+def get_client_progression(
+    client_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "trainer":
+        raise HTTPException(status_code=403, detail="Only trainers can view client progression")
+    
+    progression = db.query(models.UserProgression).filter(
+        models.UserProgression.client_id == client_id,
+        models.UserProgression.trainer_id == current_user.id
+    ).order_by(models.UserProgression.date).all()
+    
+    return progression
 
 # Gera um código de convite aleatório para permitir registos de clientes
 # Apenas treinadores podem criar códigos de convite e partilhá-los com clientes

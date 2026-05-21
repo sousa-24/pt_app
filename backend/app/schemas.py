@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 from enum import Enum
 
 # Esquemas Pydantic usados para validação de entrada e serialização de respostas.
@@ -208,3 +208,31 @@ class MessageResponse(BaseModel):
     content: str
     created_at: datetime
     model_config = {"from_attributes": True}
+
+#Esquema para introdução de progresso do cliente
+class UserProgressionCreate(BaseModel):
+    client_id: int
+    date: datetime
+    weight: float | None = None
+    body_fat_percentage: float | None = None
+    notes: str | None = None
+
+# Esquema de resposta para os dados de progressão do cliente.
+class UserProgressionResponse(BaseModel):
+    id: int
+    client_id: int
+    date: datetime
+    weight: float | None = None
+    body_fat_percentage: float | None = None
+    muscle_mass: float | None = None
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+#Calcula a massa muscular com base no peso e na percentagem de gordura corporal, se ambos os valores forem fornecidos.
+    @model_validator(mode='after')
+    def calculate_muscle_mass(self):
+        if self.weight is not None and self.body_fat_percentage is not None:
+            self.muscle_mass = round(self.weight * (1 - self.body_fat_percentage / 100), 2)
+        return self
