@@ -12,6 +12,7 @@ import 'widgets/student_header.dart';
 import 'widgets/student_invoices_screen.dart';
 import 'widgets/student_menu_grid.dart';
 import 'widgets/student_menu_screen.dart';
+import 'widgets/student_progress_screen.dart';
 import 'widgets/student_profile_card.dart';
 import 'widgets/student_section_title.dart';
 import 'widgets/student_workout_card.dart';
@@ -161,7 +162,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
 
     if (_selectedNavIndex == 5) {
-      return const [StudentProfileCard()];
+      return [StudentProgressScreen(token: widget.token)];
     }
 
     if (_selectedNavIndex == 6) {
