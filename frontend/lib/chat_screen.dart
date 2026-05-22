@@ -43,14 +43,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initChat() async {
-    final userData = await ApiService.get(context, '/me', widget.token);
+    final userData = await ApiService.get(context, '/api/v1/me', widget.token);
     if (userData == null || userData['id'] == null) return;
 
     setState(() {
       currentUserId = userData['id'];
     });
 
-    final contacts = await ApiService.get(context, '/my-contacts/', widget.token);
+    final contacts = await ApiService.get(context, '/api/v1/my-contacts/', widget.token);
     if (contacts != null) {
       setState(() {
         _contacts = List<Map<String, dynamic>>.from(contacts);

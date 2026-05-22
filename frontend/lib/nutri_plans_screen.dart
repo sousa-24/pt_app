@@ -21,7 +21,7 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
   }
 
   Future<void> fetchPlans() async {
-    final data = await ApiService.get(context, '/nutri_plans/', widget.token);
+    final data = await ApiService.get(context, '/api/v1/nutri_plans/', widget.token);
     if (data != null) {
       setState(() {
         plans = data;

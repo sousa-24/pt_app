@@ -82,7 +82,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
       return {'name': meal['name'].text, 'food_items': foodItems};
     }).toList();
 
-    final data = await ApiService.post(context, '/nutri_plans/', widget.token, {
+    final data = await ApiService.post(context, '/api/v1/nutri_plans/', widget.token, {
       'title': titleController.text,
       'client_id': int.parse(clientIdController.text),
       'meals': mealsData,

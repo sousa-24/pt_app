@@ -26,7 +26,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
   }
 
   Future<void> fetchPlans() async {
-    final data = await ApiService.get(context, '/workout_plans/', widget.token);
+    final data = await ApiService.get(context, '/api/v1/workout_plans/', widget.token);
     if (data != null) {
       setState(() {
         // Mapeamos os planos e adicionamos um estado local 'completed' para os exercícios
@@ -52,7 +52,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     });
 
     // Opcional: Enviar para a API o progresso real
-    // await ApiService.post(context, '/workout_plans/toggle_exercise', ...);
+    // await ApiService.post(context, '/api/v1/workout_plans/toggle_exercise', ...);
   }
 
   @override

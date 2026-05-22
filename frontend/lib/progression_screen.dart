@@ -21,7 +21,7 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
   }
 
   Future<void> fetchProgression() async {
-    final data = await ApiService.get(context, '/progression/', widget.token);
+    final data = await ApiService.get(context, '/api/v1/progression/', widget.token);
     if (data != null) {
       setState(() {
         progression = data;
