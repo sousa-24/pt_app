@@ -252,7 +252,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final token = widget.token;
     if (token == null || token.isEmpty) return;
 
-    final userData = await ApiService.get(context, '/me', token);
+    final userData = await ApiService.get(context, '/api/v1/me', token);
     if (!mounted || userData == null) return;
 
     final name = userData['name'];

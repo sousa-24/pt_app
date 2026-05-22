@@ -21,7 +21,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
   }
 
   Future<void> fetchSessions() async {
-    final data = await ApiService.get(context, '/training_sessions/', widget.token);
+    final data = await ApiService.get(context, '/api/v1/training_sessions/', widget.token);
     if (data != null) {
       setState(() {
         sessions = data;

@@ -21,7 +21,7 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
 
     final data = await ApiService.post(
       context,
-      '/invite-codes/',
+      '/api/v1/invite-codes/',
       widget.token,
       {},
     );

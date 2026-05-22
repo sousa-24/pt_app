@@ -70,6 +70,11 @@ class WorkoutPlanCreate(BaseModel):
     exercises: list[ExerciseCreate]
 
 
+# Esquema para atualizar um plano de treino (ex: marcar como completo).
+class WorkoutPlanUpdate(BaseModel):
+    completed: bool
+
+
 # Esquema de resposta para um plano de treino, incluindo exercícios e metadados.
 class WorkoutPlanResponse(BaseModel):
     id: int
@@ -77,6 +82,7 @@ class WorkoutPlanResponse(BaseModel):
     trainer_id: int
     client_id: int
     exercises: list[ExerciseResponse]
+    completed: bool
     created_at: datetime
     model_config = {"from_attributes": True}
 
