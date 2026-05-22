@@ -26,6 +26,7 @@ class WorkoutPlan(Base):
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed = Column(Boolean, default=False)
 
     # Relação com os exercícios deste plano de treino.
     exercises = relationship("Exercise", back_populates="workout_plan")
@@ -74,7 +75,7 @@ class UserProgression(Base):
     date = Column(DateTime, nullable=False)
     weight = Column(Float, nullable=True)
     body_fat_percentage = Column(Float, nullable=True)
-    musscle_mass = Column(Float, nullable=True)
+    muscle_mass = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
