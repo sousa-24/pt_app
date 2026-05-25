@@ -62,7 +62,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
     final data = await ApiService.post(
       context,
-      '/workout_plans/',
+      '/api/v1/workout_plans/',
       widget.token,
       {
         'title': titleController.text,

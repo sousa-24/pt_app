@@ -48,15 +48,30 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
                       title: Text(plan['title']),
                       subtitle: Text('Created: ${plan['created_at']}'),
                       children: [
-                        ...plan['items'].map<Widget>((item) {
-                          return ListTile(
-                            leading: const Icon(Icons.restaurant),
-                            title: Text(item['name']),
-                            subtitle: Text(
-                              'Calories: ${item['calories']} | P: ${item['protein']}g | C: ${item['carbs']}g | F: ${item['fats']}g',
-                            ),
-                          );
-                        }).toList(),
+                        ...List<Widget>.from(
+                          (plan['meals'] as List<dynamic>).expand((meal) {
+                            final mealMap = meal as Map<String, dynamic>;
+                            return [
+                              ListTile(
+                                leading: const Icon(Icons.restaurant_menu),
+                                title: Text(mealMap['name'] ?? 'Meal'),
+                                subtitle: const Text('Meal'),
+                              ),
+                              ...List<Widget>.from(
+                                (mealMap['food_items'] as List<dynamic>).map((item) {
+                                  final food = item as Map<String, dynamic>;
+                                  return ListTile(
+                                    leading: const Icon(Icons.food_bank),
+                                    title: Text(food['name'] ?? 'Food Item'),
+                                    subtitle: Text(
+                                      'W: ${food['weight']}g • Cals: ${food['calories']} • P: ${food['protein']}g • C: ${food['carbs']}g • F: ${food['fats']}g',
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ];
+                          }).toList(),
+                        ),
                       ],
                     );
                   },

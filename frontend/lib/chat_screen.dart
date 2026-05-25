@@ -123,7 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final receiverId = _selectedContact!['id'];
     final history = await ApiService.get(
       context,
-      '/messages/$receiverId',
+      '/api/v1/messages/$receiverId',
       widget.token,
     );
     if (history != null) {

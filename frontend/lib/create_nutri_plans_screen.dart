@@ -71,6 +71,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
           .map(
             (food) => {
               'name': food['name'].text,
+              'weight': double.tryParse(food['weight'].text) ?? 0,
               'calories': double.tryParse(food['calories'].text) ?? 0,
               'protein': double.tryParse(food['protein'].text) ?? 0,
               'carbs': double.tryParse(food['carbs'].text) ?? 0,
