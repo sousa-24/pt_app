@@ -347,6 +347,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
+        if (role != _selectedAccount) {
+          setState(() {
+            errorMessage = _selectedAccount == 'client'
+                ? 'Esta conta nao e de aluno'
+                : 'Esta conta nao e de personal';
+          });
+          return;
+        }
+
         Navigator.pushReplacement(
           context,
 

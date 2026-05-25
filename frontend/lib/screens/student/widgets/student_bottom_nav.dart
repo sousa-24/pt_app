@@ -5,11 +5,13 @@ import '../student_theme.dart';
 class StudentBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
+  final VoidCallback onOpenChat;
 
   const StudentBottomNav({
     super.key,
     required this.selectedIndex,
     required this.onChanged,
+    required this.onOpenChat,
   });
 
   @override
@@ -17,7 +19,7 @@ class StudentBottomNav extends StatelessWidget {
     const items = [
       _NavConfig(Icons.home_rounded, 'Inicio'),
       _NavConfig(Icons.fitness_center, 'Treinos'),
-      _NavConfig(Icons.calendar_month, 'Calendario'),
+      _NavConfig(Icons.chat_bubble_outline, 'Chat'),
       _NavConfig(Icons.menu_rounded, 'Menu'),
     ];
 
@@ -31,7 +33,7 @@ class StudentBottomNav extends StatelessWidget {
           final isActive = selectedIndex == index;
 
           return InkWell(
-            onTap: () => onChanged(index),
+            onTap: index == 2 ? onOpenChat : () => onChanged(index),
             child: SizedBox(
               width: 82,
               child: Column(
@@ -39,10 +41,9 @@ class StudentBottomNav extends StatelessWidget {
                 children: [
                   Icon(
                     item.icon,
-                    color:
-                        isActive
-                            ? StudentTheme.blue
-                            : Colors.white.withOpacity(0.72),
+                    color: isActive
+                        ? StudentTheme.blue
+                        : Colors.white.withOpacity(0.72),
                     size: 30,
                   ),
                   const SizedBox(height: 6),
@@ -50,10 +51,9 @@ class StudentBottomNav extends StatelessWidget {
                     item.label,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color:
-                          isActive
-                              ? StudentTheme.blue
-                              : Colors.white.withOpacity(0.76),
+                      color: isActive
+                          ? StudentTheme.blue
+                          : Colors.white.withOpacity(0.76),
                       fontSize: 13,
                       fontWeight:
                           isActive ? FontWeight.w800 : FontWeight.normal,
