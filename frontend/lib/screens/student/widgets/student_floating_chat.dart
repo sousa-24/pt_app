@@ -49,7 +49,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
   Future<void> _initChat() async {
     try {
-      final userData = await ApiService.get(context, '/me', widget.token);
+      final userData = await ApiService.get(context, '/api/v1/me', widget.token);
       if (!mounted) return;
 
       if (userData == null || userData['id'] == null) {
@@ -64,7 +64,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
       final contactsData = await ApiService.get(
         context,
-        '/my-contacts/',
+        '/api/v1/my-contacts/',
         widget.token,
       );
       if (!mounted) return;
@@ -121,7 +121,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
     final history = await ApiService.get(
       context,
-      '/messages/${contact['id']}',
+      '/api/v1/messages/${contact['id']}',
       widget.token,
     );
     if (!mounted || history is! List) return;
