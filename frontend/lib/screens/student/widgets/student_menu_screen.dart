@@ -42,9 +42,9 @@ class StudentMenuScreen extends StatelessWidget {
         onTap: () => onOpenSection(5),
       ),
       _MenuRowItem(
-        icon: Icons.note_add_outlined,
-        label: 'Treinos Extra',
-        onTap: () => onOpenSection(1),
+        icon: Icons.restaurant_menu,
+        label: 'Meu Plano Alimentar',
+        onTap: () => onOpenSection(7),
       ),
       _MenuRowItem(
         icon: Icons.attach_money,
@@ -56,133 +56,142 @@ class StudentMenuScreen extends StatelessWidget {
         label: 'Chat com Personal',
         onTap: onOpenChat,
       ),
-      _MenuRowItem(
-        icon: Icons.folder_outlined,
-        label: 'Ficheiros',
-        onTap: () {},
-      ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextButton.icon(
-          onPressed: onBack,
-          icon: const Icon(Icons.chevron_left),
-          label: const Text('Voltar'),
-          style: TextButton.styleFrom(
-            foregroundColor: StudentTheme.darkText,
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(70),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Opcao para inserir foto do aluno.'),
-                ),
-              );
-            },
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 122,
-                  height: 122,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: StudentTheme.blue, width: 4),
-                    color: const Color(0xFF2C2C2E),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: StudentTheme.mutedText,
-                    size: 74,
-                  ),
-                ),
-                Positioned(
-                  right: 2,
-                  bottom: 2,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: const BoxDecoration(
-                      color: StudentTheme.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.photo_camera_outlined,
-                      color: Colors.black,
-                      size: 21,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Center(
-          child: Text(
-            'Inserir foto',
-            style: TextStyle(
-              color: StudentTheme.mutedText,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: Text(
-            studentName,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: StudentTheme.darkText,
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        Container(
-          decoration: StudentTheme.cardDecoration(),
-          child: Column(
-            children: List.generate(items.length, (index) {
-              final item = items[index];
-              final isLast = index == items.length - 1;
-
-              return _MenuRow(
-                item: item,
-                showDivider: !isLast,
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: 18),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: OutlinedButton.icon(
-            onPressed: onLogout,
-            icon: const Icon(Icons.logout),
-            label: const Text(
-              'Sair',
-              style: TextStyle(fontWeight: FontWeight.w900),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: StudentTheme.blue,
-              side: const BorderSide(color: StudentTheme.blue),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: StudentTheme.maxContentWidth),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              onPressed: onBack,
+              icon: const Icon(Icons.chevron_left),
+              label: const Text('Voltar'),
+              style: TextButton.styleFrom(
+                foregroundColor: StudentTheme.darkText,
+                padding: EdgeInsets.zero,
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            const Center(
+              child: Icon(
+                Icons.fitness_center,
+                color: StudentTheme.blue,
+                size: 52,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Center(
+              child: Text(
+                'FITPRO',
+                style: TextStyle(
+                  color: StudentTheme.darkText,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(58),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Opcao para inserir foto do aluno.'),
+                    ),
+                  );
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 104,
+                      height: 104,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: StudentTheme.blue, width: 4),
+                        color: const Color(0xFF2C2C2E),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: StudentTheme.mutedText,
+                        size: 62,
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(
+                          color: StudentTheme.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.photo_camera_outlined,
+                          color: Colors.black,
+                          size: 19,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                studentName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: StudentTheme.darkText,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              decoration: StudentTheme.cardDecoration(),
+              child: Column(
+                children: List.generate(items.length, (index) {
+                  final item = items[index];
+                  final isLast = index == items.length - 1;
+
+                  return _MenuRow(
+                    item: item,
+                    showDivider: !isLast,
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: OutlinedButton.icon(
+                onPressed: onLogout,
+                icon: const Icon(Icons.logout),
+                label: const Text(
+                  'Sair',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: StudentTheme.blue,
+                  side: const BorderSide(color: StudentTheme.blue),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
