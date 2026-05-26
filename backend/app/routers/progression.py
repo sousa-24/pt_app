@@ -15,15 +15,21 @@ router = APIRouter(prefix="/api/v1", tags=["progression"])
 def create_progression(
     progression: schemas.UserProgressionCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(require_trainer)
+    current_user: models.User = Depends(get_current_user)
 ):
     """Create a new progression record."""
+    
+    muscle_mass = None
+    if progression.weight and progression.body_fat_percentage:
+        muscle_mass = round(progression.weight * (1 - progression.body_fat_percentage / 100), 2)
+
     new_progression = models.UserProgression(
         client_id=progression.client_id,
         trainer_id=current_user.id,
         date=progression.date,
         weight=progression.weight,
         body_fat_percentage=progression.body_fat_percentage,
+        muscle_mass=muscle_mass,
         notes=progression.notes
     )
     db.add(new_progression)

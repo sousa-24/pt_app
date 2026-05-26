@@ -23,7 +23,7 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
 
   Future<void> _fetchProgressionData() async {
     // Chamada unificada para o endpoint correto do backend Python
-    final data = await ApiService.get(context, '/progression/1', widget.token);
+    final data = await ApiService.get(context, '/ap1/v1/progression', widget.token);
     
     if (data != null) {
       setState(() {

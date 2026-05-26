@@ -7,20 +7,20 @@ from datetime import datetime, timezone, timedelta
 from app.database import get_db
 from app import models, schemas
 from app.auth import pwd_context, create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/api/v1", tags=["auth"])
 
 
 @router.post("/login/", response_model=schemas.Token)
-def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Login endpoint: validates credentials and returns JWT token."""
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if not db_user or not pwd_context.verify(user.password, db_user.password):
+    db_user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not db_user or not pwd_context.verify(form_data.password, db_user.password):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
 
     access_token = create_access_token(data={"sub": db_user.email, "role": db_user.role})
     return {"access_token": access_token, "token_type": "bearer", "role": db_user.role}
-
 
 @router.post("/registar/", response_model=schemas.UserResponse)
 def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -71,4 +71,20 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @router.get("/me", response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(get_current_user)):
     """Get current authenticated user's profile."""
+    return current_user
+
+@router.post("/me", response_model=schemas.UserResponse)
+def update_me(updated_user: schemas.UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if updated_user.name:
+        current_user.name = updated_user.name
+    if updated_user.email:
+        existing_user = db.query(models.User).filter(models.User.email == updated_user.email).first()
+        if existing_user and existing_user.id != current_user.id:
+            raise HTTPException(status_code=400, detail="Email já em uso")
+        current_user.email = updated_user.email
+    if updated_user.password:
+        current_user.password = pwd_context.hash(updated_user.password)
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
     return current_user

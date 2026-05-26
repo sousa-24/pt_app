@@ -281,3 +281,8 @@ class SessionPerformanceResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+#Esquema para update de profile do utilizador
+class UserProfileUpdate(BaseModel):
+    name: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None

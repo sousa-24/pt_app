@@ -16,7 +16,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login/")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
