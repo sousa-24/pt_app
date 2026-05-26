@@ -384,7 +384,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     try {
       final data = await ApiService.get(
         context,
-        '/workout_plans/',
+        '/api/v1/workout_plans/',
         token,
       ).timeout(const Duration(seconds: 8));
       if (!mounted) return;

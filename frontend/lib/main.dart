@@ -335,15 +335,13 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8000/api/v1/login/'),
-
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-
-        body: jsonEncode({
-          'email': emailController.text,
+        body: {
+          'username': emailController.text.trim(),
           'password': passwordController.text,
-        }),
+        },
       );
 
       if (response.statusCode == 200) {

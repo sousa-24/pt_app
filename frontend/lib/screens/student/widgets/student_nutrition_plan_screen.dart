@@ -41,7 +41,7 @@ class _StudentNutritionPlanScreenState
     try {
       final data = await ApiService.get(
         context,
-        '/nutri_plans/',
+        '/api/v1/nutri_plans/',
         token,
       ).timeout(const Duration(seconds: 8));
       if (!mounted) return;
