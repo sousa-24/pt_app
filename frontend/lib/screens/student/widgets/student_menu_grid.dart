@@ -76,27 +76,27 @@ class _MenuTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: item.onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 46,
+                height: 46,
                 decoration: const BoxDecoration(
                   color: StudentTheme.blue,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(item.icon, color: Colors.black, size: 28),
+                child: Icon(item.icon, color: Colors.black, size: 25),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   item.label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
-                    height: 1.05,
+                    height: 1.08,
                   ),
                 ),
               ),

@@ -93,9 +93,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final isDark = widget.themeMode == ThemeMode.dark;
-    final surfaceColor = isDark ? const Color(0xFF2C2C2E) : Colors.white;
-    final textColor = isDark ? const Color(0xFFF4F4F1) : const Color(0xFF1C1C1E);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor =
+        isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF4F4F1);
+    final textColor =
+        isDark ? const Color(0xFFF4F4F1) : const Color(0xFF1C1C1E);
     final mutedColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(

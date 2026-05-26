@@ -6,12 +6,14 @@ import 'student_section_title.dart';
 
 class StudentFrequencyCard extends StatelessWidget {
   final List<StudentWorkoutPlan> workouts;
+  final List<StudentTrainingSession> trainingSessions;
   final DateTime selectedDate;
   final ValueChanged<int> onWeekdaySelected;
 
   const StudentFrequencyCard({
     super.key,
     required this.workouts,
+    this.trainingSessions = const [],
     required this.selectedDate,
     required this.onWeekdaySelected,
   });
@@ -32,7 +34,15 @@ class StudentFrequencyCard extends StatelessWidget {
           Row(
             children: List.generate(7, (index) {
               final weekday = index + 1;
-              final hasWorkout = workouts.any((w) => w.weekday == weekday);
+              final hasWorkout =
+                  workouts.any(
+                    (workout) =>
+                        workout.scheduledDate != null &&
+                        workout.weekday == weekday,
+                  ) ||
+                  trainingSessions.any(
+                    (session) => session.date.weekday == weekday,
+                  );
               final isSelected = weekday == selectedDate.weekday;
 
               return Expanded(

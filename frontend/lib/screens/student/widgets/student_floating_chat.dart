@@ -52,7 +52,8 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
       final userData = await ApiService.get(context, '/api/v1/me', widget.token);
       if (!mounted) return;
 
-      if (userData == null || userData['id'] == null) {
+      final userId = _intValue(userData is Map ? userData['id'] : null);
+      if (userData == null || userId == null) {
         setState(() {
           _errorMessage = 'Nao foi possivel identificar o aluno.';
           _isLoading = false;
@@ -60,7 +61,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
         return;
       }
 
-      _currentUserId = userData['id'] as int;
+      _currentUserId = userId;
 
       final contactsData = await ApiService.get(
         context,
@@ -395,6 +396,11 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
     return DateTime.tryParse(value.toString())?.toLocal();
+  }
+
+  static int? _intValue(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '');
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../api_service.dart';
 import '../../main.dart';
@@ -9,6 +10,7 @@ import 'widgets/student_calendar_card.dart';
 import 'widgets/student_floating_chat.dart';
 import 'widgets/student_frequency_card.dart';
 import 'widgets/student_header.dart';
+import 'widgets/student_hydration_card.dart';
 import 'widgets/student_invoices_screen.dart';
 import 'widgets/student_menu_grid.dart';
 import 'widgets/student_menu_screen.dart';
@@ -38,6 +40,7 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   List<StudentWorkoutPlan> _workouts = [];
+  List<StudentTrainingSession> _trainingSessions = [];
   final Set<String> _completedWorkoutIds = {'lower-a'};
   bool _isLoadingWorkouts = true;
   String? _workoutErrorMessage;
@@ -45,13 +48,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   String _studentName = 'Aluno';
   late DateTime _selectedDate;
   bool _isChatOpen = false;
+  int _waterMl = 0;
+  static const int _waterGoalMl = 2000;
+  static const String _hydrationDateKey = 'fitpro_hydration_date';
+  static const String _hydrationAmountKey = 'fitpro_hydration_amount_ml';
 
   @override
   void initState() {
     super.initState();
     _selectedDate = _dateOnly(DateTime.now());
+    _loadHydration();
     _loadStudentData();
     _loadWorkoutPlans();
+    _loadTrainingSessions();
   }
 
   @override
@@ -60,44 +69,64 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     return Scaffold(
       backgroundColor: StudentTheme.lightBg,
-      bottomNavigationBar:
-          isMenuArea
-              ? null
-              : StudentBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onChanged: (index) => setState(() => _selectedNavIndex = index),
-                onOpenChat: _openChat,
-              ),
+      bottomNavigationBar: isMenuArea ? null : _bottomNav(),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!isMenuArea) StudentHeader(studentName: _studentName),
-                Transform.translate(
-                  offset: Offset(0, isMenuArea ? 0 : -18),
-                  child: SafeArea(
-                    top: isMenuArea,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        isMenuArea ? 18 : 0,
-                        20,
-                        24,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: _selectedContent(),
-                      ),
+          _studentPage(isMenuArea),
+          if (_isChatOpen) _floatingChat(),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomNav() {
+    return Center(
+      heightFactor: 1,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: StudentTheme.maxContentWidth,
+        ),
+        child: StudentBottomNav(
+          selectedIndex: _selectedNavIndex,
+          onChanged: (index) => setState(() => _selectedNavIndex = index),
+          onOpenChat: _openChat,
+        ),
+      ),
+    );
+  }
+
+  Widget _studentPage(bool isMenuArea) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: StudentTheme.maxContentWidth,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isMenuArea) StudentHeader(studentName: _studentName),
+              Transform.translate(
+                offset: Offset(0, isMenuArea ? 0 : -18),
+                child: SafeArea(
+                  top: isMenuArea,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      isMenuArea ? 18 : 0,
+                      20,
+                      24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _selectedContent(),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          if (_isChatOpen) _floatingChat(),
-        ],
+        ),
       ),
     );
   }
@@ -107,8 +136,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return [
         StudentFrequencyCard(
           workouts: _workouts,
+          trainingSessions: _trainingSessions,
           selectedDate: _selectedDate,
           onWeekdaySelected: _selectWeekday,
+        ),
+        const SizedBox(height: 18),
+        StudentHydrationCard(
+          currentMl: _waterMl,
+          goalMl: _waterGoalMl,
+          onAddSmall: () => _addWater(250),
+          onAddMedium: () => _addWater(500),
+          onRemoveSmall: () => _removeWater(250),
+          onReset: _resetWater,
         ),
         const SizedBox(height: 18),
         StudentMenuGrid(
@@ -217,7 +256,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   List<StudentWorkoutPlan> _plansForDate(DateTime date) {
-    return _workouts.where((workout) => workout.weekday == date.weekday).toList();
+    final selectedDate = _dateOnly(date);
+
+    return _workouts.where((workout) {
+      final scheduledDate = workout.scheduledDate;
+      if (scheduledDate != null) {
+        return _dateOnly(scheduledDate) == selectedDate;
+      }
+
+      return workout.weekday == date.weekday;
+    }).toList();
   }
 
   void _selectWeekday(int weekday) {
@@ -244,6 +292,68 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         _completedWorkoutIds.add(workout.id);
       }
     });
+  }
+
+  void _addWater(int amountMl) {
+    if (_waterMl >= _waterGoalMl) return;
+
+    setState(() {
+      _waterMl = (_waterMl + amountMl).clamp(0, _waterGoalMl).toInt();
+    });
+    _saveHydration();
+
+    if (_waterMl == _waterGoalMl) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Meta de hidratacao concluida hoje.'),
+        ),
+      );
+    }
+  }
+
+  void _removeWater(int amountMl) {
+    if (_waterMl <= 0) return;
+
+    setState(() {
+      _waterMl = (_waterMl - amountMl).clamp(0, _waterGoalMl).toInt();
+    });
+    _saveHydration();
+  }
+
+  void _resetWater() {
+    setState(() => _waterMl = 0);
+    _saveHydration();
+  }
+
+  Future<void> _loadHydration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = _todayKey();
+    final savedDate = prefs.getString(_hydrationDateKey);
+    final savedAmount = prefs.getInt(_hydrationAmountKey);
+
+    if (savedDate == today && savedAmount != null) {
+      if (!mounted) return;
+      setState(() {
+        _waterMl = savedAmount.clamp(0, _waterGoalMl).toInt();
+      });
+      return;
+    }
+
+    await prefs.setString(_hydrationDateKey, today);
+    await prefs.setInt(_hydrationAmountKey, 0);
+    if (!mounted) return;
+    setState(() => _waterMl = 0);
+  }
+
+  Future<void> _saveHydration() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_hydrationDateKey, _todayKey());
+    await prefs.setInt(_hydrationAmountKey, _waterMl);
+  }
+
+  static String _todayKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}-${now.day}';
   }
 
   Future<void> _loadStudentData() async {
@@ -299,6 +409,30 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  Future<void> _loadTrainingSessions() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final data = await ApiService.get(
+        context,
+        '/api/v1/training_sessions/',
+        token,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted || data is! List) return;
+
+      setState(() {
+        _trainingSessions = data
+            .map(_trainingSessionFromApi)
+            .whereType<StudentTrainingSession>()
+            .toList();
+        _workouts = _workouts.map(_workoutWithSessionDate).toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+    }
+  }
+
   StudentWorkoutPlan _workoutFromApi(dynamic value, int index) {
     final plan = value is Map<String, dynamic> ? value : <String, dynamic>{};
     final exercisesData =
@@ -324,10 +458,55 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ? 'Plano atribuido'
               : '${exercises.length} exercicios',
       weekday: (index % 7) + 1,
+      scheduledDate:
+          _sessionDateForWorkout(_text(plan['id'], 'workout-$index')),
       durationMinutes: exercises.isEmpty ? 0 : exercises.length * 10,
       exercises: exercises,
       color: _workoutColor(index),
       icon: Icons.fitness_center,
+    );
+  }
+
+  StudentWorkoutPlan _workoutWithSessionDate(StudentWorkoutPlan workout) {
+    final sessionDate = _sessionDateForWorkout(workout.id);
+    if (sessionDate == null) return workout;
+
+    return StudentWorkoutPlan(
+      id: workout.id,
+      title: workout.title,
+      focus: workout.focus,
+      weekday: sessionDate.weekday,
+      scheduledDate: sessionDate,
+      durationMinutes: workout.durationMinutes,
+      exercises: workout.exercises,
+      color: workout.color,
+      icon: workout.icon,
+    );
+  }
+
+  DateTime? _sessionDateForWorkout(String workoutId) {
+    for (final session in _trainingSessions) {
+      if (session.workoutPlanId == workoutId) {
+        return session.date;
+      }
+    }
+
+    return null;
+  }
+
+  StudentTrainingSession? _trainingSessionFromApi(dynamic value) {
+    final session = value is Map<String, dynamic> ? value : null;
+    if (session == null) return null;
+
+    final rawDate = session['date'];
+    final date = rawDate is String ? DateTime.tryParse(rawDate) : null;
+    if (date == null) return null;
+
+    return StudentTrainingSession(
+      id: _text(session['id'], 'session-${_trainingSessions.length}'),
+      workoutPlanId: session['workout_plan_id']?.toString(),
+      date: date,
+      status: _text(session['status'], 'scheduled'),
     );
   }
 

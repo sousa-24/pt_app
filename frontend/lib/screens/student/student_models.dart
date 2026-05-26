@@ -5,6 +5,7 @@ class StudentWorkoutPlan {
   final String title;
   final String focus;
   final int weekday;
+  final DateTime? scheduledDate;
   final int durationMinutes;
   final List<String> exercises;
   final Color color;
@@ -15,10 +16,25 @@ class StudentWorkoutPlan {
     required this.title,
     required this.focus,
     required this.weekday,
+    this.scheduledDate,
     required this.durationMinutes,
     required this.exercises,
     required this.color,
     required this.icon,
+  });
+}
+
+class StudentTrainingSession {
+  final String id;
+  final String? workoutPlanId;
+  final DateTime date;
+  final String status;
+
+  const StudentTrainingSession({
+    required this.id,
+    required this.workoutPlanId,
+    required this.date,
+    required this.status,
   });
 }
 
