@@ -22,63 +22,69 @@ class StudentHeader extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            Row(
+            Stack(
+              alignment: Alignment.center,
               children: [
-                const Icon(
-                  Icons.fitness_center,
-                  color: StudentTheme.blue,
-                  size: 30,
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    'FITPRO',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                Stack(
-                  clipBehavior: Clip.none,
+                const Column(
                   children: [
-                    IconButton.filled(
-                      onPressed: () {},
-                      style: IconButton.styleFrom(
-                        backgroundColor: Color(0xFF2C2C2E),
-                        foregroundColor: StudentTheme.blue,
-                      ),
-                      icon: const Icon(Icons.notifications_none),
+                    Icon(
+                      Icons.fitness_center,
+                      color: StudentTheme.blue,
+                      size: 44,
                     ),
-                    Positioned(
-                      right: -1,
-                      top: -1,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFF7185),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '2',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
+                    SizedBox(height: 6),
+                    Text(
+                      'FITPRO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
                       ),
                     ),
                   ],
                 ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton.filled(
+                        onPressed: () {},
+                        style: IconButton.styleFrom(
+                          backgroundColor: Color(0xFF2C2C2E),
+                          foregroundColor: StudentTheme.blue,
+                        ),
+                        icon: const Icon(Icons.notifications_none),
+                      ),
+                      Positioned(
+                        right: -1,
+                        top: -1,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF7185),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '2',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 34),
+            const SizedBox(height: 30),
             Container(
               width: 122,
               height: 122,

@@ -18,14 +18,37 @@ def create_progression(
     current_user: models.User = Depends(get_current_user)
 ):
     """Create a new progression record."""
-    
-    muscle_mass = None
-    if progression.weight and progression.body_fat_percentage:
-        muscle_mass = round(progression.weight * (1 - progression.body_fat_percentage / 100), 2)
+    if current_user.role == "trainer":
+        if progression.client_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="client_id e obrigatorio para treinadores"
+            )
+        client_id = progression.client_id
+        trainer_id = current_user.id
+    else:
+        if current_user.trainer_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Cliente sem treinador associado"
+            )
+        client_id = current_user.id
+        trainer_id = current_user.trainer_id
+
+    muscle_mass = progression.muscle_mass
+    if (
+        muscle_mass is None
+        and progression.weight is not None
+        and progression.body_fat_percentage is not None
+    ):
+        muscle_mass = round(
+            progression.weight * (1 - progression.body_fat_percentage / 100),
+            2
+        )
 
     new_progression = models.UserProgression(
-        client_id=progression.client_id,
-        trainer_id=current_user.id,
+        client_id=client_id,
+        trainer_id=trainer_id,
         date=progression.date,
         weight=progression.weight,
         body_fat_percentage=progression.body_fat_percentage,

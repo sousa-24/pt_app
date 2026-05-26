@@ -19,11 +19,6 @@ class StudentMenuGrid extends StatelessWidget {
         onTap: () => onOpenSection(1),
       ),
       _MenuItem(
-        icon: Icons.note_add_outlined,
-        label: 'Treinos\nExtras',
-        onTap: () => onOpenSection(1),
-      ),
-      _MenuItem(
         icon: Icons.assignment_outlined,
         label: 'Avaliações',
         onTap: () {},
@@ -31,7 +26,12 @@ class StudentMenuGrid extends StatelessWidget {
       _MenuItem(
         icon: Icons.fact_check_outlined,
         label: 'O Meu\nProgresso',
-        onTap: () => onOpenSection(3),
+        onTap: () => onOpenSection(5),
+      ),
+      _MenuItem(
+        icon: Icons.restaurant_menu,
+        label: 'Plano\nAlimentar',
+        onTap: () => onOpenSection(7),
       ),
       _MenuItem(
         icon: Icons.calendar_month,
@@ -39,9 +39,9 @@ class StudentMenuGrid extends StatelessWidget {
         onTap: () => onOpenSection(2),
       ),
       _MenuItem(
-        icon: Icons.folder_outlined,
-        label: 'Ficheiros',
-        onTap: () {},
+        icon: Icons.attach_money,
+        label: 'Faturas',
+        onTap: () => onOpenSection(4),
       ),
     ];
 

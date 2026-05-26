@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class StudentTheme {
   const StudentTheme._();
 
+  static const double maxContentWidth = 460;
+
   static const Color blue = Color.fromARGB(223, 212, 244, 74);
   static const Color navy = Color(0xFF252527);
   static const Color darkNavy = Color(0xFF1C1C1E);

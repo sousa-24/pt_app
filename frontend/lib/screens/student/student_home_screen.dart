@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../api_service.dart';
-import '../../chat_screen.dart';
 import '../../main.dart';
 import 'student_models.dart';
 import 'student_theme.dart';
 import 'widgets/student_bottom_nav.dart';
 import 'widgets/student_calendar_card.dart';
+import 'widgets/student_floating_chat.dart';
 import 'widgets/student_frequency_card.dart';
 import 'widgets/student_header.dart';
 import 'widgets/student_invoices_screen.dart';
 import 'widgets/student_menu_grid.dart';
 import 'widgets/student_menu_screen.dart';
+import 'widgets/student_nutrition_plan_screen.dart';
 import 'widgets/student_progress_screen.dart';
 import 'widgets/student_profile_card.dart';
 import 'widgets/student_section_title.dart';
@@ -36,49 +37,21 @@ class StudentHomeScreen extends StatefulWidget {
 }
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
-  final List<StudentWorkoutPlan> _workouts = const [
-    StudentWorkoutPlan(
-      id: 'lower-a',
-      title: 'Treino A',
-      focus: 'Pernas e gluteos',
-      weekday: DateTime.monday,
-      durationMinutes: 45,
-      exercises: ['Agachamento', 'Leg press', 'Cadeira extensora'],
-      color: StudentTheme.blue,
-      icon: Icons.fitness_center,
-    ),
-    StudentWorkoutPlan(
-      id: 'upper-b',
-      title: 'Treino B',
-      focus: 'Peito, costas e bracos',
-      weekday: DateTime.wednesday,
-      durationMinutes: 50,
-      exercises: ['Supino', 'Remada baixa', 'Desenvolvimento'],
-      color: Color(0xFFFF7A00),
-      icon: Icons.sports_gymnastics,
-    ),
-    StudentWorkoutPlan(
-      id: 'full-c',
-      title: 'Treino C',
-      focus: 'Corpo inteiro',
-      weekday: DateTime.friday,
-      durationMinutes: 40,
-      exercises: ['Levantamento terra', 'Afundo', 'Prancha'],
-      color: Color(0xFF20A36B),
-      icon: Icons.directions_run,
-    ),
-  ];
-
+  List<StudentWorkoutPlan> _workouts = [];
   final Set<String> _completedWorkoutIds = {'lower-a'};
+  bool _isLoadingWorkouts = true;
+  String? _workoutErrorMessage;
   int _selectedNavIndex = 0;
   String _studentName = 'Aluno';
   late DateTime _selectedDate;
+  bool _isChatOpen = false;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = _dateOnly(DateTime.now());
     _loadStudentData();
+    _loadWorkoutPlans();
   }
 
   @override
@@ -93,27 +66,38 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               : StudentBottomNav(
                 selectedIndex: _selectedNavIndex,
                 onChanged: (index) => setState(() => _selectedNavIndex = index),
+                onOpenChat: _openChat,
               ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!isMenuArea) StudentHeader(studentName: _studentName),
-            Transform.translate(
-              offset: Offset(0, isMenuArea ? 0 : -18),
-              child: SafeArea(
-                top: isMenuArea,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(20, isMenuArea ? 18 : 0, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _selectedContent(),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMenuArea) StudentHeader(studentName: _studentName),
+                Transform.translate(
+                  offset: Offset(0, isMenuArea ? 0 : -18),
+                  child: SafeArea(
+                    top: isMenuArea,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        isMenuArea ? 18 : 0,
+                        20,
+                        24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: _selectedContent(),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (_isChatOpen) _floatingChat(),
+        ],
       ),
     );
   }
@@ -140,7 +124,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           subtitle: 'Plano semanal',
         ),
         const SizedBox(height: 12),
-        ..._workouts.map(_workoutCard),
+        if (_isLoadingWorkouts)
+          const Center(child: CircularProgressIndicator())
+        else if (_workoutErrorMessage != null)
+          _StatusCard(message: _workoutErrorMessage!)
+        else if (_workouts.isEmpty)
+          const _StatusCard(
+            message: 'Ainda nao existem treinos atribuidos.',
+          )
+        else
+          ..._workouts.map(_workoutCard),
       ];
     }
 
@@ -167,6 +160,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (_selectedNavIndex == 6) {
       return const [StudentProfileCard()];
+    }
+
+    if (_selectedNavIndex == 7) {
+      return [StudentNutritionPlanScreen(token: widget.token)];
     }
 
     return [
@@ -264,6 +261,76 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  Future<void> _loadWorkoutPlans() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) {
+      setState(() {
+        _isLoadingWorkouts = false;
+        _workoutErrorMessage = 'Entre com login para acessar os treinos.';
+      });
+      return;
+    }
+
+    try {
+      final data = await ApiService.get(
+        context,
+        '/workout_plans/',
+        token,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+
+      setState(() {
+        if (data is List) {
+          _workouts = List.generate(
+            data.length,
+            (index) => _workoutFromApi(data[index], index),
+          );
+        }
+        _isLoadingWorkouts = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _workoutErrorMessage =
+            'Nao foi possivel carregar os treinos agora.';
+        _isLoadingWorkouts = false;
+      });
+    }
+  }
+
+  StudentWorkoutPlan _workoutFromApi(dynamic value, int index) {
+    final plan = value is Map<String, dynamic> ? value : <String, dynamic>{};
+    final exercisesData =
+        plan['exercises'] is List ? plan['exercises'] as List : const [];
+    final exercises =
+        exercisesData
+            .whereType<Map<String, dynamic>>()
+            .map((exercise) {
+              final name = _text(exercise['name'], 'Exercicio');
+              final sets = exercise['sets'];
+              final reps = exercise['reps'];
+
+              if (sets == null || reps == null) return name;
+              return '$name ${sets}x$reps';
+            })
+            .toList();
+
+    return StudentWorkoutPlan(
+      id: _text(plan['id'], 'workout-$index'),
+      title: _text(plan['title'], 'Treino ${index + 1}'),
+      focus:
+          exercises.isEmpty
+              ? 'Plano atribuido'
+              : '${exercises.length} exercicios',
+      weekday: (index % 7) + 1,
+      durationMinutes: exercises.isEmpty ? 0 : exercises.length * 10,
+      exercises: exercises,
+      color: _workoutColor(index),
+      icon: Icons.fitness_center,
+    );
+  }
+
   void _openChat() {
     final token = widget.token;
 
@@ -276,13 +343,19 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          token: token,
-          role: widget.role,
-        ),
+    setState(() => _isChatOpen = true);
+  }
+
+  Widget _floatingChat() {
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 700;
+
+    return Positioned(
+      right: isCompact ? 12 : 24,
+      bottom: isCompact ? 12 : 24,
+      child: StudentFloatingChat(
+        token: widget.token!,
+        onClose: () => setState(() => _isChatOpen = false),
       ),
     );
   }
@@ -302,5 +375,44 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   static DateTime _dateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
+  }
+
+  static Color _workoutColor(int index) {
+    const colors = [
+      StudentTheme.blue,
+      Color(0xFFFF7A00),
+      Color(0xFF20A36B),
+      Color(0xFF4EA6FF),
+    ];
+
+    return colors[index % colors.length];
+  }
+
+  static String _text(dynamic value, String fallback) {
+    if (value == null) return fallback;
+    final text = value.toString().trim();
+    return text.isEmpty ? fallback : text;
+  }
+}
+
+class _StatusCard extends StatelessWidget {
+  final String message;
+
+  const _StatusCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: StudentTheme.cardDecoration(),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: StudentTheme.mutedText,
+          fontSize: 14,
+        ),
+      ),
+    );
   }
 }
