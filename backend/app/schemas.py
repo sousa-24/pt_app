@@ -110,10 +110,11 @@ class TrainingSessionResponse(BaseModel):
 
 # Esquema para registar um novo registo de progressão do cliente.
 class UserProgressionCreate(BaseModel):
-    client_id: int
+    client_id: int | None = None
     date: datetime
     weight: float | None = None
     body_fat_percentage: float | None = None
+    muscle_mass: float | None = None
     notes: str | None = None
 
 
@@ -217,10 +218,11 @@ class MessageResponse(BaseModel):
 
 #Esquema para introdução de progresso do cliente
 class UserProgressionCreate(BaseModel):
-    client_id: int
+    client_id: int | None = None
     date: datetime
     weight: float | None = None
     body_fat_percentage: float | None = None
+    muscle_mass: float | None = None
     notes: str | None = None
 
 # Esquema de resposta para os dados de progressão do cliente.
