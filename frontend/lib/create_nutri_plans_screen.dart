@@ -41,6 +41,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
     setState(() {
       meals[mealIndex]['food_items'].add({
         'name': TextEditingController(),
+        'weight': TextEditingController(),
         'calories': TextEditingController(),
         'protein': TextEditingController(),
         'carbs': TextEditingController(),
@@ -231,6 +232,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             ),
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: TextField(
                                             controller: food['calories'],
