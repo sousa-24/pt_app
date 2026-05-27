@@ -24,7 +24,23 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   @override
   void initState() {
     super.initState();
-    addExercise(); // start with one exercise row
+    addExercise();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    clientIdController.dispose();
+    for (final controller in nameControllers) {
+      controller.dispose();
+    }
+    for (final controller in setsControllers) {
+      controller.dispose();
+    }
+    for (final controller in repsControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   void addExercise() {
@@ -37,16 +53,40 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
   void removeExercise(int index) {
     setState(() {
-      nameControllers.removeAt(index);
-      setsControllers.removeAt(index);
-      repsControllers.removeAt(index);
+      nameControllers.removeAt(index).dispose();
+      setsControllers.removeAt(index).dispose();
+      repsControllers.removeAt(index).dispose();
     });
   }
 
   Future<void> submitPlan() async {
-    if (titleController.text.isEmpty || clientIdController.text.isEmpty) {
-      setState(() => errorMessage = 'Please fill in all fields');
+    final title = titleController.text.trim();
+    final clientId = int.tryParse(clientIdController.text.trim());
+
+    if (title.isEmpty || clientId == null) {
+      setState(() => errorMessage = 'Preenche o título e um ID de aluno válido.');
       return;
+    }
+
+    final exercises = <Map<String, dynamic>>[];
+    for (var i = 0; i < nameControllers.length; i++) {
+      final name = nameControllers[i].text.trim();
+      final sets = int.tryParse(setsControllers[i].text.trim());
+      final reps = int.tryParse(repsControllers[i].text.trim());
+
+      if (name.isEmpty || sets == null || reps == null || sets <= 0 || reps <= 0) {
+        setState(() {
+          errorMessage =
+              'Preenche o nome, as séries e as repetições de todos os exercícios.';
+        });
+        return;
+      }
+
+      exercises.add({
+        'name': name,
+        'sets': sets,
+        'reps': reps,
+      });
     }
 
     setState(() {
@@ -54,29 +94,32 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       errorMessage = '';
     });
 
-    final exercises = List.generate(nameControllers.length, (i) => {
-      'name': nameControllers[i].text,
-      'sets': int.tryParse(setsControllers[i].text) ?? 0,
-      'reps': int.tryParse(repsControllers[i].text) ?? 0,
-    });
+    try {
+      final data = await ApiService.post(
+        context,
+        '/api/v1/workout_plans/',
+        widget.token,
+        {
+          'title': title,
+          'client_id': clientId,
+          'exercises': exercises,
+        },
+      ).timeout(const Duration(seconds: 10));
 
-    final data = await ApiService.post(
-      context,
-      '/api/v1/workout_plans/',
-      widget.token,
-      {
-        'title': titleController.text,
-        'client_id': int.parse(clientIdController.text),
-        'exercises': exercises,
-      },
-    );
+      if (!mounted) return;
 
-    setState(() => isLoading = false);
-
-    if (data != null) {
-      Navigator.pop(context);
-    } else {
-      setState(() => errorMessage = 'Failed to create plan');
+      if (data is Map<String, dynamic> && data['id'] != null) {
+        Navigator.pop(context, true);
+      } else {
+        setState(() => errorMessage = 'Não foi possível criar o plano de treino.');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => errorMessage = 'Não foi possível contactar o servidor.');
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -84,7 +127,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Workout Plan'),
+        title: const Text('Criar Plano de Treino'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -94,7 +137,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             TextField(
               controller: titleController,
               decoration: const InputDecoration(
-                labelText: 'Plan Title',
+                labelText: 'Título do plano',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -103,13 +146,14 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
               controller: clientIdController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Client ID',
+                labelText: 'ID do aluno',
+                helperText: 'Para CassiaM, usa o ID 2.',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              'Exercises',
+              'Exercícios',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -127,7 +171,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Exercise ${index + 1}',
+                            Text('Exercício ${index + 1}',
                                 style: const TextStyle(fontWeight: FontWeight.bold)),
                             if (nameControllers.length > 1)
                               IconButton(
@@ -140,7 +184,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                         TextField(
                           controller: nameControllers[index],
                           decoration: const InputDecoration(
-                            labelText: 'Exercise Name',
+                            labelText: 'Nome do exercício',
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -152,7 +196,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                                 controller: setsControllers[index],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
-                                  labelText: 'Sets',
+                                  labelText: 'Séries',
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -163,7 +207,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                                 controller: repsControllers[index],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
-                                  labelText: 'Reps',
+                                  labelText: 'Repetições',
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -180,7 +224,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             OutlinedButton.icon(
               onPressed: addExercise,
               icon: const Icon(Icons.add),
-              label: const Text('Add Exercise'),
+              label: const Text('Adicionar exercício'),
             ),
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
@@ -192,7 +236,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                 onPressed: isLoading ? null : submitPlan,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Create Plan'),
+                    : const Text('Criar plano'),
               ),
             ),
           ],

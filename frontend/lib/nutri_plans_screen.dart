@@ -13,6 +13,7 @@ class NutriPlansScreen extends StatefulWidget {
 class _NutriPlansScreenState extends State<NutriPlansScreen> {
   List plans = [];
   bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -21,10 +22,27 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
   }
 
   Future<void> fetchPlans() async {
-    final data = await ApiService.get(context, '/api/v1/nutri_plans/', widget.token);
-    if (data != null) {
+    try {
+      final data = await ApiService.get(
+        context,
+        '/api/v1/nutri_plans/',
+        widget.token,
+      ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
+
       setState(() {
-        plans = data;
+        if (data is List) {
+          plans = data;
+          errorMessage = '';
+        } else {
+          errorMessage = 'Nao foi possivel carregar os planos alimentares.';
+        }
+        isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = 'Nao foi possivel contactar o servidor.';
         isLoading = false;
       });
     }
@@ -34,48 +52,83 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nutrition Plans'),
+        title: const Text('Planos Alimentares'),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : plans.isEmpty
-              ? const Center(child: Text('No nutrition plans yet'))
-              : ListView.builder(
-                  itemCount: plans.length,
-                  itemBuilder: (context, index) {
-                    final plan = plans[index];
-                    return ExpansionTile(
-                      title: Text(plan['title']),
-                      subtitle: Text('Created: ${plan['created_at']}'),
-                      children: [
-                        ...List<Widget>.from(
-                          (plan['meals'] as List<dynamic>).expand((meal) {
-                            final mealMap = meal as Map<String, dynamic>;
-                            return [
-                              ListTile(
-                                leading: const Icon(Icons.restaurant_menu),
-                                title: Text(mealMap['name'] ?? 'Meal'),
-                                subtitle: const Text('Meal'),
-                              ),
-                              ...List<Widget>.from(
-                                (mealMap['food_items'] as List<dynamic>).map((item) {
-                                  final food = item as Map<String, dynamic>;
-                                  return ListTile(
-                                    leading: const Icon(Icons.food_bank),
-                                    title: Text(food['name'] ?? 'Food Item'),
-                                    subtitle: Text(
-                                      'W: ${food['weight']}g • Cals: ${food['calories']} • P: ${food['protein']}g • C: ${food['carbs']}g • F: ${food['fats']}g',
+          : errorMessage.isNotEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(errorMessage, textAlign: TextAlign.center),
+                  ),
+                )
+              : plans.isEmpty
+                  ? const Center(
+                      child: Text('Ainda nao existem planos alimentares.'),
+                    )
+                  : ListView.builder(
+                      itemCount: plans.length,
+                      itemBuilder: (context, index) {
+                        final plan = plans[index];
+                        final planMap = plan is Map<String, dynamic>
+                            ? plan
+                            : <String, dynamic>{};
+                        final meals = planMap['meals'] is List
+                            ? planMap['meals'] as List
+                            : const [];
+
+                        return ExpansionTile(
+                          title: Text(planMap['title'] ?? 'Plano alimentar'),
+                          subtitle: Text(
+                            'Criado em: ${planMap['created_at'] ?? 'recentemente'}',
+                          ),
+                          children: [
+                            ...List<Widget>.from(
+                              meals.expand((meal) {
+                                final mealMap = meal is Map<String, dynamic>
+                                    ? meal
+                                    : <String, dynamic>{};
+                                final foodItems = mealMap['food_items'] is List
+                                    ? mealMap['food_items'] as List
+                                    : const [];
+
+                                return [
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.restaurant_menu),
+                                    title: Text(
+                                      mealMap['name'] ?? 'Refeicao',
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            ];
-                          }).toList(),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                                    subtitle: const Text('Refeicao'),
+                                  ),
+                                  ...List<Widget>.from(
+                                    foodItems.map((item) {
+                                      final food = item is Map<String, dynamic>
+                                          ? item
+                                          : <String, dynamic>{};
+                                      return ListTile(
+                                        leading: const Icon(Icons.food_bank),
+                                        title: Text(
+                                          food['name'] ?? 'Alimento',
+                                        ),
+                                        subtitle: Text(
+                                          'Peso: ${food['weight']}g | '
+                                          'Calorias: ${food['calories']} | '
+                                          'Proteina: ${food['protein']}g | '
+                                          'Hidratos: ${food['carbs']}g | '
+                                          'Gordura: ${food['fats']}g',
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ];
+                              }).toList(),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
     );
   }
 }
