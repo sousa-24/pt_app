@@ -7,6 +7,7 @@ from app.database import get_db
 from app import models, schemas
 from app.dependencies import require_trainer, get_user_items, verify_user_ownership
 from app.auth import get_current_user
+from app.services.notification_services import create_notification, create_notification
 
 router = APIRouter(prefix="/api/v1", tags=["workout_plans"])
 
@@ -39,6 +40,15 @@ def create_workout_plan(
         db.add(new_exercise)
 
     db.commit()
+    # Create a notification for the client about the new workout plan
+    create_notification(
+        db=db,
+        user_id=plan.client_id,
+        title="Novo Plano de Treino",
+        message=f"O treinador {current_user.name} criou um novo plano de treino para si.",
+        type="workout_plan"
+    )
+
     db.refresh(new_plan)
     return new_plan
 
