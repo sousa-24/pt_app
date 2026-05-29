@@ -16,7 +16,8 @@ from app.routers import (
     invite_codes,
     messages,
     contacts,
-    session_feedback
+    session_feedback,
+    notifications
 )
 
 # Create tables if they don't exist
@@ -43,7 +44,7 @@ app.include_router(invite_codes.router)
 app.include_router(messages.router)
 app.include_router(contacts.router)
 app.include_router(session_feedback.router)
-
+app.include_router(notifications.router)
 
 # WebSocket endpoint for real-time messaging
 @app.websocket("/ws/{user_id}")

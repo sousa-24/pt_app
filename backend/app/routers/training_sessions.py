@@ -9,6 +9,7 @@ from app.database import get_db
 from app import models, schemas
 from app.dependencies import require_trainer, get_user_items
 from app.auth import get_current_user
+from app.services.notification_services import create_notification
 
 router = APIRouter(prefix="/api/v1", tags=["training_sessions"])
 
@@ -55,6 +56,13 @@ def create_training_session(
     )
     db.add(new_session)
     db.commit()
+    create_notification(
+        db=db,
+        user_id=session.client_id,
+        title="Nova Sessão de Treino",
+        message=f"O treinador {current_user.name} agendou uma nova sessão de treino para si no dia {session.date.strftime('%Y-%m-%d %H:%M')}.",
+        type="training_session"
+    )
     db.refresh(new_session)
     return new_session
 

@@ -180,3 +180,16 @@ class SessionPerformance(Base):
     session = relationship("TrainingSession", back_populates="performance")
     client = relationship("User", foreign_keys=[client_id])
     trainer = relationship("User", foreign_keys=[trainer_id])
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(100), nullable=False)
+    content = Column(Text, nullable=False)
+    type = Column(String(50), nullable=False)
+    read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="notifications")
