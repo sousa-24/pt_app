@@ -5,6 +5,7 @@ from app import models, schemas
 from fastapi.middleware.cors import CORSMiddleware
 from app.websocket_manager import manager
 from app.auth import get_user_from_token
+from app.services.notification_services import create_notification
 
 # Import all routers
 from app.routers import (
@@ -72,20 +73,19 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
         while True:
             try:
                 data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
             except Exception:
-                await websocket.send_json({"type": "error", "detail": "Invalid JSON payload"})
                 continue
 
             receiver_id = data.get("receiver_id")
             content = data.get("content")
             if receiver_id is None or content is None:
-                await websocket.send_json({"type": "error", "detail": "receiver_id and content are required"})
                 continue
 
             try:
                 receiver_id = int(receiver_id)
             except (TypeError, ValueError):
-                await websocket.send_json({"type": "error", "detail": "receiver_id must be an integer"})
                 continue
 
             new_message = models.Message(
@@ -108,6 +108,15 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
 
             await manager.send_message(payload, receiver_id)
             await websocket.send_json({"type": "sent", "message": payload})
+
+            create_notification(
+                db=db,
+                user_id=receiver_id,
+                title="Nova mensagem",
+                message=f"{auth_user.name} enviou-lhe uma mensagem.",
+                type="message",
+            )
+            await manager.send_message({"type": "new_notification"}, receiver_id)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
