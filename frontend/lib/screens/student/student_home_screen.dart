@@ -71,10 +71,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       backgroundColor: StudentTheme.lightBg,
       bottomNavigationBar: isMenuArea ? null : _bottomNav(),
       body: Stack(
-        children: [
-          _studentPage(isMenuArea),
-          if (_isChatOpen) _floatingChat(),
-        ],
+        children: [_studentPage(isMenuArea), if (_isChatOpen) _floatingChat()],
       ),
     );
   }
@@ -168,9 +165,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         else if (_workoutErrorMessage != null)
           _StatusCard(message: _workoutErrorMessage!)
         else if (_workouts.isEmpty)
-          const _StatusCard(
-            message: 'Ainda nao existem treinos atribuidos.',
-          )
+          const _StatusCard(message: 'Ainda nao existem treinos atribuidos.')
         else
           ..._workouts.map(_workoutCard),
       ];
@@ -205,6 +200,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return [StudentNutritionPlanScreen(token: widget.token)];
     }
 
+    if (_selectedNavIndex == 8) {
+      return [
+        const StudentSectionTitle(
+          title: 'As minhas sessões',
+          subtitle: 'Agendamentos marcados pela personal',
+        ),
+        const SizedBox(height: 12),
+        if (_trainingSessions.isEmpty)
+          const _StatusCard(message: 'Ainda não existem sessões agendadas.')
+        else
+          ..._trainingSessions.map(_sessionCard),
+      ];
+    }
+
     return [
       StudentMenuScreen(
         studentName: _studentName,
@@ -235,10 +244,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             decoration: StudentTheme.cardDecoration(),
             child: const Text(
               'Sem treino marcado para este dia.',
-              style: TextStyle(
-                color: StudentTheme.mutedText,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: StudentTheme.mutedText, fontSize: 14),
             ),
           )
         else
@@ -252,6 +258,67 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       workout: workout,
       isCompleted: _completedWorkoutIds.contains(workout.id),
       onToggle: () => _toggleWorkout(workout),
+    );
+  }
+
+  Widget _sessionCard(StudentTrainingSession session) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: StudentTheme.cardDecoration(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: const BoxDecoration(
+              color: StudentTheme.blue,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.event_available_outlined,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _sessionDateLabel(session.date),
+                  style: const TextStyle(
+                    color: StudentTheme.darkText,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _sessionStatusLabel(session.status),
+                  style: const TextStyle(
+                    color: StudentTheme.mutedText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (session.notes != null && session.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    session.notes!,
+                    style: const TextStyle(
+                      color: StudentTheme.mutedText,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -304,9 +371,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (_waterMl == _waterGoalMl) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meta de hidratacao concluida hoje.'),
-        ),
+        const SnackBar(content: Text('Meta de hidratacao concluida hoje.')),
       );
     }
   }
@@ -402,8 +467,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       if (!mounted) return;
 
       setState(() {
-        _workoutErrorMessage =
-            'Nao foi possivel carregar os treinos agora.';
+        _workoutErrorMessage = 'Nao foi possivel carregar os treinos agora.';
         _isLoadingWorkouts = false;
       });
     }
@@ -435,31 +499,30 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   StudentWorkoutPlan _workoutFromApi(dynamic value, int index) {
     final plan = value is Map<String, dynamic> ? value : <String, dynamic>{};
-    final exercisesData =
-        plan['exercises'] is List ? plan['exercises'] as List : const [];
-    final exercises =
-        exercisesData
-            .whereType<Map<String, dynamic>>()
-            .map((exercise) {
-              final name = _text(exercise['name'], 'Exercicio');
-              final sets = exercise['sets'];
-              final reps = exercise['reps'];
+    final exercisesData = plan['exercises'] is List
+        ? plan['exercises'] as List
+        : const [];
+    final exercises = exercisesData.whereType<Map<String, dynamic>>().map((
+      exercise,
+    ) {
+      final name = _text(exercise['name'], 'Exercicio');
+      final sets = exercise['sets'];
+      final reps = exercise['reps'];
 
-              if (sets == null || reps == null) return name;
-              return '$name ${sets}x$reps';
-            })
-            .toList();
+      if (sets == null || reps == null) return name;
+      return '$name ${sets}x$reps';
+    }).toList();
 
     return StudentWorkoutPlan(
       id: _text(plan['id'], 'workout-$index'),
       title: _text(plan['title'], 'Treino ${index + 1}'),
-      focus:
-          exercises.isEmpty
-              ? 'Plano atribuido'
-              : '${exercises.length} exercicios',
+      focus: exercises.isEmpty
+          ? 'Plano atribuido'
+          : '${exercises.length} exercicios',
       weekday: (index % 7) + 1,
-      scheduledDate:
-          _sessionDateForWorkout(_text(plan['id'], 'workout-$index')),
+      scheduledDate: _sessionDateForWorkout(
+        _text(plan['id'], 'workout-$index'),
+      ),
       durationMinutes: exercises.isEmpty ? 0 : exercises.length * 10,
       exercises: exercises,
       color: _workoutColor(index),
@@ -507,7 +570,31 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       workoutPlanId: session['workout_plan_id']?.toString(),
       date: date,
       status: _text(session['status'], 'scheduled'),
+      notes: session['notes']?.toString(),
     );
+  }
+
+  static String _sessionDateLabel(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '$day/$month/$year às $hour:$minute';
+  }
+
+  static String _sessionStatusLabel(String status) {
+    switch (status) {
+      case 'scheduled':
+        return 'Agendada';
+      case 'completed':
+        return 'Concluída';
+      case 'cancelled':
+        return 'Cancelada';
+      default:
+        return status;
+    }
   }
 
   void _openChat() {
@@ -515,9 +602,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Entre com login para acessar o chat.'),
-        ),
+        const SnackBar(content: Text('Entre com login para acessar o chat.')),
       );
       return;
     }
@@ -587,10 +672,7 @@ class _StatusCard extends StatelessWidget {
       decoration: StudentTheme.cardDecoration(),
       child: Text(
         message,
-        style: const TextStyle(
-          color: StudentTheme.mutedText,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: StudentTheme.mutedText, fontSize: 14),
       ),
     );
   }

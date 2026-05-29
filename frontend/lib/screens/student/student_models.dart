@@ -29,12 +29,14 @@ class StudentTrainingSession {
   final String? workoutPlanId;
   final DateTime date;
   final String status;
+  final String? notes;
 
   const StudentTrainingSession({
     required this.id,
     required this.workoutPlanId,
     required this.date,
     required this.status,
+    this.notes,
   });
 }
 

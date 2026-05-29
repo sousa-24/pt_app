@@ -5,10 +5,7 @@ import '../student_theme.dart';
 class StudentMenuGrid extends StatelessWidget {
   final ValueChanged<int> onOpenSection;
 
-  const StudentMenuGrid({
-    super.key,
-    required this.onOpenSection,
-  });
+  const StudentMenuGrid({super.key, required this.onOpenSection});
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +34,11 @@ class StudentMenuGrid extends StatelessWidget {
         icon: Icons.calendar_month,
         label: 'Calendario',
         onTap: () => onOpenSection(2),
+      ),
+      _MenuItem(
+        icon: Icons.event_available_outlined,
+        label: 'Sessões',
+        onTap: () => onOpenSection(8),
       ),
       _MenuItem(
         icon: Icons.attach_money,

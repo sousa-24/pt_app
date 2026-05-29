@@ -19,11 +19,17 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   String errorMessage = '';
 
   Future<void> pickDate() async {
+    final now = DateTime.now();
+    final earliestDate = now.add(const Duration(hours: 24));
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: earliestDate,
+      firstDate: DateTime(
+        earliestDate.year,
+        earliestDate.month,
+        earliestDate.day,
+      ),
+      lastDate: now.add(const Duration(days: 365)),
     );
     if (date != null) {
       setState(() => selectedDate = date);
@@ -40,9 +46,51 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
     }
   }
 
+  DateTime? get selectedDateTime {
+    if (selectedDate == null || selectedTime == null) return null;
+
+    return DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
+  }
+
+  String? getApiErrorMessage(dynamic data) {
+    if (data is Map && data['detail'] is String) {
+      return data['detail'] as String;
+    }
+
+    return null;
+  }
+
   Future<void> submitSession() async {
-    if (clientIdController.text.isEmpty || selectedDate == null || selectedTime == null) {
-      setState(() => errorMessage = 'Please fill in all fields');
+    final clientId = int.tryParse(clientIdController.text);
+    final dateTime = selectedDateTime;
+
+    if (clientId == null || dateTime == null) {
+      setState(() => errorMessage = 'Preenche o ID do aluno, a data e a hora.');
+      return;
+    }
+
+    final now = DateTime.now();
+    final earliestDateTime = now.add(const Duration(hours: 24));
+
+    if (dateTime.isBefore(now)) {
+      setState(() {
+        errorMessage =
+            'A sessão de treino não pode ser agendada para uma data/hora passada.';
+      });
+      return;
+    }
+
+    if (dateTime.isBefore(earliestDateTime)) {
+      setState(() {
+        errorMessage =
+            'A sessão de treino deve ser agendada com pelo menos 24 horas de antecedência.';
+      });
       return;
     }
 
@@ -51,40 +99,36 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       errorMessage = '';
     });
 
-    final dateTime = DateTime(
-      selectedDate!.year,
-      selectedDate!.month,
-      selectedDate!.day,
-      selectedTime!.hour,
-      selectedTime!.minute,
-    );
-
     final data = await ApiService.post(
       context,
-      '/training_sessions/',
+      '/api/v1/training_sessions/',
       widget.token,
       {
-        'client_id': int.parse(clientIdController.text),
+        'client_id': clientId,
         'date': dateTime.toIso8601String(),
         'notes': notesController.text.isEmpty ? null : notesController.text,
       },
     );
 
+    if (!mounted) return;
+
     setState(() => isLoading = false);
 
-    if (data != null) {
+    if (data is Map && data['id'] != null) {
       Navigator.pop(context);
     } else {
-      setState(() => errorMessage = 'Failed to schedule session');
+      setState(() {
+        errorMessage =
+            getApiErrorMessage(data) ??
+            'Não foi possível agendar a sessão de treino.';
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Schedule Session'),
-      ),
+      appBar: AppBar(title: const Text('Agendar sessão')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -94,7 +138,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
               controller: clientIdController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Client ID',
+                labelText: 'ID do aluno',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -105,9 +149,11 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                   child: OutlinedButton.icon(
                     onPressed: pickDate,
                     icon: const Icon(Icons.calendar_today),
-                    label: Text(selectedDate == null
-                        ? 'Pick Date'
-                        : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'),
+                    label: Text(
+                      selectedDate == null
+                          ? 'Escolher data'
+                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -115,9 +161,11 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                   child: OutlinedButton.icon(
                     onPressed: pickTime,
                     icon: const Icon(Icons.access_time),
-                    label: Text(selectedTime == null
-                        ? 'Pick Time'
-                        : selectedTime!.format(context)),
+                    label: Text(
+                      selectedTime == null
+                          ? 'Escolher hora'
+                          : selectedTime!.format(context),
+                    ),
                   ),
                 ),
               ],
@@ -127,7 +175,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
               controller: notesController,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
+                labelText: 'Notas (opcional)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -141,7 +189,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                 onPressed: isLoading ? null : submitSession,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Schedule Session'),
+                    : const Text('Agendar sessão'),
               ),
             ),
           ],

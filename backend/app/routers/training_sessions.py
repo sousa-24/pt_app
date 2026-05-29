@@ -1,6 +1,8 @@
 """
-Training sessions endpoints: create and list training sessions.
+Endpoints para criar e listar sessões de treino.
 """
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -17,7 +19,33 @@ def create_training_session(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_trainer)
 ):
-    """Create a new training session."""
+    """Cria uma nova sessão de treino."""
+    now = datetime.now(session.date.tzinfo) if session.date.tzinfo else datetime.now()
+    earliest_allowed_date = now + timedelta(hours=24)
+
+    if session.date < now:
+        raise HTTPException(
+            status_code=400,
+            detail="A sessão de treino não pode ser agendada para uma data/hora passada."
+        )
+
+    if session.date < earliest_allowed_date:
+        raise HTTPException(
+            status_code=400,
+            detail="A sessão de treino deve ser agendada com pelo menos 24 horas de antecedência."
+        )
+
+    client = db.query(models.User).filter(
+        models.User.id == session.client_id,
+        models.User.role == "client",
+        models.User.trainer_id == current_user.id
+    ).first()
+    if not client:
+        raise HTTPException(
+            status_code=404,
+            detail="Aluno não encontrado para este treinador."
+        )
+
     new_session = models.TrainingSession(
         client_id=session.client_id,
         trainer_id=current_user.id,
@@ -36,6 +64,6 @@ def get_training_sessions(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """Get all training sessions for the current user."""
+    """Lista todas as sessões de treino do utilizador atual."""
     sessions = get_user_items(db, models.TrainingSession, current_user)
     return sessions

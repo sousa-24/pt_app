@@ -47,6 +47,11 @@ class StudentMenuScreen extends StatelessWidget {
         onTap: () => onOpenSection(7),
       ),
       _MenuRowItem(
+        icon: Icons.event_available_outlined,
+        label: 'As Minhas Sessões',
+        onTap: () => onOpenSection(8),
+      ),
+      _MenuRowItem(
         icon: Icons.attach_money,
         label: 'Faturas',
         onTap: () => onOpenSection(4),
@@ -60,7 +65,9 @@ class StudentMenuScreen extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: StudentTheme.maxContentWidth),
+        constraints: const BoxConstraints(
+          maxWidth: StudentTheme.maxContentWidth,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -162,10 +169,7 @@ class StudentMenuScreen extends StatelessWidget {
                   final item = items[index];
                   final isLast = index == items.length - 1;
 
-                  return _MenuRow(
-                    item: item,
-                    showDivider: !isLast,
-                  );
+                  return _MenuRow(item: item, showDivider: !isLast);
                 }),
               ),
             ),
@@ -200,10 +204,7 @@ class _MenuRow extends StatelessWidget {
   final _MenuRowItem item;
   final bool showDivider;
 
-  const _MenuRow({
-    required this.item,
-    required this.showDivider,
-  });
+  const _MenuRow({required this.item, required this.showDivider});
 
   @override
   Widget build(BuildContext context) {
@@ -211,10 +212,7 @@ class _MenuRow extends StatelessWidget {
       children: [
         ListTile(
           onTap: item.onTap,
-          leading: Icon(
-            item.icon,
-            color: StudentTheme.darkText,
-          ),
+          leading: Icon(item.icon, color: StudentTheme.darkText),
           title: Text(item.label),
           textColor: StudentTheme.darkText,
           iconColor: StudentTheme.darkText,

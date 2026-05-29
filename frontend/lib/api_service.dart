@@ -22,7 +22,14 @@ class ApiService {
       return null;
     }
 
-    return jsonDecode(response.body);
+    final data = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return data is Map<String, dynamic>
+          ? data
+          : {'detail': 'Nao foi possivel concluir o pedido.'};
+    }
+
+    return data;
   }
 
   static Future<dynamic> post(
@@ -45,7 +52,14 @@ class ApiService {
       return null;
     }
 
-    return jsonDecode(response.body);
+    final data = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return data is Map<String, dynamic>
+          ? data
+          : {'detail': 'Nao foi possivel concluir o pedido.'};
+    }
+
+    return data;
   }
 
   static void _redirectToLogin(BuildContext context) {

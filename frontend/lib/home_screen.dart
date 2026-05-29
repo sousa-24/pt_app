@@ -111,6 +111,12 @@ class HomeScreen extends StatelessWidget {
                 title: const Text('Sessões Agendadas'),
                 onTap: () {
                   Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SessionsScreen(token: token),
+                    ),
+                  );
                 },
               ),
               ListTile(
