@@ -16,6 +16,8 @@ class User(Base):
     role = Column(Enum("trainer", "client"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    notifications = relationship("Notification", back_populates="user")
+
 
 # Plano de treino atribuído por um treinador a um cliente.
 class WorkoutPlan(Base):
