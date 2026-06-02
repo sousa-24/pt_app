@@ -78,9 +78,39 @@ def update_workout_plan(
     
     verify_user_ownership(db, db_plan, current_user)
     
-    db_plan.completed = plan_update.completed
-    db.add(db_plan)
+    if plan_update.title is not None:
+        db_plan.title = plan_update.title
+    if plan_update.completed is not None:
+        db_plan.completed = plan_update.completed
+    if plan_update.exercises is not None:
+        db.query(models.Exercise).filter(models.Exercise.workout_plan_id == plan_id).delete()
+        for exercise in plan_update.exercises:
+            db.add(models.Exercise(
+                workout_plan_id=plan_id,
+                name=exercise.name,
+                sets=exercise.sets,
+                reps=exercise.reps,
+                rest_time=exercise.rest_time,
+                notes=exercise.notes
+            ))
     db.commit()
     db.refresh(db_plan)
-    
     return db_plan
+
+
+@router.delete("/workout_plans/{plan_id}", response_model=schemas.StatusResponse)
+def delete_workout_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_trainer)
+):
+    """Delete a workout plan and all its exercises."""
+    db_plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id).first()
+    if not db_plan:
+        raise HTTPException(status_code=404, detail="Plano de treino não encontrado")
+    if db_plan.trainer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Não tens permissão para eliminar este plano")
+    db.query(models.Exercise).filter(models.Exercise.workout_plan_id == plan_id).delete()
+    db.delete(db_plan)
+    db.commit()
+    return {"message": "Plano de treino eliminado com sucesso"}

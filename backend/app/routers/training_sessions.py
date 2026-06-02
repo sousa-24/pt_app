@@ -75,3 +75,67 @@ def get_training_sessions(
     """Lista todas as sessões de treino do utilizador atual."""
     sessions = get_user_items(db, models.TrainingSession, current_user)
     return sessions
+
+
+@router.put("/training_sessions/{session_id}", response_model=schemas.TrainingSessionResponse)
+def update_training_session(
+    session_id: int,
+    data: schemas.TrainingSessionUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_trainer)
+):
+    """Atualiza uma sessão de treino."""
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == session_id,
+        models.TrainingSession.trainer_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessão de treino não encontrada")
+
+    if data.date is not None:
+        now = datetime.now(data.date.tzinfo) if data.date.tzinfo else datetime.now()
+        if data.date < now:
+            raise HTTPException(
+                status_code=400,
+                detail="A sessão de treino não pode ser agendada para uma data/hora passada."
+            )
+        if data.date < now + timedelta(hours=24):
+            raise HTTPException(
+                status_code=400,
+                detail="A sessão de treino deve ser agendada com pelo menos 24 horas de antecedência."
+            )
+        session.date = data.date
+    if data.workout_plan_id is not None:
+        session.workout_plan_id = data.workout_plan_id if data.workout_plan_id > 0 else None
+    if data.notes is not None:
+        session.notes = data.notes
+    if data.status is not None:
+        session.status = data.status
+
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+@router.delete("/training_sessions/{session_id}", response_model=schemas.StatusResponse)
+def delete_training_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_trainer)
+):
+    """Elimina uma sessão de treino."""
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == session_id,
+        models.TrainingSession.trainer_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessão de treino não encontrada")
+    db.query(models.ClientSessionFeedback).filter(
+        models.ClientSessionFeedback.session_id == session_id
+    ).delete(synchronize_session=False)
+    db.query(models.SessionPerformance).filter(
+        models.SessionPerformance.session_id == session_id
+    ).delete(synchronize_session=False)
+    db.delete(session)
+    db.commit()
+    return {"message": "Sessão de treino eliminada com sucesso"}

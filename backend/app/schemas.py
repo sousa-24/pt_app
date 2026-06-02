@@ -70,9 +70,11 @@ class WorkoutPlanCreate(BaseModel):
     exercises: list[ExerciseCreate]
 
 
-# Esquema para atualizar um plano de treino (ex: marcar como completo).
+# Esquema para atualizar um plano de treino (título, exercícios, estado completo).
 class WorkoutPlanUpdate(BaseModel):
-    completed: bool
+    title: str | None = None
+    completed: bool | None = None
+    exercises: list[ExerciseCreate] | None = None
 
 
 # Esquema de resposta para um plano de treino, incluindo exercícios e metadados.
@@ -255,7 +257,7 @@ class ClientSessionFeedbackCreate(BaseModel):
 class ClientSessionFeedbackResponse(BaseModel):
     id: int
     session_id: int
-    cliente_id: int
+    client_id: int
     trainer_id: int
     rating: int
     notes: str | None = None
@@ -274,7 +276,7 @@ class SessionPerformanceCreate(BaseModel):
 class SessionPerformanceResponse(BaseModel):
     id: int
     session_id: int
-    cliente_id: int
+    client_id: int
     trainer_id: int
     performance_rating: int
     notes: str | None = None
@@ -304,3 +306,33 @@ class NotificationCountResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     message: str
+
+
+class UserProgressionUpdate(BaseModel):
+    date: datetime | None = None
+    weight: float | None = None
+    body_fat_percentage: float | None = None
+    muscle_mass: float | None = None
+    notes: str | None = None
+
+
+class ClientSessionFeedbackUpdate(BaseModel):
+    rating: int | None = None
+    notes: str | None = None
+
+
+class SessionPerformanceUpdate(BaseModel):
+    performance_rating: int | None = None
+    notes: str | None = None
+
+
+class NutriPlanUpdate(BaseModel):
+    title: str | None = None
+    meals: list[MealCreate] | None = None
+
+
+class TrainingSessionUpdate(BaseModel):
+    date: datetime | None = None
+    workout_plan_id: int | None = None
+    notes: str | None = None
+    status: str | None = None
