@@ -102,7 +102,17 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isMenuArea) StudentHeader(studentName: _studentName),
+              if (!isMenuArea) StudentHeader(
+                studentName: _studentName,
+                token: widget.token,
+                onNotificationTap: (type) {
+                  if (type == 'message') {
+                    _openChat();
+                  } else if (type == 'training_session') {
+                    setState(() => _selectedNavIndex = 8);
+                  }
+                },
+              ),
               Transform.translate(
                 offset: Offset(0, isMenuArea ? 0 : -18),
                 child: SafeArea(
