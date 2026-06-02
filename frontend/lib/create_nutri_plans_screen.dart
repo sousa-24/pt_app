@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'client_selector.dart';
 
 class CreateNutriPlanScreen extends StatefulWidget {
   final String token;
@@ -12,7 +13,7 @@ class CreateNutriPlanScreen extends StatefulWidget {
 
 class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
   final titleController = TextEditingController();
-  final clientIdController = TextEditingController();
+  int? selectedClientId;
   bool isLoading = false;
   String errorMessage = '';
 
@@ -57,8 +58,8 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
   }
 
   Future<void> submitPlan() async {
-    if (titleController.text.isEmpty || clientIdController.text.isEmpty) {
-      setState(() => errorMessage = 'Preenche o título e o ID do aluno.');
+    if (titleController.text.isEmpty || selectedClientId == null) {
+      setState(() => errorMessage = 'Preenche o título e seleciona um aluno.');
       return;
     }
 
@@ -85,23 +86,21 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
     }).toList();
 
     try {
-      final data = await ApiService.post(
-        context,
-        '/api/v1/nutri_plans/',
-        widget.token,
-        {
-          'title': titleController.text,
-          'client_id': int.parse(clientIdController.text),
-          'meals': mealsData,
-        },
-      ).timeout(const Duration(seconds: 10));
+      final data =
+          await ApiService.post(context, '/api/v1/nutri_plans/', widget.token, {
+            'title': titleController.text,
+            'client_id': selectedClientId,
+            'meals': mealsData,
+          }).timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
 
       if (data is Map<String, dynamic> && data['id'] != null) {
         Navigator.pop(context, true);
       } else {
-        setState(() => errorMessage = 'Não foi possível criar o plano alimentar.');
+        setState(
+          () => errorMessage = 'Não foi possível criar o plano alimentar.',
+        );
       }
     } catch (_) {
       if (!mounted) return;
@@ -130,14 +129,12 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: clientIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'ID do aluno',
-                helperText: 'Para CassiaM, usa o ID 2.',
-                border: OutlineInputBorder(),
-              ),
+            ClientSelector(
+              token: widget.token,
+              selectedClientId: selectedClientId,
+              onChanged: (clientId) {
+                setState(() => selectedClientId = clientId);
+              },
             ),
             const SizedBox(height: 24),
             const Text(

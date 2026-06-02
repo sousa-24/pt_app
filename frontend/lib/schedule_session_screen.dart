@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'client_selector.dart';
 
 class ScheduleSessionScreen extends StatefulWidget {
   final String token;
@@ -11,11 +12,11 @@ class ScheduleSessionScreen extends StatefulWidget {
 }
 
 class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
-  final clientIdController = TextEditingController();
   final maxStudentsController = TextEditingController(text: '10');
   final notesController = TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  int? selectedClientId;
   String sessionType = 'individual';
   bool isLoading = false;
   String errorMessage = '';
@@ -69,7 +70,6 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   }
 
   Future<void> submitSession() async {
-    final clientId = int.tryParse(clientIdController.text);
     final maxStudents = int.tryParse(maxStudentsController.text);
     final dateTime = selectedDateTime;
 
@@ -78,8 +78,8 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       return;
     }
 
-    if (sessionType == 'individual' && clientId == null) {
-      setState(() => errorMessage = 'Preenche o ID do aluno, a data e a hora.');
+    if (sessionType == 'individual' && selectedClientId == null) {
+      setState(() => errorMessage = 'Seleciona o aluno, a data e a hora.');
       return;
     }
 
@@ -117,7 +117,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       '/api/v1/training_sessions/',
       widget.token,
       {
-        'client_id': sessionType == 'individual' ? clientId : null,
+        'client_id': sessionType == 'individual' ? selectedClientId : null,
         'date': dateTime.toIso8601String(),
         'session_type': sessionType,
         'max_students': sessionType == 'group' ? maxStudents : null,
@@ -169,13 +169,12 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             ),
             const SizedBox(height: 16),
             if (sessionType == 'individual')
-              TextField(
-                controller: clientIdController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'ID do aluno',
-                  border: OutlineInputBorder(),
-                ),
+              ClientSelector(
+                token: widget.token,
+                selectedClientId: selectedClientId,
+                onChanged: (clientId) {
+                  setState(() => selectedClientId = clientId);
+                },
               )
             else
               TextField(
