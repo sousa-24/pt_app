@@ -29,6 +29,10 @@ class StudentTrainingSession {
   final String? workoutPlanId;
   final DateTime date;
   final String status;
+  final String sessionType;
+  final int? maxStudents;
+  final int registeredStudents;
+  final bool isEnrolled;
   final String? notes;
 
   const StudentTrainingSession({
@@ -36,6 +40,10 @@ class StudentTrainingSession {
     required this.workoutPlanId,
     required this.date,
     required this.status,
+    this.sessionType = 'individual',
+    this.maxStudents,
+    this.registeredStudents = 0,
+    this.isEnrolled = false,
     this.notes,
   });
 }

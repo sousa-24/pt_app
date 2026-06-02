@@ -41,6 +41,7 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   List<StudentWorkoutPlan> _workouts = [];
   List<StudentTrainingSession> _trainingSessions = [];
+  List<StudentTrainingSession> _availableGroupSessions = [];
   final Set<String> _completedWorkoutIds = {'lower-a'};
   bool _isLoadingWorkouts = true;
   String? _workoutErrorMessage;
@@ -61,6 +62,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     _loadStudentData();
     _loadWorkoutPlans();
     _loadTrainingSessions();
+    _loadAvailableGroupSessions();
   }
 
   @override
@@ -102,17 +104,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isMenuArea) StudentHeader(
-                studentName: _studentName,
-                token: widget.token,
-                onNotificationTap: (type) {
-                  if (type == 'message') {
-                    _openChat();
-                  } else if (type == 'training_session') {
-                    setState(() => _selectedNavIndex = 8);
-                  }
-                },
-              ),
+              if (!isMenuArea)
+                StudentHeader(
+                  studentName: _studentName,
+                  token: widget.token,
+                  onNotificationTap: (type) {
+                    if (type == 'message') {
+                      _openChat();
+                    } else if (type == 'training_session') {
+                      setState(() => _selectedNavIndex = 8);
+                    }
+                  },
+                ),
               Transform.translate(
                 offset: Offset(0, isMenuArea ? 0 : -18),
                 child: SafeArea(
@@ -221,6 +224,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           const _StatusCard(message: 'Ainda não existem sessões agendadas.')
         else
           ..._trainingSessions.map(_sessionCard),
+        if (_availableGroupSessions.isNotEmpty) ...[
+          const SizedBox(height: 22),
+          const StudentSectionTitle(
+            title: 'Aulas em grupo disponíveis',
+            subtitle: 'Inscreve-te nas vagas abertas pela personal',
+          ),
+          const SizedBox(height: 12),
+          ..._availableGroupSessions.map(
+            (session) => _sessionCard(
+              session,
+              action: TextButton.icon(
+                onPressed: () => _enrollGroupSession(session),
+                icon: const Icon(Icons.how_to_reg),
+                label: const Text('Inscrever-me'),
+              ),
+            ),
+          ),
+        ],
       ];
     }
 
@@ -271,7 +292,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  Widget _sessionCard(StudentTrainingSession session) {
+  Widget _sessionCard(StudentTrainingSession session, {Widget? action}) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
@@ -307,7 +328,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _sessionStatusLabel(session.status),
+                  _sessionSubtitle(session),
                   style: const TextStyle(
                     color: StudentTheme.mutedText,
                     fontSize: 13,
@@ -324,6 +345,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     ),
                   ),
                 ],
+                if (action != null) ...[const SizedBox(height: 10), action],
               ],
             ),
           ),
@@ -507,6 +529,58 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  Future<void> _loadAvailableGroupSessions() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final data = await ApiService.get(
+        context,
+        '/api/v1/group_training_sessions/available',
+        token,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted || data is! List) return;
+
+      setState(() {
+        _availableGroupSessions = data
+            .map(_trainingSessionFromApi)
+            .whereType<StudentTrainingSession>()
+            .where((session) => !session.isEnrolled)
+            .toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+    }
+  }
+
+  Future<void> _enrollGroupSession(StudentTrainingSession session) async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    final data = await ApiService.post(
+      context,
+      '/api/v1/group_training_sessions/${session.id}/enroll',
+      token,
+      {},
+    );
+    if (!mounted) return;
+
+    if (data is Map && data['id'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inscrição realizada com sucesso.')),
+      );
+      _loadTrainingSessions();
+      _loadAvailableGroupSessions();
+    } else {
+      final detail = data is Map ? data['detail']?.toString() : null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(detail ?? 'Não foi possível fazer a inscrição.'),
+        ),
+      );
+    }
+  }
+
   StudentWorkoutPlan _workoutFromApi(dynamic value, int index) {
     final plan = value is Map<String, dynamic> ? value : <String, dynamic>{};
     final exercisesData = plan['exercises'] is List
@@ -580,6 +654,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       workoutPlanId: session['workout_plan_id']?.toString(),
       date: date,
       status: _text(session['status'], 'scheduled'),
+      sessionType: _text(session['session_type'], 'individual'),
+      maxStudents: _intOrNull(session['max_students']),
+      registeredStudents: _intOrNull(session['registered_students']) ?? 0,
+      isEnrolled: session['is_enrolled'] == true,
       notes: session['notes']?.toString(),
     );
   }
@@ -605,6 +683,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       default:
         return status;
     }
+  }
+
+  static String _sessionSubtitle(StudentTrainingSession session) {
+    final status = _sessionStatusLabel(session.status);
+    if (session.sessionType != 'group') return status;
+
+    final maxStudents = session.maxStudents?.toString() ?? '-';
+    return 'Aula em grupo · ${session.registeredStudents}/$maxStudents inscritos · $status';
   }
 
   void _openChat() {
@@ -666,6 +752,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     if (value == null) return fallback;
     final text = value.toString().trim();
     return text.isEmpty ? fallback : text;
+  }
+
+  static int? _intOrNull(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 }
 

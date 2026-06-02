@@ -10,6 +10,11 @@ class RoleEnum(str, Enum):
     client = "client"
 
 
+class TrainingSessionType(str, Enum):
+    individual = "individual"
+    group = "group"
+
+
 # Esquema para criar um novo utilizador no sistema.
 class UserCreate(BaseModel):
     name: str
@@ -89,19 +94,25 @@ class WorkoutPlanResponse(BaseModel):
 
 # Esquema para agendar ou atualizar uma sessão de treino.
 class TrainingSessionCreate(BaseModel):
-    client_id: int
+    client_id: int | None = None
     workout_plan_id: int | None = None
     date: datetime
+    session_type: TrainingSessionType = TrainingSessionType.individual
+    max_students: int | None = None
     notes: str | None = None
 
 
 # Esquema de resposta para sessões de treino agendadas.
 class TrainingSessionResponse(BaseModel):
     id: int
-    client_id: int
+    client_id: int | None = None
     trainer_id: int
     workout_plan_id: int | None = None
     date: datetime
+    session_type: str = "individual"
+    max_students: int | None = None
+    registered_students: int = 0
+    is_enrolled: bool = False
     status: str
     notes: str | None = None
     created_at: datetime

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime, Text, ForeignKey, Float, Boolean
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Text, ForeignKey, Float, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime, timezone
@@ -55,16 +55,34 @@ class TrainingSession(Base):
     __tablename__ = "training_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     workout_plan_id = Column(Integer, ForeignKey("workout_plans.id"), nullable=True)
     date = Column(DateTime, nullable=False)
+    session_type = Column(String(20), default="individual", nullable=False)
+    max_students = Column(Integer, nullable=True)
     status = Column(Enum("scheduled", "completed", "cancelled"), default="scheduled")
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     feedback = relationship("ClientSessionFeedback", back_populates="session")
     performance = relationship("SessionPerformance", back_populates="session")
+    registrations = relationship("GroupSessionRegistration", back_populates="session")
+
+
+class GroupSessionRegistration(Base):
+    __tablename__ = "group_session_registrations"
+    __table_args__ = (
+        UniqueConstraint("session_id", "client_id", name="uq_group_session_client"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("training_sessions.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    session = relationship("TrainingSession", back_populates="registrations")
+    client = relationship("User", foreign_keys=[client_id])
 
 
 # Registos de progressão do cliente, usados para acompanhar peso e composição corporal.
