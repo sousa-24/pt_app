@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.database import engine, get_db, Base
 from app import models, schemas
@@ -22,8 +23,36 @@ from app.routers import (
     payments
 )
 
+def ensure_training_session_group_columns():
+    """Adds group-session columns when the table already exists."""
+    with engine.begin() as connection:
+        existing_columns = {
+            row[0]
+            for row in connection.execute(text("SHOW COLUMNS FROM training_sessions"))
+        }
+
+        if "session_type" not in existing_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE training_sessions "
+                    "ADD COLUMN session_type VARCHAR(20) NOT NULL DEFAULT 'individual'"
+                )
+            )
+
+        if "max_students" not in existing_columns:
+            connection.execute(
+                text("ALTER TABLE training_sessions ADD COLUMN max_students INT NULL")
+            )
+
+        if "client_id" in existing_columns:
+            connection.execute(
+                text("ALTER TABLE training_sessions MODIFY COLUMN client_id INT NULL")
+            )
+
+
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
+ensure_training_session_group_columns()
 
 # Create FastAPI instance and configure CORS
 app = FastAPI(title="FITPRO API", version="1.0.0")
