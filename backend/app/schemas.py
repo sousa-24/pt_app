@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 from pydantic import BaseModel, EmailStr, model_validator
 from enum import Enum
 
@@ -336,3 +337,38 @@ class TrainingSessionUpdate(BaseModel):
     workout_plan_id: int | None = None
     notes: str | None = None
     status: str | None = None
+
+
+class PaymentCreate(BaseModel):
+    client_id: int
+    type_of_service: str
+    cost: Decimal
+    due_date: date
+    payment_method: str | None = None
+    notes: str | None = None
+
+
+class PaymentUpdate(BaseModel):
+    type_of_service: str | None = None
+    cost: Decimal | None = None
+    status: str | None = None
+    due_date: date | None = None
+    paid_at: datetime | None = None
+    payment_method: str | None = None
+    notes: str | None = None
+
+
+class PaymentResponse(BaseModel):
+    id: int
+    trainer_id: int
+    client_id: int
+    type_of_service: str
+    cost: Decimal
+    status: str
+    due_date: date
+    paid_at: datetime | None = None
+    payment_method: str | None = None
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

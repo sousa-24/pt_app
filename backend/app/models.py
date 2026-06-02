@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime, Text, ForeignKey, Float, Boolean
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Date, Text, ForeignKey, Float, Boolean, Numeric
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime, timezone
@@ -182,6 +182,25 @@ class SessionPerformance(Base):
     session = relationship("TrainingSession", back_populates="performance")
     client = relationship("User", foreign_keys=[client_id])
     trainer = relationship("User", foreign_keys=[trainer_id])
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    type_of_service = Column(String(100), nullable=False)
+    cost = Column(Numeric(10, 2), nullable=False)
+    status = Column(Enum("pending", "paid", "overdue", "cancelled"), default="pending", nullable=False)
+    due_date = Column(Date, nullable=False)
+    paid_at = Column(DateTime(timezone=True), nullable=True)
+    payment_method = Column(String(50), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    trainer = relationship("User", foreign_keys=[trainer_id])
+    client = relationship("User", foreign_keys=[client_id])
+
 
 class Notification(Base):
     __tablename__ = "notifications"
