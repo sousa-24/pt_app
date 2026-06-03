@@ -55,18 +55,31 @@ class TrainingSession(Base):
     __tablename__ = "training_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     workout_plan_id = Column(Integer, ForeignKey("workout_plans.id"), nullable=True)
     date = Column(DateTime, nullable=False)
-    session_type = Column(String(20), default="individual", nullable=False)
-    max_students = Column(Integer, nullable=True)
     status = Column(Enum("scheduled", "completed", "cancelled"), default="scheduled")
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     feedback = relationship("ClientSessionFeedback", back_populates="session")
     performance = relationship("SessionPerformance", back_populates="session")
+
+
+# Aula em grupo criada por um treinador, com vagas limitadas.
+class GroupSession(Base):
+    __tablename__ = "group_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date = Column(DateTime(timezone=True), nullable=False)
+    max_students = Column(Integer, nullable=False)
+    status = Column(Enum("scheduled", "completed", "cancelled"), default="scheduled")
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    trainer = relationship("User", foreign_keys=[trainer_id])
     registrations = relationship("GroupSessionRegistration", back_populates="session")
 
 
@@ -77,11 +90,11 @@ class GroupSessionRegistration(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("training_sessions.id"), nullable=False)
+    session_id = Column(Integer, ForeignKey("group_sessions.id"), nullable=False)
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    session = relationship("TrainingSession", back_populates="registrations")
+    session = relationship("GroupSession", back_populates="registrations")
     client = relationship("User", foreign_keys=[client_id])
 
 

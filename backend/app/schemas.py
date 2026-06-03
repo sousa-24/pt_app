@@ -11,9 +11,10 @@ class RoleEnum(str, Enum):
     client = "client"
 
 
-class TrainingSessionType(str, Enum):
-    individual = "individual"
-    group = "group"
+class SessionStatusEnum(str, Enum):
+    scheduled = "scheduled"
+    completed = "completed"
+    cancelled = "cancelled"
 
 
 # Esquema para criar um novo utilizador no sistema.
@@ -95,25 +96,48 @@ class WorkoutPlanResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# Esquema para agendar ou atualizar uma sessão de treino.
+# Esquema para agendar uma sessão de treino individual.
 class TrainingSessionCreate(BaseModel):
-    client_id: int | None = None
+    client_id: int
     workout_plan_id: int | None = None
     date: datetime
-    session_type: TrainingSessionType = TrainingSessionType.individual
-    max_students: int | None = None
     notes: str | None = None
 
 
-# Esquema de resposta para sessões de treino agendadas.
+# Esquema de resposta para sessões de treino individuais.
 class TrainingSessionResponse(BaseModel):
     id: int
-    client_id: int | None = None
+    client_id: int
     trainer_id: int
     workout_plan_id: int | None = None
     date: datetime
-    session_type: str = "individual"
+    status: str
+    notes: str | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# Esquema para criar uma aula em grupo.
+class GroupSessionCreate(BaseModel):
+    date: datetime
+    max_students: int
+    notes: str | None = None
+
+
+# Esquema para atualizar uma aula em grupo.
+class GroupSessionUpdate(BaseModel):
+    date: datetime | None = None
     max_students: int | None = None
+    status: SessionStatusEnum | None = None
+    notes: str | None = None
+
+
+# Esquema de resposta para aulas em grupo.
+class GroupSessionResponse(BaseModel):
+    id: int
+    trainer_id: int
+    date: datetime
+    max_students: int
     registered_students: int = 0
     is_enrolled: bool = False
     status: str
@@ -347,7 +371,7 @@ class TrainingSessionUpdate(BaseModel):
     date: datetime | None = None
     workout_plan_id: int | None = None
     notes: str | None = None
-    status: str | None = None
+    status: SessionStatusEnum | None = None
 
 
 class PaymentCreate(BaseModel):

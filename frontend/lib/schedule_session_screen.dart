@@ -112,18 +112,26 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       errorMessage = '';
     });
 
-    final data = await ApiService.post(
-      context,
-      '/api/v1/training_sessions/',
-      widget.token,
-      {
-        'client_id': sessionType == 'individual' ? selectedClientId : null,
+    final String endpoint;
+    final Map<String, dynamic> body;
+
+    if (sessionType == 'group') {
+      endpoint = '/api/v1/group_sessions/';
+      body = {
         'date': dateTime.toIso8601String(),
-        'session_type': sessionType,
-        'max_students': sessionType == 'group' ? maxStudents : null,
+        'max_students': maxStudents,
         'notes': notesController.text.isEmpty ? null : notesController.text,
-      },
-    );
+      };
+    } else {
+      endpoint = '/api/v1/training_sessions/';
+      body = {
+        'client_id': selectedClientId,
+        'date': dateTime.toIso8601String(),
+        'notes': notesController.text.isEmpty ? null : notesController.text,
+      };
+    }
+
+    final data = await ApiService.post(context, endpoint, widget.token, body);
 
     if (!mounted) return;
 

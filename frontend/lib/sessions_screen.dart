@@ -13,6 +13,7 @@ class SessionsScreen extends StatefulWidget {
 
 class _SessionsScreenState extends State<SessionsScreen> {
   List sessions = [];
+  List groupSessions = [];
   List availableGroupSessions = [];
   bool isLoading = true;
   String? errorMessage;
@@ -44,6 +45,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         isLoading = false;
       });
 
+      fetchGroupSessions();
       if (widget.role == 'client') {
         fetchAvailableGroupSessions();
       }
@@ -57,18 +59,29 @@ class _SessionsScreenState extends State<SessionsScreen> {
     }
   }
 
-  Future<void> fetchAvailableGroupSessions() async {
+  Future<void> fetchGroupSessions() async {
     final data = await ApiService.get(
       context,
-      '/api/v1/group_training_sessions/available',
+      '/api/v1/group_sessions/',
       widget.token,
     );
     if (!mounted || data is! List) return;
 
     setState(() {
-      availableGroupSessions = data
-          .where((session) => session is Map && session['is_enrolled'] != true)
-          .toList();
+      groupSessions = data;
+    });
+  }
+
+  Future<void> fetchAvailableGroupSessions() async {
+    final data = await ApiService.get(
+      context,
+      '/api/v1/group_sessions/available',
+      widget.token,
+    );
+    if (!mounted || data is! List) return;
+
+    setState(() {
+      availableGroupSessions = data;
     });
   }
 
@@ -78,7 +91,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
 
     final data = await ApiService.post(
       context,
-      '/api/v1/group_training_sessions/$sessionId/enroll',
+      '/api/v1/group_sessions/$sessionId/enroll',
       widget.token,
       {},
     );
@@ -104,7 +117,6 @@ class _SessionsScreenState extends State<SessionsScreen> {
     if (data is Map && data['detail'] is String) {
       return data['detail'] as String;
     }
-
     return null;
   }
 
@@ -149,14 +161,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
     return '$day/$month/$year às $hour:$minute';
   }
 
-  String sessionTypeLabel(dynamic session) {
-    if (session is Map && session['session_type'] == 'group') {
-      final registered = session['registered_students'] ?? 0;
-      final maxStudents = session['max_students'] ?? '-';
-      return 'Aula em grupo · $registered/$maxStudents inscritos';
-    }
-
-    return 'Sessão individual';
+  String groupSessionLabel(dynamic session) {
+    final registered = session is Map ? session['registered_students'] ?? 0 : 0;
+    final maxStudents = session is Map ? session['max_students'] ?? '-' : '-';
+    return 'Aula em grupo · $registered/$maxStudents inscritos';
   }
 
   @override
@@ -172,10 +180,25 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 if (sessions.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(24),
-                    child: Center(child: Text('Não existem sessões agendadas')),
+                    child: Center(
+                      child: Text('Não existem sessões individuais agendadas'),
+                    ),
                   )
                 else
-                  ...sessions.map(_sessionCard),
+                  ...sessions.map((s) => _sessionCard(s)),
+                if (groupSessions.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    child: Text(
+                      'Aulas em grupo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ...groupSessions.map((s) => _groupSessionCard(s)),
+                ],
                 if (widget.role == 'client' &&
                     availableGroupSessions.isNotEmpty) ...[
                   const Padding(
@@ -189,7 +212,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                     ),
                   ),
                   ...availableGroupSessions.map(
-                    (session) => _sessionCard(
+                    (session) => _groupSessionCard(
                       session,
                       action: TextButton.icon(
                         onPressed: () => enrollGroupSession(session),
@@ -204,36 +227,58 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
-  Widget _sessionCard(dynamic session, {Widget? action}) {
+  Widget _sessionCard(dynamic session) {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
-        leading: Icon(
-          session is Map && session['session_type'] == 'group'
-              ? Icons.groups_outlined
-              : Icons.fitness_center,
-        ),
+        leading: const Icon(Icons.fitness_center),
         title: Text('Sessão em ${formatSessionDate(session['date'])}'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(sessionTypeLabel(session)),
+            const Text('Sessão individual'),
             if (session['notes'] != null) Text(session['notes']),
           ],
         ),
-        trailing:
-            action ??
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: getStatusColor(session['status']),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                getStatusLabel(session['status']),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: getStatusColor(session['status']),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            getStatusLabel(session['status']),
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _groupSessionCard(dynamic session, {Widget? action}) {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      child: ListTile(
+        leading: const Icon(Icons.groups_outlined),
+        title: Text('Aula em ${formatSessionDate(session['date'])}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(groupSessionLabel(session)),
+            if (session['notes'] != null) Text(session['notes']),
+          ],
+        ),
+        trailing: action ?? Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: getStatusColor(session['status']),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            getStatusLabel(session['status']),
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
       ),
     );
   }

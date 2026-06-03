@@ -41,6 +41,7 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   List<StudentWorkoutPlan> _workouts = [];
   List<StudentTrainingSession> _trainingSessions = [];
+  List<StudentTrainingSession> _enrolledGroupSessions = [];
   List<StudentTrainingSession> _availableGroupSessions = [];
   final Set<String> _completedWorkoutIds = {'lower-a'};
   bool _isLoadingWorkouts = true;
@@ -62,6 +63,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     _loadStudentData();
     _loadWorkoutPlans();
     _loadTrainingSessions();
+    _loadEnrolledGroupSessions();
     _loadAvailableGroupSessions();
   }
 
@@ -220,10 +222,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           subtitle: 'Agendamentos marcados pela personal',
         ),
         const SizedBox(height: 12),
-        if (_trainingSessions.isEmpty)
+        if (_trainingSessions.isEmpty && _enrolledGroupSessions.isEmpty)
           const _StatusCard(message: 'Ainda não existem sessões agendadas.')
-        else
+        else ...[
           ..._trainingSessions.map(_sessionCard),
+          ..._enrolledGroupSessions.map(_sessionCard),
+        ],
         if (_availableGroupSessions.isNotEmpty) ...[
           const SizedBox(height: 22),
           const StudentSectionTitle(
@@ -529,6 +533,29 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  Future<void> _loadEnrolledGroupSessions() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final data = await ApiService.get(
+        context,
+        '/api/v1/group_sessions/',
+        token,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted || data is! List) return;
+
+      setState(() {
+        _enrolledGroupSessions = data
+            .map(_groupSessionFromApi)
+            .whereType<StudentTrainingSession>()
+            .toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+    }
+  }
+
   Future<void> _loadAvailableGroupSessions() async {
     final token = widget.token;
     if (token == null || token.isEmpty) return;
@@ -536,16 +563,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     try {
       final data = await ApiService.get(
         context,
-        '/api/v1/group_training_sessions/available',
+        '/api/v1/group_sessions/available',
         token,
       ).timeout(const Duration(seconds: 8));
       if (!mounted || data is! List) return;
 
       setState(() {
         _availableGroupSessions = data
-            .map(_trainingSessionFromApi)
+            .map(_groupSessionFromApi)
             .whereType<StudentTrainingSession>()
-            .where((session) => !session.isEnrolled)
             .toList();
       });
     } catch (_) {
@@ -559,7 +585,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     final data = await ApiService.post(
       context,
-      '/api/v1/group_training_sessions/${session.id}/enroll',
+      '/api/v1/group_sessions/${session.id}/enroll',
       token,
       {},
     );
@@ -569,7 +595,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Inscrição realizada com sucesso.')),
       );
-      _loadTrainingSessions();
+      _loadEnrolledGroupSessions();
       _loadAvailableGroupSessions();
     } else {
       final detail = data is Map ? data['detail']?.toString() : null;
@@ -654,7 +680,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       workoutPlanId: session['workout_plan_id']?.toString(),
       date: date,
       status: _text(session['status'], 'scheduled'),
-      sessionType: _text(session['session_type'], 'individual'),
+      notes: session['notes']?.toString(),
+    );
+  }
+
+  StudentTrainingSession? _groupSessionFromApi(dynamic value) {
+    final session = value is Map<String, dynamic> ? value : null;
+    if (session == null) return null;
+
+    final rawDate = session['date'];
+    final date = rawDate is String ? DateTime.tryParse(rawDate) : null;
+    if (date == null) return null;
+
+    return StudentTrainingSession(
+      id: _text(session['id'], 'group-session'),
+      workoutPlanId: null,
+      date: date,
+      status: _text(session['status'], 'scheduled'),
+      sessionType: 'group',
       maxStudents: _intOrNull(session['max_students']),
       registeredStudents: _intOrNull(session['registered_students']) ?? 0,
       isEnrolled: session['is_enrolled'] == true,
