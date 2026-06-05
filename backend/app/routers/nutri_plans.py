@@ -58,6 +58,20 @@ def get_nutri_plans(
     return plans
 
 
+@router.get("/nutri_plans/{plan_id}", response_model=schemas.NutriPlanResponse)
+def get_nutri_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    plan = db.query(models.NutriPlan).filter(models.NutriPlan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano nutricional não encontrado")
+    if plan.trainer_id != current_user.id and plan.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Não tens permissão para aceder a este recurso")
+    return plan
+
+
 @router.put("/nutri_plans/{plan_id}", response_model=schemas.NutriPlanResponse)
 def update_nutri_plan(
     plan_id: int,

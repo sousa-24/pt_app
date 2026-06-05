@@ -104,6 +104,20 @@ def get_available_group_sessions(
     ]
 
 
+@router.get("/group_sessions/{session_id}", response_model=schemas.GroupSessionResponse)
+def get_group_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    session = db.query(models.GroupSession).filter(models.GroupSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Aula em grupo não encontrada.")
+    if session.trainer_id != current_user.id and not any(r.client_id == current_user.id for r in session.registrations):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+    return _session_response(session, current_user)
+
+
 @router.post("/group_sessions/{session_id}/enroll", response_model=schemas.GroupSessionResponse)
 def enroll_group_session(
     session_id: int,
