@@ -2,8 +2,9 @@
 Endpoints para criar, listar, atualizar e eliminar sessões de treino individuais.
 """
 from datetime import datetime, timedelta
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
@@ -69,15 +70,28 @@ def create_training_session(
 def get_training_sessions(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    status: Optional[schemas.SessionStatusEnum] = Query(None),
 ):
     """Lista todas as sessões de treino do utilizador atual."""
     if current_user.role == "trainer":
-        return db.query(models.TrainingSession).filter(
+        q = db.query(models.TrainingSession).filter(
             models.TrainingSession.trainer_id == current_user.id
-        ).all()
-    return db.query(models.TrainingSession).filter(
-        models.TrainingSession.client_id == current_user.id
-    ).all()
+        )
+    else:
+        q = db.query(models.TrainingSession).filter(
+            models.TrainingSession.client_id == current_user.id
+        )
+
+    if date_from is not None:
+        q = q.filter(models.TrainingSession.date >= date_from)
+    if date_to is not None:
+        q = q.filter(models.TrainingSession.date <= date_to)
+    if status is not None:
+        q = q.filter(models.TrainingSession.status == status)
+
+    return q.all()
 
 
 @router.get("/training_sessions/{session_id}", response_model=schemas.TrainingSessionResponse)
