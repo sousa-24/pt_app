@@ -80,6 +80,23 @@ def get_training_sessions(
     ).all()
 
 
+@router.get("/training_sessions/{session_id}", response_model=schemas.TrainingSessionResponse)
+def get_training_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Devolve uma sessão de treino pelo ID."""
+    session = db.query(models.TrainingSession).filter(
+        models.TrainingSession.id == session_id,
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessão de treino não encontrada.")
+    if session.trainer_id != current_user.id and session.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+    return session
+
+
 @router.put(
     "/training_sessions/{session_id}",
     response_model=schemas.TrainingSessionResponse,

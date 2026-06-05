@@ -151,6 +151,29 @@ def enroll_group_session(
     return _session_response(session, current_user)
 
 
+@router.delete("/group_sessions/{session_id}/enroll", response_model=schemas.StatusResponse)
+def unenroll_group_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_client),
+):
+    """Remove a inscrição do cliente numa aula em grupo."""
+    registration = db.query(models.GroupSessionRegistration).filter(
+        models.GroupSessionRegistration.session_id == session_id,
+        models.GroupSessionRegistration.client_id == current_user.id,
+    ).first()
+    if not registration:
+        raise HTTPException(status_code=404, detail="Inscrição não encontrada.")
+
+    session = db.query(models.GroupSession).filter(models.GroupSession.id == session_id).first()
+    if session and session.date <= (datetime.now(session.date.tzinfo) if session.date.tzinfo else datetime.now()):
+        raise HTTPException(status_code=400, detail="Não é possível cancelar inscrição numa aula já passada.")
+
+    db.delete(registration)
+    db.commit()
+    return {"message": "Inscrição cancelada com sucesso."}
+
+
 @router.put("/group_sessions/{session_id}", response_model=schemas.GroupSessionResponse)
 def update_group_session(
     session_id: int,
