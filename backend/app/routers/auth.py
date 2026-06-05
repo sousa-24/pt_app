@@ -1,12 +1,12 @@
 """
-Authentication endpoints: login, register, and user profile.
+Authentication endpoints: login and register.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from app.database import get_db
 from app import models, schemas
-from app.auth import pwd_context, create_access_token, get_current_user
+from app.auth import pwd_context, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/api/v1", tags=["auth"])
@@ -67,24 +67,3 @@ def registar(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
-
-@router.get("/me", response_model=schemas.UserResponse)
-def get_me(current_user: models.User = Depends(get_current_user)):
-    """Get current authenticated user's profile."""
-    return current_user
-
-@router.post("/me", response_model=schemas.UserResponse)
-def update_me(updated_user: schemas.UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    if updated_user.name:
-        current_user.name = updated_user.name
-    if updated_user.email:
-        existing_user = db.query(models.User).filter(models.User.email == updated_user.email).first()
-        if existing_user and existing_user.id != current_user.id:
-            raise HTTPException(status_code=400, detail="Email já em uso")
-        current_user.email = updated_user.email
-    if updated_user.password:
-        current_user.password = pwd_context.hash(updated_user.password)
-    db.add(current_user)
-    db.commit()
-    db.refresh(current_user)
-    return current_user

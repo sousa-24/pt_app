@@ -46,7 +46,7 @@ class _StudentHeaderState extends State<StudentHeader> {
     if (token == null || token.isEmpty) return;
     try {
       final resp = await http.get(
-        Uri.parse('${ApiService.baseUrl}/api/v1/me'),
+        Uri.parse('${ApiService.baseUrl}/api/v1/profile/me'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (resp.statusCode != 200 || !mounted) return;

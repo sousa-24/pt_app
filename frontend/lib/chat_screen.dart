@@ -43,7 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initChat() async {
-    final userData = await ApiService.get(context, '/api/v1/me', widget.token);
+    final userData = await ApiService.get(context, '/api/v1/profile/me', widget.token);
     if (userData == null || userData['id'] == null) return;
     if (!mounted) return;
 

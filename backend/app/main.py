@@ -10,6 +10,7 @@ from app.services.notification_services import create_notification
 # Import all routers
 from app.routers import (
     auth,
+    profile,
     workout_plans,
     training_sessions,
     group_sessions,
@@ -39,6 +40,7 @@ app.add_middleware(
 
 # Register all routers
 app.include_router(auth.router)
+app.include_router(profile.router)
 app.include_router(workout_plans.router)
 app.include_router(training_sessions.router)
 app.include_router(group_sessions.router)
