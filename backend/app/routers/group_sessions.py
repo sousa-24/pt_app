@@ -2,8 +2,9 @@
 Endpoints para criar e gerir aulas em grupo.
 """
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
@@ -66,20 +67,31 @@ def create_group_session(
 def get_group_sessions(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    status: Optional[schemas.SessionStatusEnum] = Query(None),
 ):
     """Lista aulas em grupo: treinador vê as suas, cliente vê as em que está inscrito."""
     if current_user.role == "trainer":
-        sessions = db.query(models.GroupSession).filter(
+        q = db.query(models.GroupSession).filter(
             models.GroupSession.trainer_id == current_user.id
-        ).all()
+        )
     else:
         enrolled_ids = db.query(models.GroupSessionRegistration.session_id).filter(
             models.GroupSessionRegistration.client_id == current_user.id
         )
-        sessions = db.query(models.GroupSession).filter(
+        q = db.query(models.GroupSession).filter(
             models.GroupSession.id.in_(enrolled_ids)
-        ).all()
+        )
 
+    if date_from is not None:
+        q = q.filter(models.GroupSession.date >= date_from)
+    if date_to is not None:
+        q = q.filter(models.GroupSession.date <= date_to)
+    if status is not None:
+        q = q.filter(models.GroupSession.status == status)
+
+    sessions = q.all()
     return [_session_response(s, current_user) for s in sessions]
 
 
@@ -102,6 +114,20 @@ def get_available_group_sessions(
         if len(s.registrations) < s.max_students
         and not any(r.client_id == current_user.id for r in s.registrations)
     ]
+
+
+@router.get("/group_sessions/{session_id}", response_model=schemas.GroupSessionResponse)
+def get_group_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    session = db.query(models.GroupSession).filter(models.GroupSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Aula em grupo não encontrada.")
+    if session.trainer_id != current_user.id and not any(r.client_id == current_user.id for r in session.registrations):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+    return _session_response(session, current_user)
 
 
 @router.post("/group_sessions/{session_id}/enroll", response_model=schemas.GroupSessionResponse)
@@ -149,6 +175,29 @@ def enroll_group_session(
     )
 
     return _session_response(session, current_user)
+
+
+@router.delete("/group_sessions/{session_id}/enroll", response_model=schemas.StatusResponse)
+def unenroll_group_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_client),
+):
+    """Remove a inscrição do cliente numa aula em grupo."""
+    registration = db.query(models.GroupSessionRegistration).filter(
+        models.GroupSessionRegistration.session_id == session_id,
+        models.GroupSessionRegistration.client_id == current_user.id,
+    ).first()
+    if not registration:
+        raise HTTPException(status_code=404, detail="Inscrição não encontrada.")
+
+    session = db.query(models.GroupSession).filter(models.GroupSession.id == session_id).first()
+    if session and session.date <= (datetime.now(session.date.tzinfo) if session.date.tzinfo else datetime.now()):
+        raise HTTPException(status_code=400, detail="Não é possível cancelar inscrição numa aula já passada.")
+
+    db.delete(registration)
+    db.commit()
+    return {"message": "Inscrição cancelada com sucesso."}
 
 
 @router.put("/group_sessions/{session_id}", response_model=schemas.GroupSessionResponse)

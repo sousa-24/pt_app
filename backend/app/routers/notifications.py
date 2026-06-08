@@ -81,3 +81,20 @@ def mark_all_notifications_as_read(
     db.commit()
 
     return {"message": "All notifications marked as read"}
+
+
+@router.delete("/notifications/{notification_id}", response_model=schemas.StatusResponse)
+def delete_notification(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    notification = db.query(models.Notification).filter(
+        models.Notification.id == notification_id,
+        models.Notification.user_id == current_user.id,
+    ).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    db.delete(notification)
+    db.commit()
+    return {"message": "Notification deleted"}

@@ -254,6 +254,14 @@ class MessageResponse(BaseModel):
     created_at: datetime
     model_config = {"from_attributes": True}
 
+class ConversationResponse(BaseModel):
+    user: UserResponse
+    last_message: str
+    last_message_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 #Esquema para introdução de progresso do cliente
 class UserProgressionCreate(BaseModel):
     client_id: int | None = None

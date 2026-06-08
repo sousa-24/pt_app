@@ -1,5 +1,5 @@
 """
-Invite codes endpoints: generate invite codes for client registration.
+Invite codes endpoints: generate, list, and delete invite codes.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -41,5 +41,30 @@ def create_invite_code(
     db.add(new_code)
     db.commit()
     db.refresh(new_code)
-    
+
     return new_code
+
+
+@router.get("/invite-codes/", response_model=list[schemas.InviteCodeResponse])
+def list_invite_codes(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_trainer)
+):
+    return db.query(models.InviteCodes).filter(models.InviteCodes.trainer_id == current_user.id).all()
+
+
+@router.delete("/invite-codes/{code_id}", response_model=schemas.StatusResponse)
+def delete_invite_code(
+    code_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_trainer)
+):
+    code = db.query(models.InviteCodes).filter(
+        models.InviteCodes.id == code_id,
+        models.InviteCodes.trainer_id == current_user.id
+    ).first()
+    if not code:
+        raise HTTPException(status_code=404, detail="Invite code not found")
+    db.delete(code)
+    db.commit()
+    return {"message": "Código de convite eliminado."}
