@@ -18,6 +18,8 @@ class _SessionsScreenState extends State<SessionsScreen> {
   bool isLoading = true;
   String? errorMessage;
 
+  bool get isTrainer => widget.role == 'trainer';
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +42,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         } else {
           errorMessage =
               getApiErrorMessage(data) ??
-              'Não foi possível carregar as sessões agendadas.';
+              'Nao foi possivel carregar as sessoes agendadas.';
         }
         isLoading = false;
       });
@@ -53,7 +55,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Não foi possível contactar o servidor.';
+        errorMessage = 'Nao foi possivel contactar o servidor.';
         isLoading = false;
       });
     }
@@ -99,14 +101,254 @@ class _SessionsScreenState extends State<SessionsScreen> {
 
     if (data is Map && data['id'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscrição realizada com sucesso.')),
+        const SnackBar(content: Text('Inscricao realizada com sucesso.')),
       );
       fetchSessions();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            getApiErrorMessage(data) ?? 'Não foi possível fazer a inscrição.',
+            getApiErrorMessage(data) ?? 'Nao foi possivel fazer a inscricao.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> editSession(dynamic session, {required bool isGroup}) async {
+    final sessionMap = session is Map<String, dynamic>
+        ? session
+        : <String, dynamic>{};
+    final initialDate = DateTime.tryParse(sessionMap['date']?.toString() ?? '');
+    DateTime? selectedDate = initialDate;
+    TimeOfDay? selectedTime = initialDate == null
+        ? null
+        : TimeOfDay(hour: initialDate.hour, minute: initialDate.minute);
+    String status = sessionMap['status']?.toString() ?? 'scheduled';
+    final notesController = TextEditingController(
+      text: sessionMap['notes']?.toString() ?? '',
+    );
+    final maxStudentsController = TextEditingController(
+      text: sessionMap['max_students']?.toString() ?? '',
+    );
+
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isGroup ? 'Editar aula em grupo' : 'Editar sessao'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final now = DateTime.now();
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                selectedDate ??
+                                now.add(const Duration(hours: 24)),
+                            firstDate: DateTime(now.year, now.month, now.day),
+                            lastDate: now.add(const Duration(days: 365)),
+                          );
+                          if (picked != null) {
+                            setDialogState(() => selectedDate = picked);
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          selectedDate == null
+                              ? 'Data'
+                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime ?? TimeOfDay.now(),
+                          );
+                          if (picked != null) {
+                            setDialogState(() => selectedTime = picked);
+                          }
+                        },
+                        icon: const Icon(Icons.access_time),
+                        label: Text(selectedTime?.format(context) ?? 'Hora'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: status,
+                  decoration: const InputDecoration(
+                    labelText: 'Estado',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'scheduled',
+                      child: Text('Agendada'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'completed',
+                      child: Text('Concluida'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'cancelled',
+                      child: Text('Cancelada'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => status = value);
+                  },
+                ),
+                if (isGroup) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: maxStudentsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Limite de alunos',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Notas',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (shouldSave != true) return;
+
+    if (selectedDate == null || selectedTime == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Escolhe a data e a hora.')));
+      return;
+    }
+
+    final dateTime = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
+
+    final endpoint = isGroup
+        ? '/api/v1/group_sessions/${sessionMap['id']}'
+        : '/api/v1/training_sessions/${sessionMap['id']}';
+    final body = <String, dynamic>{
+      'date': dateTime.toIso8601String(),
+      'notes': notesController.text.trim().isEmpty
+          ? null
+          : notesController.text.trim(),
+      'status': status,
+    };
+
+    if (isGroup) {
+      final maxStudents = int.tryParse(maxStudentsController.text.trim());
+      if (maxStudents == null || maxStudents < 1) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Indica um limite de alunos valido.')),
+        );
+        return;
+      }
+      body['max_students'] = maxStudents;
+    }
+
+    final data = await ApiService.put(context, endpoint, widget.token, body);
+    if (!mounted) return;
+
+    if (data is Map && data['id'] != null) {
+      fetchSessions();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sessao atualizada.')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            getApiErrorMessage(data) ?? 'Nao foi possivel atualizar a sessao.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> deleteSession(dynamic session, {required bool isGroup}) async {
+    final sessionMap = session is Map<String, dynamic>
+        ? session
+        : <String, dynamic>{};
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isGroup ? 'Apagar aula?' : 'Apagar sessao?'),
+        content: const Text('Esta acao nao pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final endpoint = isGroup
+        ? '/api/v1/group_sessions/${sessionMap['id']}'
+        : '/api/v1/training_sessions/${sessionMap['id']}';
+    final data = await ApiService.delete(context, endpoint, widget.token);
+    if (!mounted) return;
+
+    if (data is Map && data['message'] != null) {
+      fetchSessions();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isGroup ? 'Aula apagada.' : 'Sessao apagada.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            getApiErrorMessage(data) ?? 'Nao foi possivel apagar a sessao.',
           ),
         ),
       );
@@ -138,7 +380,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       case 'scheduled':
         return 'Agendada';
       case 'completed':
-        return 'Concluída';
+        return 'Concluida';
       case 'cancelled':
         return 'Cancelada';
       default:
@@ -158,19 +400,19 @@ class _SessionsScreenState extends State<SessionsScreen> {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
 
-    return '$day/$month/$year às $hour:$minute';
+    return '$day/$month/$year as $hour:$minute';
   }
 
   String groupSessionLabel(dynamic session) {
     final registered = session is Map ? session['registered_students'] ?? 0 : 0;
     final maxStudents = session is Map ? session['max_students'] ?? '-' : '-';
-    return 'Aula em grupo · $registered/$maxStudents inscritos';
+    return 'Aula em grupo - $registered/$maxStudents inscritos';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('As minhas sessões')),
+      appBar: AppBar(title: const Text('As minhas sessoes')),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
@@ -181,7 +423,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   const Padding(
                     padding: EdgeInsets.all(24),
                     child: Center(
-                      child: Text('Não existem sessões individuais agendadas'),
+                      child: Text('Nao existem sessoes individuais agendadas'),
                     ),
                   )
                 else
@@ -204,7 +446,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   const Padding(
                     padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Text(
-                      'Aulas em grupo disponíveis',
+                      'Aulas em grupo disponiveis',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -227,35 +469,52 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
+  Widget _trainerActions(dynamic session, {required bool isGroup}) {
+    if (!isTrainer) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'Editar',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () => editSession(session, isGroup: isGroup),
+        ),
+        IconButton(
+          tooltip: 'Apagar',
+          icon: const Icon(Icons.delete_outline),
+          color: Colors.redAccent,
+          onPressed: () => deleteSession(session, isGroup: isGroup),
+        ),
+      ],
+    );
+  }
+
   Widget _sessionCard(dynamic session) {
+    final status = session is Map ? session['status']?.toString() ?? '' : '';
+
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
         leading: const Icon(Icons.fitness_center),
-        title: Text('Sessão em ${formatSessionDate(session['date'])}'),
+        title: Text('Sessao em ${formatSessionDate(session['date'])}'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Sessão individual'),
+            const Text('Sessao individual'),
             if (session['notes'] != null) Text(session['notes']),
           ],
         ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: getStatusColor(session['status']),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            getStatusLabel(session['status']),
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
+        trailing: isTrainer
+            ? _trainerActions(session, isGroup: false)
+            : _statusBadge(status),
       ),
     );
   }
 
   Widget _groupSessionCard(dynamic session, {Widget? action}) {
+    final status = session is Map ? session['status']?.toString() ?? '' : '';
+
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
@@ -268,17 +527,25 @@ class _SessionsScreenState extends State<SessionsScreen> {
             if (session['notes'] != null) Text(session['notes']),
           ],
         ),
-        trailing: action ?? Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: getStatusColor(session['status']),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            getStatusLabel(session['status']),
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
+        trailing:
+            action ??
+            (isTrainer
+                ? _trainerActions(session, isGroup: true)
+                : _statusBadge(status)),
+      ),
+    );
+  }
+
+  Widget _statusBadge(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: getStatusColor(status),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        getStatusLabel(status),
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }
