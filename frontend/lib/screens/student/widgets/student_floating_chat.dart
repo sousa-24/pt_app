@@ -49,7 +49,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
   Future<void> _initChat() async {
     try {
-      final userData = await ApiService.get(context, '/api/v1/me', widget.token);
+      final userData = await ApiService.get(context, '/api/v1/profile/me', widget.token);
       if (!mounted) return;
 
       final userId = _intValue(userData is Map ? userData['id'] : null);

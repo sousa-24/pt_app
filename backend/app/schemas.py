@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 from pydantic import BaseModel, EmailStr, model_validator
 from enum import Enum
 
@@ -8,6 +9,12 @@ from enum import Enum
 class RoleEnum(str, Enum):
     trainer = "trainer"
     client = "client"
+
+
+class SessionStatusEnum(str, Enum):
+    scheduled = "scheduled"
+    completed = "completed"
+    cancelled = "cancelled"
 
 
 # Esquema para criar um novo utilizador no sistema.
@@ -70,9 +77,11 @@ class WorkoutPlanCreate(BaseModel):
     exercises: list[ExerciseCreate]
 
 
-# Esquema para atualizar um plano de treino (ex: marcar como completo).
+# Esquema para atualizar um plano de treino (título, exercícios, estado completo).
 class WorkoutPlanUpdate(BaseModel):
-    completed: bool
+    title: str | None = None
+    completed: bool | None = None
+    exercises: list[ExerciseCreate] | None = None
 
 
 # Esquema de resposta para um plano de treino, incluindo exercícios e metadados.
@@ -87,7 +96,7 @@ class WorkoutPlanResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# Esquema para agendar ou atualizar uma sessão de treino.
+# Esquema para agendar uma sessão de treino individual.
 class TrainingSessionCreate(BaseModel):
     client_id: int
     workout_plan_id: int | None = None
@@ -95,13 +104,42 @@ class TrainingSessionCreate(BaseModel):
     notes: str | None = None
 
 
-# Esquema de resposta para sessões de treino agendadas.
+# Esquema de resposta para sessões de treino individuais.
 class TrainingSessionResponse(BaseModel):
     id: int
     client_id: int
     trainer_id: int
     workout_plan_id: int | None = None
     date: datetime
+    status: str
+    notes: str | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# Esquema para criar uma aula em grupo.
+class GroupSessionCreate(BaseModel):
+    date: datetime
+    max_students: int
+    notes: str | None = None
+
+
+# Esquema para atualizar uma aula em grupo.
+class GroupSessionUpdate(BaseModel):
+    date: datetime | None = None
+    max_students: int | None = None
+    status: SessionStatusEnum | None = None
+    notes: str | None = None
+
+
+# Esquema de resposta para aulas em grupo.
+class GroupSessionResponse(BaseModel):
+    id: int
+    trainer_id: int
+    date: datetime
+    max_students: int
+    registered_students: int = 0
+    is_enrolled: bool = False
     status: str
     notes: str | None = None
     created_at: datetime
@@ -255,7 +293,7 @@ class ClientSessionFeedbackCreate(BaseModel):
 class ClientSessionFeedbackResponse(BaseModel):
     id: int
     session_id: int
-    cliente_id: int
+    client_id: int
     trainer_id: int
     rating: int
     notes: str | None = None
@@ -274,7 +312,7 @@ class SessionPerformanceCreate(BaseModel):
 class SessionPerformanceResponse(BaseModel):
     id: int
     session_id: int
-    cliente_id: int
+    client_id: int
     trainer_id: int
     performance_rating: int
     notes: str | None = None
@@ -304,3 +342,68 @@ class NotificationCountResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     message: str
+
+
+class UserProgressionUpdate(BaseModel):
+    date: datetime | None = None
+    weight: float | None = None
+    body_fat_percentage: float | None = None
+    muscle_mass: float | None = None
+    notes: str | None = None
+
+
+class ClientSessionFeedbackUpdate(BaseModel):
+    rating: int | None = None
+    notes: str | None = None
+
+
+class SessionPerformanceUpdate(BaseModel):
+    performance_rating: int | None = None
+    notes: str | None = None
+
+
+class NutriPlanUpdate(BaseModel):
+    title: str | None = None
+    meals: list[MealCreate] | None = None
+
+
+class TrainingSessionUpdate(BaseModel):
+    date: datetime | None = None
+    workout_plan_id: int | None = None
+    notes: str | None = None
+    status: SessionStatusEnum | None = None
+
+
+class PaymentCreate(BaseModel):
+    client_id: int
+    type_of_service: str
+    cost: Decimal
+    due_date: date
+    payment_method: str | None = None
+    notes: str | None = None
+
+
+class PaymentUpdate(BaseModel):
+    type_of_service: str | None = None
+    cost: Decimal | None = None
+    status: str | None = None
+    due_date: date | None = None
+    paid_at: datetime | None = None
+    payment_method: str | None = None
+    notes: str | None = None
+
+
+class PaymentResponse(BaseModel):
+    id: int
+    trainer_id: int
+    client_id: int
+    type_of_service: str
+    cost: Decimal
+    status: str
+    due_date: date
+    paid_at: datetime | None = None
+    payment_method: str | None = None
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

@@ -1,6 +1,6 @@
 
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.auth import get_current_user
@@ -27,7 +27,7 @@ def get_unread_notifications_count(
     return {"count": count}
 
 @router.put(
-    "/{notification_id}/read/",
+    "/notifications/{notification_id}/read/",
     response_model=schemas.StatusResponse
 )
 def mark_notification_as_read(
@@ -60,7 +60,7 @@ def mark_notification_as_read(
 
 
 @router.put(
-    "/read_all/",
+    "/notifications/read_all/",
     response_model=schemas.StatusResponse
 )
 def mark_all_notifications_as_read(

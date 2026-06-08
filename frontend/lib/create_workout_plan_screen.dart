@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'client_selector.dart';
 
 class CreateWorkoutPlanScreen extends StatefulWidget {
   final String token;
@@ -7,12 +8,13 @@ class CreateWorkoutPlanScreen extends StatefulWidget {
   const CreateWorkoutPlanScreen({super.key, required this.token});
 
   @override
-  State<CreateWorkoutPlanScreen> createState() => _CreateWorkoutPlanScreenState();
+  State<CreateWorkoutPlanScreen> createState() =>
+      _CreateWorkoutPlanScreenState();
 }
 
 class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   final titleController = TextEditingController();
-  final clientIdController = TextEditingController();
+  int? selectedClientId;
   bool isLoading = false;
   String errorMessage = '';
 
@@ -30,7 +32,6 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   @override
   void dispose() {
     titleController.dispose();
-    clientIdController.dispose();
     for (final controller in nameControllers) {
       controller.dispose();
     }
@@ -61,10 +62,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
   Future<void> submitPlan() async {
     final title = titleController.text.trim();
-    final clientId = int.tryParse(clientIdController.text.trim());
 
-    if (title.isEmpty || clientId == null) {
-      setState(() => errorMessage = 'Preenche o título e um ID de aluno válido.');
+    if (title.isEmpty || selectedClientId == null) {
+      setState(() => errorMessage = 'Preenche o título e seleciona um aluno.');
       return;
     }
 
@@ -74,7 +74,11 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       final sets = int.tryParse(setsControllers[i].text.trim());
       final reps = int.tryParse(repsControllers[i].text.trim());
 
-      if (name.isEmpty || sets == null || reps == null || sets <= 0 || reps <= 0) {
+      if (name.isEmpty ||
+          sets == null ||
+          reps == null ||
+          sets <= 0 ||
+          reps <= 0) {
         setState(() {
           errorMessage =
               'Preenche o nome, as séries e as repetições de todos os exercícios.';
@@ -82,11 +86,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
         return;
       }
 
-      exercises.add({
-        'name': name,
-        'sets': sets,
-        'reps': reps,
-      });
+      exercises.add({'name': name, 'sets': sets, 'reps': reps});
     }
 
     setState(() {
@@ -99,11 +99,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
         context,
         '/api/v1/workout_plans/',
         widget.token,
-        {
-          'title': title,
-          'client_id': clientId,
-          'exercises': exercises,
-        },
+        {'title': title, 'client_id': selectedClientId, 'exercises': exercises},
       ).timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
@@ -111,7 +107,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       if (data is Map<String, dynamic> && data['id'] != null) {
         Navigator.pop(context, true);
       } else {
-        setState(() => errorMessage = 'Não foi possível criar o plano de treino.');
+        setState(
+          () => errorMessage = 'Não foi possível criar o plano de treino.',
+        );
       }
     } catch (_) {
       if (!mounted) return;
@@ -126,9 +124,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Criar Plano de Treino'),
-      ),
+      appBar: AppBar(title: const Text('Criar Plano de Treino')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -142,14 +138,12 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: clientIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'ID do aluno',
-                helperText: 'Para CassiaM, usa o ID 2.',
-                border: OutlineInputBorder(),
-              ),
+            ClientSelector(
+              token: widget.token,
+              selectedClientId: selectedClientId,
+              onChanged: (clientId) {
+                setState(() => selectedClientId = clientId);
+              },
             ),
             const SizedBox(height: 24),
             const Text(
@@ -171,11 +165,18 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Exercício ${index + 1}',
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              'Exercício ${index + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             if (nameControllers.length > 1)
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () => removeExercise(index),
                               ),
                           ],

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
-from app.dependencies import require_trainer, get_user_items
+from app.dependencies import require_trainer, get_user_items, verify_user_ownership
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1", tags=["progression"])
@@ -69,6 +69,57 @@ def get_progression(
     """Get all progression records for the current user."""
     progression = get_user_items(db, models.UserProgression, current_user)
     return progression
+
+
+@router.put("/progression/{progression_id}", response_model=schemas.UserProgressionResponse)
+def update_progression(
+    progression_id: int,
+    data: schemas.UserProgressionUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Update a progression record. Client can edit their own; trainer can edit their clients'."""
+    record = db.query(models.UserProgression).filter(
+        models.UserProgression.id == progression_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Registo de progressão não encontrado")
+    verify_user_ownership(db, record, current_user)
+
+    if data.date is not None:
+        record.date = data.date
+    if data.weight is not None:
+        record.weight = data.weight
+    if data.body_fat_percentage is not None:
+        record.body_fat_percentage = data.body_fat_percentage
+    if data.muscle_mass is not None:
+        record.muscle_mass = data.muscle_mass
+    elif record.weight is not None and record.body_fat_percentage is not None:
+        record.muscle_mass = round(record.weight * (1 - record.body_fat_percentage / 100), 2)
+    if data.notes is not None:
+        record.notes = data.notes
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@router.delete("/progression/{progression_id}", response_model=schemas.StatusResponse)
+def delete_progression(
+    progression_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Delete a progression record. Client can delete their own; trainer can delete their clients'."""
+    record = db.query(models.UserProgression).filter(
+        models.UserProgression.id == progression_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Registo de progressão não encontrado")
+    verify_user_ownership(db, record, current_user)
+    db.delete(record)
+    db.commit()
+    return {"message": "Registo de progressão eliminado com sucesso"}
 
 
 @router.get("/progression/{client_id}", response_model=list[schemas.UserProgressionResponse])

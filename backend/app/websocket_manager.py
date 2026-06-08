@@ -35,6 +35,9 @@ class WebSocketManager:
                 del self.active_connections[user_id]
 
 
+    def is_connected(self, user_id: int) -> bool:
+        return bool(self.active_connections.get(user_id))
+
     async def broadcast(self, message: Any):
         for connections in self.active_connections.values():
             for connection in connections:

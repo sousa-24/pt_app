@@ -5,19 +5,23 @@ from app import models, schemas
 from fastapi.middleware.cors import CORSMiddleware
 from app.websocket_manager import manager
 from app.auth import get_user_from_token
+from app.services.notification_services import create_notification
 
 # Import all routers
 from app.routers import (
     auth,
+    profile,
     workout_plans,
     training_sessions,
+    group_sessions,
     progression,
     nutri_plans,
     invite_codes,
     messages,
     contacts,
     session_feedback,
-    notifications
+    notifications,
+    payments
 )
 
 # Create tables if they don't exist
@@ -36,8 +40,10 @@ app.add_middleware(
 
 # Register all routers
 app.include_router(auth.router)
+app.include_router(profile.router)
 app.include_router(workout_plans.router)
 app.include_router(training_sessions.router)
+app.include_router(group_sessions.router)
 app.include_router(progression.router)
 app.include_router(nutri_plans.router)
 app.include_router(invite_codes.router)
@@ -45,6 +51,7 @@ app.include_router(messages.router)
 app.include_router(contacts.router)
 app.include_router(session_feedback.router)
 app.include_router(notifications.router)
+app.include_router(payments.router)
 
 # WebSocket endpoint for real-time messaging
 @app.websocket("/ws/{user_id}")
@@ -72,20 +79,19 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
         while True:
             try:
                 data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
             except Exception:
-                await websocket.send_json({"type": "error", "detail": "Invalid JSON payload"})
                 continue
 
             receiver_id = data.get("receiver_id")
             content = data.get("content")
             if receiver_id is None or content is None:
-                await websocket.send_json({"type": "error", "detail": "receiver_id and content are required"})
                 continue
 
             try:
                 receiver_id = int(receiver_id)
             except (TypeError, ValueError):
-                await websocket.send_json({"type": "error", "detail": "receiver_id must be an integer"})
                 continue
 
             new_message = models.Message(
@@ -108,6 +114,15 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
 
             await manager.send_message(payload, receiver_id)
             await websocket.send_json({"type": "sent", "message": payload})
+
+            create_notification(
+                db=db,
+                user_id=receiver_id,
+                title="Nova mensagem",
+                message=f"{auth_user.name} enviou-lhe uma mensagem.",
+                type="message",
+            )
+            await manager.send_message({"type": "new_notification"}, receiver_id)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)

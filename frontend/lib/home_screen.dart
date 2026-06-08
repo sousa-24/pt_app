@@ -114,7 +114,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SessionsScreen(token: token),
+                      builder: (context) =>
+                          SessionsScreen(token: token, role: role),
                     ),
                   );
                 },
@@ -234,7 +235,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SessionsScreen(token: token),
+                      builder: (context) =>
+                          SessionsScreen(token: token, role: role),
                     ),
                   );
                 },

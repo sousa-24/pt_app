@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'client_selector.dart';
 
 class ScheduleSessionScreen extends StatefulWidget {
   final String token;
@@ -11,10 +12,12 @@ class ScheduleSessionScreen extends StatefulWidget {
 }
 
 class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
-  final clientIdController = TextEditingController();
+  final maxStudentsController = TextEditingController(text: '10');
   final notesController = TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  int? selectedClientId;
+  String sessionType = 'individual';
   bool isLoading = false;
   String errorMessage = '';
 
@@ -67,11 +70,21 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   }
 
   Future<void> submitSession() async {
-    final clientId = int.tryParse(clientIdController.text);
+    final maxStudents = int.tryParse(maxStudentsController.text);
     final dateTime = selectedDateTime;
 
-    if (clientId == null || dateTime == null) {
-      setState(() => errorMessage = 'Preenche o ID do aluno, a data e a hora.');
+    if (dateTime == null) {
+      setState(() => errorMessage = 'Escolhe a data e a hora.');
+      return;
+    }
+
+    if (sessionType == 'individual' && selectedClientId == null) {
+      setState(() => errorMessage = 'Seleciona o aluno, a data e a hora.');
+      return;
+    }
+
+    if (sessionType == 'group' && (maxStudents == null || maxStudents < 1)) {
+      setState(() => errorMessage = 'Indica um limite de alunos valido.');
       return;
     }
 
@@ -99,16 +112,26 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       errorMessage = '';
     });
 
-    final data = await ApiService.post(
-      context,
-      '/api/v1/training_sessions/',
-      widget.token,
-      {
-        'client_id': clientId,
+    final String endpoint;
+    final Map<String, dynamic> body;
+
+    if (sessionType == 'group') {
+      endpoint = '/api/v1/group_sessions/';
+      body = {
+        'date': dateTime.toIso8601String(),
+        'max_students': maxStudents,
+        'notes': notesController.text.isEmpty ? null : notesController.text,
+      };
+    } else {
+      endpoint = '/api/v1/training_sessions/';
+      body = {
+        'client_id': selectedClientId,
         'date': dateTime.toIso8601String(),
         'notes': notesController.text.isEmpty ? null : notesController.text,
-      },
-    );
+      };
+    }
+
+    final data = await ApiService.post(context, endpoint, widget.token, body);
 
     if (!mounted) return;
 
@@ -134,14 +157,42 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: clientIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'ID do aluno',
-                border: OutlineInputBorder(),
-              ),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'individual',
+                  icon: Icon(Icons.person_outline),
+                  label: Text('Individual'),
+                ),
+                ButtonSegment(
+                  value: 'group',
+                  icon: Icon(Icons.groups_outlined),
+                  label: Text('Grupo'),
+                ),
+              ],
+              selected: {sessionType},
+              onSelectionChanged: (values) {
+                setState(() => sessionType = values.first);
+              },
             ),
+            const SizedBox(height: 16),
+            if (sessionType == 'individual')
+              ClientSelector(
+                token: widget.token,
+                selectedClientId: selectedClientId,
+                onChanged: (clientId) {
+                  setState(() => selectedClientId = clientId);
+                },
+              )
+            else
+              TextField(
+                controller: maxStudentsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Limite de alunos',
+                  border: OutlineInputBorder(),
+                ),
+              ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -189,7 +240,11 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                 onPressed: isLoading ? null : submitSession,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Agendar sessão'),
+                    : Text(
+                        sessionType == 'group'
+                            ? 'Criar aula em grupo'
+                            : 'Agendar sessão',
+                      ),
               ),
             ),
           ],
