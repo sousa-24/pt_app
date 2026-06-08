@@ -87,7 +87,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => WorkoutPlansScreen(token: token),
+                      builder: (context) =>
+                          WorkoutPlansScreen(token: token, role: role),
                     ),
                   );
                 },
@@ -154,7 +155,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => NutriPlansScreen(token: token),
+                      builder: (context) =>
+                          NutriPlansScreen(token: token, role: role),
                     ),
                   );
                 },
@@ -209,7 +211,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => WorkoutPlansScreen(token: token),
+                      builder: (context) =>
+                          WorkoutPlansScreen(token: token, role: role),
                     ),
                   );
                 },
@@ -249,7 +252,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => NutriPlansScreen(token: token),
+                      builder: (context) =>
+                          NutriPlansScreen(token: token, role: role),
                     ),
                   );
                 },

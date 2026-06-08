@@ -4,8 +4,13 @@ import 'client_selector.dart';
 
 class CreateNutriPlanScreen extends StatefulWidget {
   final String token;
+  final Map<String, dynamic>? existingPlan;
 
-  const CreateNutriPlanScreen({super.key, required this.token});
+  const CreateNutriPlanScreen({
+    super.key,
+    required this.token,
+    this.existingPlan,
+  });
 
   @override
   State<CreateNutriPlanScreen> createState() => _CreateNutriPlanScreenState();
@@ -17,13 +22,79 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
   bool isLoading = false;
   String errorMessage = '';
 
-  // Each meal has a name and a list of food items
-  List<Map<String, dynamic>> meals = [];
+  final List<Map<String, dynamic>> meals = [];
+
+  bool get isEditing => widget.existingPlan != null;
 
   @override
   void initState() {
     super.initState();
-    addMeal();
+
+    final plan = widget.existingPlan;
+    if (plan == null) {
+      addMeal();
+      return;
+    }
+
+    titleController.text = plan['title']?.toString() ?? '';
+    selectedClientId = plan['client_id'] is int
+        ? plan['client_id'] as int
+        : null;
+
+    final existingMeals = plan['meals'] is List ? plan['meals'] as List : [];
+    if (existingMeals.isEmpty) {
+      addMeal();
+      return;
+    }
+
+    for (final meal in existingMeals) {
+      final mealMap = meal is Map<String, dynamic> ? meal : <String, dynamic>{};
+      final foodItems = mealMap['food_items'] is List
+          ? mealMap['food_items'] as List
+          : const [];
+
+      meals.add({
+        'name': TextEditingController(text: mealMap['name']?.toString() ?? ''),
+        'food_items': foodItems.map((item) {
+          final food = item is Map<String, dynamic>
+              ? item
+              : <String, dynamic>{};
+          return {
+            'name': TextEditingController(text: food['name']?.toString() ?? ''),
+            'weight': TextEditingController(
+              text: food['weight']?.toString() ?? '',
+            ),
+            'calories': TextEditingController(
+              text: food['calories']?.toString() ?? '',
+            ),
+            'protein': TextEditingController(
+              text: food['protein']?.toString() ?? '',
+            ),
+            'carbs': TextEditingController(
+              text: food['carbs']?.toString() ?? '',
+            ),
+            'fats': TextEditingController(text: food['fats']?.toString() ?? ''),
+          };
+        }).toList(),
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    for (final meal in meals) {
+      (meal['name'] as TextEditingController).dispose();
+      for (final food in meal['food_items'] as List) {
+        (food['name'] as TextEditingController).dispose();
+        (food['weight'] as TextEditingController).dispose();
+        (food['calories'] as TextEditingController).dispose();
+        (food['protein'] as TextEditingController).dispose();
+        (food['carbs'] as TextEditingController).dispose();
+        (food['fats'] as TextEditingController).dispose();
+      }
+    }
+    super.dispose();
   }
 
   void addMeal() {
@@ -34,7 +105,11 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
 
   void removeMeal(int mealIndex) {
     setState(() {
-      meals.removeAt(mealIndex);
+      final meal = meals.removeAt(mealIndex);
+      (meal['name'] as TextEditingController).dispose();
+      for (final food in meal['food_items'] as List) {
+        _disposeFoodItem(food);
+      }
     });
   }
 
@@ -53,14 +128,86 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
 
   void removeFoodItem(int mealIndex, int foodIndex) {
     setState(() {
-      meals[mealIndex]['food_items'].removeAt(foodIndex);
+      final food = meals[mealIndex]['food_items'].removeAt(foodIndex);
+      _disposeFoodItem(food);
     });
   }
 
+  void _disposeFoodItem(dynamic food) {
+    (food['name'] as TextEditingController).dispose();
+    (food['weight'] as TextEditingController).dispose();
+    (food['calories'] as TextEditingController).dispose();
+    (food['protein'] as TextEditingController).dispose();
+    (food['carbs'] as TextEditingController).dispose();
+    (food['fats'] as TextEditingController).dispose();
+  }
+
+  String? getApiErrorMessage(dynamic data) {
+    if (data is Map && data['detail'] is String) {
+      return data['detail'] as String;
+    }
+    return null;
+  }
+
   Future<void> submitPlan() async {
-    if (titleController.text.isEmpty || selectedClientId == null) {
-      setState(() => errorMessage = 'Preenche o título e seleciona um aluno.');
+    final title = titleController.text.trim();
+    if (title.isEmpty || selectedClientId == null) {
+      setState(() => errorMessage = 'Preenche o titulo e seleciona um aluno.');
       return;
+    }
+
+    final mealsData = <Map<String, dynamic>>[];
+    for (final meal in meals) {
+      final mealName = (meal['name'] as TextEditingController).text.trim();
+      final foodItems = <Map<String, dynamic>>[];
+
+      if (mealName.isEmpty) {
+        setState(() => errorMessage = 'Preenche o nome de todas as refeicoes.');
+        return;
+      }
+
+      for (final food in meal['food_items'] as List) {
+        final name = (food['name'] as TextEditingController).text.trim();
+        final weight = double.tryParse(
+          (food['weight'] as TextEditingController).text.trim(),
+        );
+        final calories = double.tryParse(
+          (food['calories'] as TextEditingController).text.trim(),
+        );
+        final protein = double.tryParse(
+          (food['protein'] as TextEditingController).text.trim(),
+        );
+        final carbs = double.tryParse(
+          (food['carbs'] as TextEditingController).text.trim(),
+        );
+        final fats = double.tryParse(
+          (food['fats'] as TextEditingController).text.trim(),
+        );
+
+        if (name.isEmpty ||
+            weight == null ||
+            calories == null ||
+            protein == null ||
+            carbs == null ||
+            fats == null) {
+          setState(() {
+            errorMessage =
+                'Preenche todos os campos dos alimentos com valores validos.';
+          });
+          return;
+        }
+
+        foodItems.add({
+          'name': name,
+          'weight': weight,
+          'calories': calories,
+          'protein': protein,
+          'carbs': carbs,
+          'fats': fats,
+        });
+      }
+
+      mealsData.add({'name': mealName, 'food_items': foodItems});
     }
 
     setState(() {
@@ -68,43 +215,41 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
       errorMessage = '';
     });
 
-    final mealsData = meals.map((meal) {
-      final foodItems = (meal['food_items'] as List)
-          .map(
-            (food) => {
-              'name': food['name'].text,
-              'weight': double.tryParse(food['weight'].text) ?? 0,
-              'calories': double.tryParse(food['calories'].text) ?? 0,
-              'protein': double.tryParse(food['protein'].text) ?? 0,
-              'carbs': double.tryParse(food['carbs'].text) ?? 0,
-              'fats': double.tryParse(food['fats'].text) ?? 0,
-            },
-          )
-          .toList();
-
-      return {'name': meal['name'].text, 'food_items': foodItems};
-    }).toList();
-
     try {
-      final data =
-          await ApiService.post(context, '/api/v1/nutri_plans/', widget.token, {
-            'title': titleController.text,
-            'client_id': selectedClientId,
-            'meals': mealsData,
-          }).timeout(const Duration(seconds: 10));
+      final data = isEditing
+          ? await ApiService.put(
+              context,
+              '/api/v1/nutri_plans/${widget.existingPlan!['id']}',
+              widget.token,
+              {'title': title, 'meals': mealsData},
+            ).timeout(const Duration(seconds: 10))
+          : await ApiService.post(
+              context,
+              '/api/v1/nutri_plans/',
+              widget.token,
+              {
+                'title': title,
+                'client_id': selectedClientId,
+                'meals': mealsData,
+              },
+            ).timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
 
       if (data is Map<String, dynamic> && data['id'] != null) {
         Navigator.pop(context, true);
       } else {
-        setState(
-          () => errorMessage = 'Não foi possível criar o plano alimentar.',
-        );
+        setState(() {
+          errorMessage =
+              getApiErrorMessage(data) ??
+              (isEditing
+                  ? 'Nao foi possivel atualizar o plano alimentar.'
+                  : 'Nao foi possivel criar o plano alimentar.');
+        });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorMessage = 'Não foi possível contactar o servidor.');
+      setState(() => errorMessage = 'Nao foi possivel contactar o servidor.');
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -115,7 +260,11 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar Plano Alimentar')),
+      appBar: AppBar(
+        title: Text(
+          isEditing ? 'Editar Plano Alimentar' : 'Criar Plano Alimentar',
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -124,7 +273,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
             TextField(
               controller: titleController,
               decoration: const InputDecoration(
-                labelText: 'Título do plano',
+                labelText: 'Titulo do plano',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -138,7 +287,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Refeições',
+              'Refeicoes',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -161,7 +310,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Refeição ${mealIndex + 1}',
+                              'Refeicao ${mealIndex + 1}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -169,6 +318,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                             ),
                             if (meals.length > 1)
                               IconButton(
+                                tooltip: 'Remover refeicao',
                                 icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
@@ -181,7 +331,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                         TextField(
                           controller: meal['name'],
                           decoration: const InputDecoration(
-                            labelText: 'Nome da refeição (ex.: Pequeno-almoço)',
+                            labelText: 'Nome da refeicao',
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -212,6 +362,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                       children: [
                                         Text('Item ${foodIndex + 1}'),
                                         IconButton(
+                                          tooltip: 'Remover alimento',
                                           icon: const Icon(
                                             Icons.close,
                                             color: Colors.red,
@@ -239,7 +390,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             controller: food['weight'],
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
-                                              labelText: 'Weight (g)',
+                                              labelText: 'Peso (g)',
                                               border: OutlineInputBorder(),
                                             ),
                                           ),
@@ -250,7 +401,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             controller: food['calories'],
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
-                                              labelText: 'Calories',
+                                              labelText: 'Calorias',
                                               border: OutlineInputBorder(),
                                             ),
                                           ),
@@ -261,7 +412,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             controller: food['protein'],
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
-                                              labelText: 'Protein',
+                                              labelText: 'Proteina',
                                               border: OutlineInputBorder(),
                                             ),
                                           ),
@@ -276,7 +427,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             controller: food['carbs'],
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
-                                              labelText: 'Carbs',
+                                              labelText: 'Hidratos',
                                               border: OutlineInputBorder(),
                                             ),
                                           ),
@@ -287,7 +438,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                             controller: food['fats'],
                                             keyboardType: TextInputType.number,
                                             decoration: const InputDecoration(
-                                              labelText: 'Fats',
+                                              labelText: 'Gorduras',
                                               border: OutlineInputBorder(),
                                             ),
                                           ),
@@ -314,7 +465,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
             OutlinedButton.icon(
               onPressed: addMeal,
               icon: const Icon(Icons.add),
-              label: const Text('Adicionar refeição'),
+              label: const Text('Adicionar refeicao'),
             ),
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
@@ -326,7 +477,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                 onPressed: isLoading ? null : submitPlan,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Criar plano'),
+                    : Text(isEditing ? 'Guardar alteracoes' : 'Criar plano'),
               ),
             ),
           ],
