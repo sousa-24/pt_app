@@ -4,8 +4,13 @@ import 'client_selector.dart';
 
 class CreateWorkoutPlanScreen extends StatefulWidget {
   final String token;
+  final Map<String, dynamic>? existingPlan;
 
-  const CreateWorkoutPlanScreen({super.key, required this.token});
+  const CreateWorkoutPlanScreen({
+    super.key,
+    required this.token,
+    this.existingPlan,
+  });
 
   @override
   State<CreateWorkoutPlanScreen> createState() =>
@@ -18,15 +23,49 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   bool isLoading = false;
   String errorMessage = '';
 
-  // Dynamic exercise controllers
-  List<TextEditingController> nameControllers = [];
-  List<TextEditingController> setsControllers = [];
-  List<TextEditingController> repsControllers = [];
+  final List<TextEditingController> nameControllers = [];
+  final List<TextEditingController> setsControllers = [];
+  final List<TextEditingController> repsControllers = [];
+
+  bool get isEditing => widget.existingPlan != null;
 
   @override
   void initState() {
     super.initState();
-    addExercise();
+
+    final plan = widget.existingPlan;
+    if (plan == null) {
+      addExercise();
+      return;
+    }
+
+    titleController.text = plan['title']?.toString() ?? '';
+    selectedClientId = plan['client_id'] is int
+        ? plan['client_id'] as int
+        : null;
+
+    final exercises = plan['exercises'] is List
+        ? plan['exercises'] as List
+        : [];
+    if (exercises.isEmpty) {
+      addExercise();
+      return;
+    }
+
+    for (final exercise in exercises) {
+      final exerciseMap = exercise is Map<String, dynamic>
+          ? exercise
+          : <String, dynamic>{};
+      nameControllers.add(
+        TextEditingController(text: exerciseMap['name']?.toString() ?? ''),
+      );
+      setsControllers.add(
+        TextEditingController(text: exerciseMap['sets']?.toString() ?? ''),
+      );
+      repsControllers.add(
+        TextEditingController(text: exerciseMap['reps']?.toString() ?? ''),
+      );
+    }
   }
 
   @override
@@ -60,11 +99,18 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
     });
   }
 
+  String? getApiErrorMessage(dynamic data) {
+    if (data is Map && data['detail'] is String) {
+      return data['detail'] as String;
+    }
+    return null;
+  }
+
   Future<void> submitPlan() async {
     final title = titleController.text.trim();
 
     if (title.isEmpty || selectedClientId == null) {
-      setState(() => errorMessage = 'Preenche o título e seleciona um aluno.');
+      setState(() => errorMessage = 'Preenche o titulo e seleciona um aluno.');
       return;
     }
 
@@ -81,7 +127,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           reps <= 0) {
         setState(() {
           errorMessage =
-              'Preenche o nome, as séries e as repetições de todos os exercícios.';
+              'Preenche o nome, as series e as repeticoes de todos os exercicios.';
         });
         return;
       }
@@ -94,26 +140,43 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       errorMessage = '';
     });
 
+    final payload = {
+      'title': title,
+      'client_id': selectedClientId,
+      'exercises': exercises,
+    };
+
     try {
-      final data = await ApiService.post(
-        context,
-        '/api/v1/workout_plans/',
-        widget.token,
-        {'title': title, 'client_id': selectedClientId, 'exercises': exercises},
-      ).timeout(const Duration(seconds: 10));
+      final data = isEditing
+          ? await ApiService.put(
+              context,
+              '/api/v1/workout_plans/${widget.existingPlan!['id']}',
+              widget.token,
+              payload,
+            ).timeout(const Duration(seconds: 10))
+          : await ApiService.post(
+              context,
+              '/api/v1/workout_plans/',
+              widget.token,
+              payload,
+            ).timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
 
       if (data is Map<String, dynamic> && data['id'] != null) {
         Navigator.pop(context, true);
       } else {
-        setState(
-          () => errorMessage = 'Não foi possível criar o plano de treino.',
-        );
+        setState(() {
+          errorMessage =
+              getApiErrorMessage(data) ??
+              (isEditing
+                  ? 'Nao foi possivel atualizar o plano de treino.'
+                  : 'Nao foi possivel criar o plano de treino.');
+        });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorMessage = 'Não foi possível contactar o servidor.');
+      setState(() => errorMessage = 'Nao foi possivel contactar o servidor.');
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -124,7 +187,11 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar Plano de Treino')),
+      appBar: AppBar(
+        title: Text(
+          isEditing ? 'Editar Plano de Treino' : 'Criar Plano de Treino',
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -133,7 +200,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             TextField(
               controller: titleController,
               decoration: const InputDecoration(
-                labelText: 'Título do plano',
+                labelText: 'Titulo do plano',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -147,7 +214,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Exercícios',
+              'Exercicios',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -166,13 +233,14 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Exercício ${index + 1}',
+                              'Exercicio ${index + 1}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             if (nameControllers.length > 1)
                               IconButton(
+                                tooltip: 'Remover exercicio',
                                 icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
@@ -185,7 +253,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                         TextField(
                           controller: nameControllers[index],
                           decoration: const InputDecoration(
-                            labelText: 'Nome do exercício',
+                            labelText: 'Nome do exercicio',
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -197,7 +265,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                                 controller: setsControllers[index],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
-                                  labelText: 'Séries',
+                                  labelText: 'Series',
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -208,7 +276,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                                 controller: repsControllers[index],
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
-                                  labelText: 'Repetições',
+                                  labelText: 'Repeticoes',
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -225,7 +293,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             OutlinedButton.icon(
               onPressed: addExercise,
               icon: const Icon(Icons.add),
-              label: const Text('Adicionar exercício'),
+              label: const Text('Adicionar exercicio'),
             ),
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
@@ -237,7 +305,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                 onPressed: isLoading ? null : submitPlan,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Criar plano'),
+                    : Text(isEditing ? 'Guardar alteracoes' : 'Criar plano'),
               ),
             ),
           ],
