@@ -81,15 +81,16 @@ def update_workout_plan(
     plan_id: int,
     plan_update: schemas.WorkoutPlanUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(require_trainer)
 ):
     """Update workout plan (e.g., mark as completed)."""
-    db_plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id).first()
-    
+    db_plan = db.query(models.WorkoutPlan).filter(
+        models.WorkoutPlan.id == plan_id,
+        models.WorkoutPlan.trainer_id == current_user.id
+    ).first()
+
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plano de treino não encontrado")
-    
-    verify_user_ownership(db, db_plan, current_user)
     
     if plan_update.title is not None:
         db_plan.title = plan_update.title
