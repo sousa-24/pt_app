@@ -138,7 +138,21 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
     setState(() => isLoading = false);
 
     if (data is Map && data['id'] != null) {
-      Navigator.pop(context);
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Sucesso'),
+          content: const Text('Agendamento feito com sucesso.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      Navigator.pop(context, true);
     } else {
       setState(() {
         errorMessage =

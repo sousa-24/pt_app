@@ -237,6 +237,21 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
       if (!mounted) return;
 
       if (data is Map<String, dynamic> && data['id'] != null) {
+        setState(() => isLoading = false);
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Sucesso'),
+            content: const Text('Plano alimentar criado com sucesso.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
         Navigator.pop(context, true);
       } else {
         setState(() {
