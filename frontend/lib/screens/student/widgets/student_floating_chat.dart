@@ -83,7 +83,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
       }
 
       final uri = Uri.parse(
-        'ws://127.0.0.1:8000/ws/$_currentUserId?token=${widget.token}',
+        'wss://backend-production-d7c3c.up.railway.app/ws/$_currentUserId?token=${widget.token}',
       );
       _channel = WebSocketChannel.connect(uri);
 

@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/registar/'),
+        Uri.parse('https://backend-production-d7c3c.up.railway.app/api/v1/registar/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
