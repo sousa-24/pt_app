@@ -185,7 +185,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
 
     if (_selectedNavIndex == 4) {
-      return const [StudentInvoicesScreen()];
+      return [StudentInvoicesScreen(token: widget.token)];
     }
 
     if (_selectedNavIndex == 5) {

@@ -109,6 +109,21 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       if (!mounted) return;
 
       if (data is Map<String, dynamic> && data['id'] != null) {
+        setState(() => isLoading = false);
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Sucesso'),
+            content: const Text('Plano de treino criado com sucesso.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
         Navigator.pop(context, true);
       } else {
         setState(() => errorMessage = 'Não foi possível criar o plano de treino.');
