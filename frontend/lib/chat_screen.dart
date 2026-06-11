@@ -66,7 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (currentUserId == null) return;
 
     final uri = Uri.parse(
-      'ws://127.0.0.1:8000/ws/$currentUserId?token=${widget.token}',
+      'wss://backend-production-d7c3c.up.railway.app/ws/$currentUserId?token=${widget.token}',
     );
     channel = WebSocketChannel.connect(uri);
 
