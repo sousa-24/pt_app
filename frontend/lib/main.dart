@@ -292,16 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               child: OutlinedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => RegisterScreen(
-                            onToggleTheme: widget.onToggleTheme,
-                            themeMode: widget.themeMode,
-                          ),
-                    ),
-                  );
+                  _openRegisterScreen();
                 },
 
                 style: OutlinedButton.styleFrom(
@@ -323,6 +314,32 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _openRegisterScreen() async {
+    final registeredRole = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RegisterScreen(
+          onToggleTheme: widget.onToggleTheme,
+          themeMode: widget.themeMode,
+        ),
+      ),
+    );
+
+    if (!mounted || registeredRole == null) return;
+
+    setState(() {
+      emailController.clear();
+      passwordController.clear();
+      errorMessage = '';
+      _showPassword = false;
+      _selectedAccount = registeredRole;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Conta criada! Faca login para entrar.')),
     );
   }
 

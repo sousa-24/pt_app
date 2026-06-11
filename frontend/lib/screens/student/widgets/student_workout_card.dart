@@ -6,13 +6,13 @@ import '../student_theme.dart';
 class StudentWorkoutCard extends StatelessWidget {
   final StudentWorkoutPlan workout;
   final bool isCompleted;
-  final VoidCallback onToggle;
+  final VoidCallback onOpen;
 
   const StudentWorkoutCard({
     super.key,
     required this.workout,
     required this.isCompleted,
-    required this.onToggle,
+    required this.onOpen,
   });
 
   @override
@@ -87,12 +87,10 @@ class StudentWorkoutCard extends StatelessWidget {
             width: double.infinity,
             height: 46,
             child: ElevatedButton.icon(
-              onPressed: onToggle,
-              icon: Icon(
-                isCompleted ? Icons.replay : Icons.play_arrow_rounded,
-              ),
+              onPressed: onOpen,
+              icon: const Icon(Icons.visibility_outlined),
               label: Text(
-                isCompleted ? 'Marcar como pendente' : 'Comecar treino',
+                isCompleted ? 'Ver treino concluído' : 'Ver treino',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(

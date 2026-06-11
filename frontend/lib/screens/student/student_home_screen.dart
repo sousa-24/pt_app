@@ -200,7 +200,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
 
     if (_selectedNavIndex == 4) {
-      return const [StudentInvoicesScreen()];
+      return [StudentInvoicesScreen(token: widget.token)];
     }
 
     if (_selectedNavIndex == 5) {
@@ -292,64 +292,265 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return StudentWorkoutCard(
       workout: workout,
       isCompleted: _completedWorkoutIds.contains(workout.id),
-      onToggle: () => _toggleWorkout(workout),
+      onOpen: () => _showWorkoutDetails(workout),
     );
   }
 
   Widget _sessionCard(StudentTrainingSession session, {Widget? action}) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: StudentTheme.cardDecoration(),
+    return GestureDetector(
+      onTap: () => _showSessionDetails(session),
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(18),
+        decoration: StudentTheme.cardDecoration(),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: const BoxDecoration(
+                color: StudentTheme.blue,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.event_available_outlined,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _sessionDateLabel(session.date),
+                    style: const TextStyle(
+                      color: StudentTheme.darkText,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _sessionSubtitle(session),
+                    style: const TextStyle(
+                      color: StudentTheme.mutedText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (session.notes != null && session.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      session.notes!,
+                      style: const TextStyle(
+                        color: StudentTheme.mutedText,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                  if (action != null) ...[const SizedBox(height: 10), action],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.chevron_right,
+                  color: StudentTheme.mutedText,
+                  size: 22,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Ver',
+                  style: TextStyle(
+                    color: StudentTheme.mutedText,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSessionDetails(StudentTrainingSession session) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: StudentTheme.navy,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.84,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          color: StudentTheme.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.event_available_outlined,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _sessionTypeTitle(session),
+                              style: const TextStyle(
+                                color: StudentTheme.darkText,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _sessionStatusLabel(session.status),
+                              style: TextStyle(
+                                color: _sessionStatusColor(session.status),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _sessionDetailRow(
+                    Icons.calendar_today_outlined,
+                    'Data e hora',
+                    _sessionDateLabel(session.date),
+                  ),
+                  _sessionDetailRow(
+                    Icons.category_outlined,
+                    'Tipo',
+                    session.sessionType == 'group'
+                        ? 'Aula em grupo'
+                        : 'Sessão individual',
+                  ),
+                  if (session.sessionType == 'group')
+                    _sessionDetailRow(
+                      Icons.groups_outlined,
+                      'Vagas',
+                      '${session.registeredStudents}/${session.maxStudents?.toString() ?? '-'} inscritos',
+                    ),
+                  if (session.workoutPlanId != null &&
+                      session.workoutPlanId!.isNotEmpty)
+                    _sessionDetailRow(
+                      Icons.fitness_center_outlined,
+                      'Plano associado',
+                      _workoutTitleForSession(session),
+                    ),
+                  _sessionDetailRow(
+                    Icons.notes_outlined,
+                    'Notas da personal',
+                    session.notes?.trim().isNotEmpty == true
+                        ? session.notes!.trim()
+                        : 'Sem notas para esta sessão.',
+                  ),
+                  const SizedBox(height: 14),
+                  if (session.sessionType == 'group' &&
+                      session.isEnrolled) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF7185),
+                          side: const BorderSide(color: Color(0xFFFF7185)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _confirmUnenrollGroupSession(session);
+                        },
+                        icon: const Icon(Icons.event_busy_outlined),
+                        label: const Text('Cancelar inscrição'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Fechar'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sessionDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: const BoxDecoration(
-              color: StudentTheme.blue,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.event_available_outlined,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(width: 14),
+          Icon(icon, color: StudentTheme.blue, size: 20),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _sessionDateLabel(session.date),
-                  style: const TextStyle(
-                    color: StudentTheme.darkText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _sessionSubtitle(session),
+                  label,
                   style: const TextStyle(
                     color: StudentTheme.mutedText,
-                    fontSize: 13,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: StudentTheme.darkText,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (session.notes != null && session.notes!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    session.notes!,
-                    style: const TextStyle(
-                      color: StudentTheme.mutedText,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-                if (action != null) ...[const SizedBox(height: 10), action],
               ],
             ),
           ),
@@ -395,6 +596,154 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         _completedWorkoutIds.add(workout.id);
       }
     });
+  }
+
+  void _showWorkoutDetails(StudentWorkoutPlan workout) {
+    final isCompleted = _completedWorkoutIds.contains(workout.id);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: StudentTheme.navy,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.84,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: workout.color.withOpacity(0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(workout.icon, color: workout.color),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              workout.title,
+                              style: const TextStyle(
+                                color: StudentTheme.darkText,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isCompleted ? 'Concluído' : 'Pendente',
+                              style: TextStyle(
+                                color: isCompleted
+                                    ? StudentTheme.blue
+                                    : const Color(0xFFFFD36A),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  _sessionDetailRow(
+                    Icons.timer_outlined,
+                    'Duração estimada',
+                    '${workout.durationMinutes} min',
+                  ),
+                  _sessionDetailRow(
+                    Icons.fitness_center_outlined,
+                    'Exercícios',
+                    workout.exercises.isEmpty
+                        ? 'Sem exercícios definidos.'
+                        : '${workout.exercises.length} exercício(s)',
+                  ),
+                  if (workout.exercises.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    ...workout.exercises.map(
+                      (exercise) => Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3A3A3D),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          exercise,
+                          style: const TextStyle(
+                            color: StudentTheme.darkText,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _toggleWorkout(workout);
+                      },
+                      icon: Icon(
+                        isCompleted
+                            ? Icons.replay_outlined
+                            : Icons.check_circle_outline,
+                      ),
+                      label: Text(
+                        isCompleted
+                            ? 'Marcar como pendente'
+                            : 'Marcar como concluído',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Fechar'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _addWater(int amountMl) {
@@ -728,12 +1077,99 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  static Color _sessionStatusColor(String status) {
+    switch (status) {
+      case 'scheduled':
+        return StudentTheme.blue;
+      case 'completed':
+        return const Color(0xFF63D471);
+      case 'cancelled':
+        return const Color(0xFFFF7185);
+      default:
+        return StudentTheme.mutedText;
+    }
+  }
+
   static String _sessionSubtitle(StudentTrainingSession session) {
     final status = _sessionStatusLabel(session.status);
     if (session.sessionType != 'group') return status;
 
     final maxStudents = session.maxStudents?.toString() ?? '-';
     return 'Aula em grupo · ${session.registeredStudents}/$maxStudents inscritos · $status';
+  }
+
+  static String _sessionTypeTitle(StudentTrainingSession session) {
+    return session.sessionType == 'group'
+        ? 'Detalhes da aula em grupo'
+        : 'Detalhes da sessão';
+  }
+
+  String _workoutTitleForSession(StudentTrainingSession session) {
+    final workoutPlanId = session.workoutPlanId;
+    if (workoutPlanId == null || workoutPlanId.isEmpty) {
+      return 'Sem plano associado';
+    }
+
+    for (final workout in _workouts) {
+      if (workout.id == workoutPlanId) return workout.title;
+    }
+
+    return 'Plano #$workoutPlanId';
+  }
+
+  Future<void> _confirmUnenrollGroupSession(
+    StudentTrainingSession session,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar inscrição?'),
+        content: Text(
+          'Queres cancelar a inscrição na aula de ${_sessionDateLabel(session.date)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancelar inscrição'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      _unenrollGroupSession(session);
+    }
+  }
+
+  Future<void> _unenrollGroupSession(StudentTrainingSession session) async {
+    final token = widget.token;
+    if (token == null || token.isEmpty) return;
+
+    final data = await ApiService.delete(
+      context,
+      '/api/v1/group_sessions/${session.id}/enroll',
+      token,
+    );
+    if (!mounted) return;
+
+    if (data is Map && data['message'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inscrição cancelada com sucesso.')),
+      );
+      _loadEnrolledGroupSessions();
+      _loadAvailableGroupSessions();
+    } else {
+      final detail = data is Map ? data['detail']?.toString() : null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(detail ?? 'Não foi possível cancelar a inscrição.'),
+        ),
+      );
+    }
   }
 
   void _openChat() {
@@ -751,16 +1187,42 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   Widget _floatingChat() {
     final media = MediaQuery.of(context);
-    final isCompact = media.size.width < 700;
+    final screenWidth = media.size.width;
+    final screenHeight = media.size.height;
+    final isCompact = screenWidth < 700;
+    final sideMargin = isCompact ? 12.0 : 24.0;
+    final bottomMargin = isCompact ? 92.0 : 96.0;
+    final availableWidth = screenWidth - (sideMargin * 2);
+    final availableHeight =
+        screenHeight - media.padding.top - bottomMargin - 24;
+    final maxTabletWidth = availableWidth < 720.0 ? availableWidth : 720.0;
+    final maxChatHeight = availableHeight < 680.0 ? availableHeight : 680.0;
+    final chatWidth = isCompact
+        ? _boundedDouble(availableWidth, 300.0, 360.0)
+        : _boundedDouble(screenWidth * 0.78, 540.0, maxTabletWidth);
+    final chatHeight = isCompact
+        ? _boundedDouble(360.0, 320.0, availableHeight)
+        : _boundedDouble(screenHeight * 0.72, 560.0, maxChatHeight);
 
     return Positioned(
-      right: isCompact ? 12 : 24,
-      bottom: isCompact ? 12 : 24,
-      child: StudentFloatingChat(
-        token: widget.token!,
-        onClose: () => setState(() => _isChatOpen = false),
+      right: sideMargin,
+      bottom: bottomMargin,
+      child: SizedBox(
+        width: chatWidth,
+        height: chatHeight,
+        child: StudentFloatingChat(
+          token: widget.token!,
+          onClose: () => setState(() => _isChatOpen = false),
+        ),
       ),
     );
+  }
+
+  static double _boundedDouble(double value, double lower, double upper) {
+    if (upper < lower) return upper;
+    if (value < lower) return lower;
+    if (value > upper) return upper;
+    return value;
   }
 
   void _logout() {

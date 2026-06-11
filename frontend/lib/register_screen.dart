@@ -73,10 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response.statusCode == 200) {
         if (!mounted) return;
 
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conta criada! Faca login para entrar.')),
-        );
+        Navigator.pop(context, selectedRole);
       } else {
         final data = jsonDecode(response.body);
         setState(() => errorMessage = data['detail'] ?? 'Falha no cadastro');

@@ -217,40 +217,48 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final isCompact = media.size.width < 700;
-    final width = isCompact ? media.size.width - 24 : 380.0;
-    final height = isCompact ? media.size.height * 0.72 : 520.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final media = MediaQuery.of(context);
+        final isCompact = media.size.width < 700;
+        final width = constraints.hasBoundedWidth
+            ? double.infinity
+            : (isCompact ? 300.0 : 540.0);
+        final height = constraints.hasBoundedHeight
+            ? double.infinity
+            : (isCompact ? 360.0 : 560.0);
 
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: StudentTheme.lightBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF3A3A3D)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66000000),
-              blurRadius: 24,
-              offset: Offset(0, 12),
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              color: StudentTheme.lightBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF3A3A3D)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x66000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 12),
+                ),
+              ],
             ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            _Header(
-              contactName: _selectedContactName,
-              onClose: widget.onClose,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                _Header(
+                  contactName: _selectedContactName,
+                  onClose: widget.onClose,
+                ),
+                Expanded(child: _body()),
+                _messageInput(),
+              ],
             ),
-            Expanded(child: _body()),
-            _messageInput(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
