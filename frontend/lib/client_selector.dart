@@ -19,17 +19,22 @@ class ClientSelector extends StatefulWidget {
 }
 
 class _ClientSelectorState extends State<ClientSelector> {
-  List<Map<String, dynamic>> clients = [];
-  bool isLoading = true;
-  String? errorMessage;
+  List<Map<String, dynamic>> _clients = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    loadClients();
+    _loadClients();
   }
 
-  Future<void> loadClients() async {
+  Future<void> _loadClients() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
       final data = await ApiService.get(
         context,
@@ -39,81 +44,85 @@ class _ClientSelectorState extends State<ClientSelector> {
       if (!mounted) return;
 
       setState(() {
-        if (data is List) {
-          clients = data
-              .whereType<Map>()
-              .map((client) => Map<String, dynamic>.from(client))
-              .where((client) => client['id'] != null)
-              .toList();
-          errorMessage = null;
-        } else {
-          errorMessage = 'Nao foi possivel carregar os alunos.';
-        }
-        isLoading = false;
+        _clients = data is List
+            ? data
+                  .whereType<Map>()
+                  .map((item) => Map<String, dynamic>.from(item))
+                  .where((item) => item['id'] != null)
+                  .toList()
+            : [];
+        _error = data is List ? null : 'Nao foi possivel carregar os alunos.';
+        _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-
       setState(() {
-        errorMessage = 'Nao foi possivel carregar os alunos.';
-        isLoading = false;
+        _clients = [];
+        _error = 'Nao foi possivel carregar os alunos.';
+        _isLoading = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const InputDecorator(
-        decoration: InputDecoration(
-          labelText: 'Aluno',
-          border: OutlineInputBorder(),
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(width: 12),
-            Text('A carregar alunos...'),
-          ],
-        ),
-      );
+    if (_isLoading) {
+      return const LinearProgressIndicator();
     }
 
-    if (errorMessage != null) {
+    if (_error != null) {
       return InputDecorator(
         decoration: const InputDecoration(
           labelText: 'Aluno',
           border: OutlineInputBorder(),
         ),
-        child: Text(errorMessage!),
+        child: Row(
+          children: [
+            Expanded(child: Text(_error!)),
+            IconButton(
+              tooltip: 'Tentar novamente',
+              onPressed: _loadClients,
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
+        ),
       );
     }
 
     return DropdownButtonFormField<int>(
-      initialValue: widget.selectedClientId,
-      isExpanded: true,
+      initialValue: _clientExists(widget.selectedClientId)
+          ? widget.selectedClientId
+          : null,
       decoration: const InputDecoration(
         labelText: 'Aluno',
         border: OutlineInputBorder(),
       ),
-      hint: const Text('Selecionar aluno'),
-      items: clients.map((client) {
-        final id = client['id'] is int
-            ? client['id'] as int
-            : int.tryParse(client['id'].toString());
-        final name = client['name']?.toString().trim();
-        final email = client['email']?.toString().trim();
-        final label = name == null || name.isEmpty
-            ? email ?? 'Aluno $id'
-            : name;
-
-        return DropdownMenuItem<int>(value: id, child: Text(label));
+      items: _clients.map((client) {
+        final id = client['id'];
+        return DropdownMenuItem<int>(
+          value: id is int ? id : int.tryParse(id.toString()),
+          child: Text(_clientLabel(client)),
+        );
       }).toList(),
-      onChanged: widget.onChanged,
+      onChanged: _clients.isEmpty ? null : widget.onChanged,
     );
+  }
+
+  bool _clientExists(int? clientId) {
+    if (clientId == null) return false;
+    return _clients.any((client) {
+      final id = client['id'];
+      return id == clientId || int.tryParse(id.toString()) == clientId;
+    });
+  }
+
+  String _clientLabel(Map<String, dynamic> client) {
+    final name = client['name']?.toString().trim();
+    if (name != null && name.isNotEmpty) return name;
+
+    final email = client['email']?.toString().trim();
+    if (email != null && email.isNotEmpty) return email;
+
+    return 'Aluno ${client['id']}';
   }
 }

@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'app_config.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 import 'screens/student/student_home_screen.dart';
@@ -21,10 +22,9 @@ class _MyAppState extends State<MyApp> {
 
   void toggleTheme() {
     setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.light
-              ? ThemeMode.dark
-              : ThemeMode.light;
+      _themeMode = _themeMode == ThemeMode.light
+          ? ThemeMode.dark
+          : ThemeMode.light;
     });
   }
 
@@ -64,10 +64,7 @@ class _MyAppState extends State<MyApp> {
       ),
 
       themeMode: _themeMode,
-      home: LoginScreen(
-        onToggleTheme: toggleTheme,
-        themeMode: _themeMode,
-      ),
+      home: LoginScreen(onToggleTheme: toggleTheme, themeMode: _themeMode),
     );
   }
 }
@@ -106,10 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF4F4F1);
-    final textColor =
-        isDark ? const Color(0xFFF4F4F1) : const Color(0xFF1C1C1E);
+    final surfaceColor = isDark
+        ? const Color(0xFF2C2C2E)
+        : const Color(0xFFF4F4F1);
+    final textColor = isDark
+        ? const Color(0xFFF4F4F1)
+        : const Color(0xFF1C1C1E);
     final mutedColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(
@@ -135,180 +134,175 @@ class _LoginScreenState extends State<LoginScreen> {
             constraints: const BoxConstraints(maxWidth: 460),
             child: Column(
               children: [
-            const SizedBox(height: 36),
+                const SizedBox(height: 36),
 
-            Icon(
-              Icons.fitness_center,
-              size: 74,
-              color: primaryColor,
-            ),
+                Icon(Icons.fitness_center, size: 74, color: primaryColor),
 
-            const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-            Text(
-              'FITPRO',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-              ),
-            ),
-
-            Text(
-              'O seu app',
-              style: TextStyle(
-                color: mutedColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-
-            const SizedBox(height: 42),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Entrar como',
-                style: TextStyle(
-                  color: mutedColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                Text(
+                  'FITPRO',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 10),
-
-            Container(
-              height: 52,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDark ? Colors.white10 : Colors.black12,
+                Text(
+                  'O seu app',
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  _AccountOptionButton(
-                    label: 'Aluno',
-                    icon: Icons.school_outlined,
-                    isSelected: _selectedAccount == 'client',
-                    onTap: () => setState(() => _selectedAccount = 'client'),
+
+                const SizedBox(height: 42),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Entrar como',
+                    style: TextStyle(
+                      color: mutedColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  _AccountOptionButton(
-                    label: 'Personal',
-                    icon: Icons.fitness_center,
-                    isSelected: _selectedAccount == 'trainer',
-                    onTap: () => setState(() => _selectedAccount = 'trainer'),
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  height: 52,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : Colors.black12,
+                    ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: passwordController,
-              obscureText: !_showPassword,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) {
-                if (!isLoading) login();
-              },
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  tooltip: _showPassword ? 'Esconder senha' : 'Ver senha',
-                  icon: Icon(
-                    _showPassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
+                  child: Row(
+                    children: [
+                      _AccountOptionButton(
+                        label: 'Aluno',
+                        icon: Icons.school_outlined,
+                        isSelected: _selectedAccount == 'client',
+                        onTap: () =>
+                            setState(() => _selectedAccount = 'client'),
+                      ),
+                      _AccountOptionButton(
+                        label: 'Personal',
+                        icon: Icons.fitness_center,
+                        isSelected: _selectedAccount == 'trainer',
+                        onTap: () =>
+                            setState(() => _selectedAccount = 'trainer'),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    setState(() => _showPassword = !_showPassword);
+                ),
+
+                const SizedBox(height: 24),
+
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: passwordController,
+                  obscureText: !_showPassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!isLoading) login();
                   },
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            if (errorMessage.isNotEmpty)
-              Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.redAccent),
-              ),
-
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-
-              child: ElevatedButton(
-                onPressed: isLoading ? null : login,
-
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      tooltip: _showPassword ? 'Esconder senha' : 'Ver senha',
+                      icon: Icon(
+                        _showPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() => _showPassword = !_showPassword);
+                      },
+                    ),
                   ),
-                  elevation: 0,
                 ),
 
-                child:
-                    isLoading
-                        ? const CircularProgressIndicator(
-                          color: Colors.black,
-                        )
+                const SizedBox(height: 24),
+
+                if (errorMessage.isNotEmpty)
+                  Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+
+                const SizedBox(height: 16),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : login,
+
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.black)
                         : const Text(
-                          'LOGIN',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            'LOGIN',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            SizedBox(
-              width: double.infinity,
-
-              child: OutlinedButton(
-                onPressed: () {
-                  _openRegisterScreen();
-                },
-
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryColor,
-                  side: BorderSide(color: primaryColor.withOpacity(0.65)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text(
-                  'Criar nova conta',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  width: double.infinity,
+
+                  child: OutlinedButton(
+                    onPressed: () {
+                      _openRegisterScreen();
+                    },
+
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      side: BorderSide(color: primaryColor.withOpacity(0.65)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: const Text(
+                      'Criar nova conta',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ),
-              ),
-            ),
               ],
             ),
           ),
@@ -351,10 +345,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://backend-production-d7c3c.up.railway.app/api/v1/login/'),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        AppConfig.apiUri('/api/v1/login/'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'username': emailController.text.trim(),
           'password': passwordController.text,
@@ -382,21 +374,19 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
 
           MaterialPageRoute(
-            builder:
-                (context) =>
-                    role == 'client'
-                        ? StudentHomeScreen(
-                          token: token,
-                          role: role,
-                          onToggleTheme: widget.onToggleTheme,
-                          themeMode: widget.themeMode,
-                        )
-                        : HomeScreen(
-                          token: token,
-                          role: role,
-                          onToggleTheme: widget.onToggleTheme,
-                          themeMode: widget.themeMode,
-                        ),
+            builder: (context) => role == 'client'
+                ? StudentHomeScreen(
+                    token: token,
+                    role: role,
+                    onToggleTheme: widget.onToggleTheme,
+                    themeMode: widget.themeMode,
+                  )
+                : HomeScreen(
+                    token: token,
+                    role: role,
+                    onToggleTheme: widget.onToggleTheme,
+                    themeMode: widget.themeMode,
+                  ),
           ),
         );
       } else {

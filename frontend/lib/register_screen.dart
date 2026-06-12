@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_config.dart';
+
 class RegisterScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final ThemeMode themeMode;
@@ -65,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('https://backend-production-d7c3c.up.railway.app/api/v1/registar/'),
+        AppConfig.apiUri('/api/v1/registar/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -91,10 +93,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF4F4F1);
-    final textColor =
-        isDark ? const Color(0xFFF4F4F1) : const Color(0xFF1C1C1E);
+    final surfaceColor = isDark
+        ? const Color(0xFF2C2C2E)
+        : const Color(0xFFF4F4F1);
+    final textColor = isDark
+        ? const Color(0xFFF4F4F1)
+        : const Color(0xFF1C1C1E);
     final mutedColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(
@@ -124,11 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             constraints: const BoxConstraints(maxWidth: 460),
             child: Column(
               children: [
-                Icon(
-                  Icons.fitness_center,
-                  size: 66,
-                  color: primaryColor,
-                ),
+                Icon(Icons.fitness_center, size: 66, color: primaryColor),
                 const SizedBox(height: 8),
                 Text(
                   'FITPRO',

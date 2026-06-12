@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'main.dart';
+import 'app_config.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://backend-production-d7c3c.up.railway.app';
+  static const String baseUrl = AppConfig.apiBaseUrl;
 
   static Future<dynamic> get(
     BuildContext context,
@@ -12,7 +13,7 @@ class ApiService {
     String token,
   ) async {
     final response = await http.get(
-      Uri.parse('$baseUrl$endpoint'),
+      AppConfig.apiUri(endpoint),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -38,7 +39,7 @@ class ApiService {
     Map<String, dynamic> body,
   ) async {
     final response = await http.post(
-      Uri.parse('$baseUrl$endpoint'),
+      AppConfig.apiUri(endpoint),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
