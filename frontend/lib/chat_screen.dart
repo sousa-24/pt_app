@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'app_config.dart';
 import 'api_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -65,8 +66,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (currentUserId == null) return;
 
-    final uri = Uri.parse(
-      'ws://127.0.0.1:8000/ws/$currentUserId?token=${widget.token}',
+    final uri = AppConfig.websocketUri(
+      userId: currentUserId!,
+      token: widget.token,
     );
     channel = WebSocketChannel.connect(uri);
 

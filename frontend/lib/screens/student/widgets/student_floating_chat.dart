@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../../api_service.dart';
+import '../../../app_config.dart';
 import '../student_theme.dart';
 
 class StudentFloatingChat extends StatefulWidget {
@@ -49,7 +50,11 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
 
   Future<void> _initChat() async {
     try {
-      final userData = await ApiService.get(context, '/api/v1/me', widget.token);
+      final userData = await ApiService.get(
+        context,
+        '/api/v1/me',
+        widget.token,
+      );
       if (!mounted) return;
 
       final userId = _intValue(userData is Map ? userData['id'] : null);
@@ -71,8 +76,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
       if (!mounted) return;
 
       if (contactsData is List) {
-        _contacts =
-            contactsData.whereType<Map<String, dynamic>>().toList();
+        _contacts = contactsData.whereType<Map<String, dynamic>>().toList();
         if (_contacts.isNotEmpty) {
           _selectedContact = _contacts.first;
         }
@@ -82,8 +86,9 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
         await _loadHistory();
       }
 
-      final uri = Uri.parse(
-        'ws://127.0.0.1:8000/ws/$_currentUserId?token=${widget.token}',
+      final uri = AppConfig.websocketUri(
+        userId: _currentUserId!,
+        token: widget.token,
       );
       _channel = WebSocketChannel.connect(uri);
 
@@ -197,10 +202,9 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
       return;
     }
 
-    _channel!.sink.add(jsonEncode({
-      'receiver_id': contact['id'],
-      'content': text,
-    }));
+    _channel!.sink.add(
+      jsonEncode({'receiver_id': contact['id'], 'content': text}),
+    );
     _messageController.clear();
   }
 
@@ -242,10 +246,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
         clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
-            _Header(
-              contactName: _selectedContactName,
-              onClose: widget.onClose,
-            ),
+            _Header(contactName: _selectedContactName, onClose: widget.onClose),
             Expanded(child: _body()),
             _messageInput(),
           ],
@@ -332,8 +333,7 @@ class _StudentFloatingChatState extends State<StudentFloatingChat> {
   }
 
   Widget _messageInput() {
-    final enabled =
-        !_isLoading && _isConnected && _selectedContact != null;
+    final enabled = !_isLoading && _isConnected && _selectedContact != null;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -408,10 +408,7 @@ class _Header extends StatelessWidget {
   final String contactName;
   final VoidCallback onClose;
 
-  const _Header({
-    required this.contactName,
-    required this.onClose,
-  });
+  const _Header({required this.contactName, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -494,8 +491,9 @@ class _MessageBubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
@@ -556,10 +554,7 @@ class _EmptyState extends StatelessWidget {
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: StudentTheme.mutedText,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: StudentTheme.mutedText, fontSize: 14),
         ),
       ),
     );
