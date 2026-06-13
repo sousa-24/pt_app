@@ -187,7 +187,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: status,
+                  initialValue: status,
                   decoration: const InputDecoration(
                     labelText: 'Estado',
                     border: OutlineInputBorder(),
@@ -265,17 +265,26 @@ class _SessionsScreenState extends State<SessionsScreen> {
       selectedTime!.hour,
       selectedTime!.minute,
     );
+    final dateChanged =
+        initialDate == null ||
+        initialDate.year != dateTime.year ||
+        initialDate.month != dateTime.month ||
+        initialDate.day != dateTime.day ||
+        initialDate.hour != dateTime.hour ||
+        initialDate.minute != dateTime.minute;
 
     final endpoint = isGroup
         ? '/api/v1/group_sessions/${sessionMap['id']}'
         : '/api/v1/training_sessions/${sessionMap['id']}';
     final body = <String, dynamic>{
-      'date': dateTime.toIso8601String(),
       'notes': notesController.text.trim().isEmpty
           ? null
           : notesController.text.trim(),
       'status': status,
     };
+    if (dateChanged) {
+      body['date'] = dateTime.toIso8601String();
+    }
 
     if (isGroup) {
       final maxStudents = int.tryParse(maxStudentsController.text.trim());

@@ -22,6 +22,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
   int? _selectedClientId;
   DateTime? _dueDate;
   List<Map<String, dynamic>> _payments = [];
+  Map<int, String> _clientNames = {};
   bool _isLoading = true;
   bool _isSaving = false;
   String? _message;
@@ -49,13 +50,14 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     });
 
     try {
-      final data = await ApiService.get(
-        context,
-        '/api/v1/payments/',
-        widget.token,
-      ).timeout(const Duration(seconds: 8));
+      final results = await Future.wait([
+        ApiService.get(context, '/api/v1/payments/', widget.token),
+        ApiService.get(context, '/api/v1/my-contacts/', widget.token),
+      ]).timeout(const Duration(seconds: 8));
       if (!mounted) return;
 
+      final data = results[0];
+      final contacts = results[1];
       setState(() {
         if (data is List) {
           _payments = data
@@ -67,6 +69,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           _loadError =
               _apiError(data) ?? 'Nao foi possivel carregar as faturas.';
         }
+        _clientNames = _clientNameMap(contacts);
         _isLoading = false;
       });
     } catch (_) {
@@ -140,6 +143,249 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     }
   }
 
+  Future<void> _updatePayment(
+    Map<String, dynamic> payment,
+    Map<String, dynamic> body,
+    String successMessage,
+  ) async {
+    final id = payment['id'];
+    if (id == null) return;
+
+    final data = await ApiService.put(
+      context,
+      '/api/v1/payments/$id',
+      widget.token,
+      body,
+    );
+    if (!mounted) return;
+
+    if (data is Map && data['id'] != null) {
+      setState(() => _message = successMessage);
+      _loadPayments();
+    } else {
+      setState(() {
+        _message = _apiError(data) ?? 'Nao foi possivel atualizar a fatura.';
+      });
+    }
+  }
+
+  Future<void> _markAsPaid(Map<String, dynamic> payment) async {
+    await _updatePayment(payment, {
+      'status': 'paid',
+      'paid_at': DateTime.now().toIso8601String(),
+    }, 'Fatura marcada como paga.');
+  }
+
+  Future<void> _cancelPayment(Map<String, dynamic> payment) async {
+    await _updatePayment(payment, {'status': 'cancelled'}, 'Fatura cancelada.');
+  }
+
+  Future<void> _deletePayment(Map<String, dynamic> payment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Apagar fatura?'),
+        content: const Text('Esta acao nao pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final id = payment['id'];
+    if (id == null) return;
+
+    final data = await ApiService.delete(
+      context,
+      '/api/v1/payments/$id',
+      widget.token,
+    );
+    if (!mounted) return;
+
+    if (data is Map && data['message'] != null) {
+      setState(() => _message = 'Fatura apagada.');
+      _loadPayments();
+    } else {
+      setState(() {
+        _message = _apiError(data) ?? 'Nao foi possivel apagar a fatura.';
+      });
+    }
+  }
+
+  Future<void> _editPayment(Map<String, dynamic> payment) async {
+    final serviceController = TextEditingController(
+      text: _text(payment['type_of_service']),
+    );
+    final costController = TextEditingController(
+      text: payment['cost']?.toString() ?? '',
+    );
+    final methodController = TextEditingController(
+      text: _text(payment['payment_method']),
+    );
+    final notesController = TextEditingController(
+      text: _text(payment['notes']),
+    );
+    DateTime? dueDate = DateTime.tryParse(
+      payment['due_date']?.toString() ?? '',
+    );
+    String status = payment['status']?.toString() ?? 'pending';
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Editar fatura'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: serviceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Servico',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: costController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Valor',
+                    prefixText: 'EUR ',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: status,
+                  decoration: const InputDecoration(
+                    labelText: 'Estado',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'pending', child: Text('Pendente')),
+                    DropdownMenuItem(value: 'paid', child: Text('Pago')),
+                    DropdownMenuItem(value: 'overdue', child: Text('Atrasado')),
+                    DropdownMenuItem(
+                      value: 'cancelled',
+                      child: Text('Cancelado'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => status = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final now = DateTime.now();
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: dueDate ?? now,
+                      firstDate: DateTime(now.year - 1),
+                      lastDate: DateTime(now.year + 3),
+                    );
+                    if (picked != null) {
+                      setDialogState(() => dueDate = picked);
+                    }
+                  },
+                  icon: const Icon(Icons.event),
+                  label: Text(
+                    dueDate == null
+                        ? 'Data de vencimento'
+                        : _formatDate(dueDate!.toIso8601String()),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: methodController,
+                  decoration: const InputDecoration(
+                    labelText: 'Metodo de pagamento',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Notas',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) {
+      serviceController.dispose();
+      costController.dispose();
+      methodController.dispose();
+      notesController.dispose();
+      return;
+    }
+
+    final cost = double.tryParse(costController.text.replaceAll(',', '.'));
+    if (serviceController.text.trim().isEmpty || cost == null || cost <= 0) {
+      if (mounted) {
+        setState(() => _message = 'Preenche servico e valor validos.');
+      }
+      serviceController.dispose();
+      costController.dispose();
+      methodController.dispose();
+      notesController.dispose();
+      return;
+    }
+
+    await _updatePayment(payment, {
+      'type_of_service': serviceController.text.trim(),
+      'cost': cost,
+      'status': status,
+      if (dueDate != null)
+        'due_date': dueDate!.toIso8601String().substring(0, 10),
+      'payment_method': methodController.text.trim().isEmpty
+          ? null
+          : methodController.text.trim(),
+      'notes': notesController.text.trim().isEmpty
+          ? null
+          : notesController.text.trim(),
+      if (status == 'paid' && payment['paid_at'] == null)
+        'paid_at': DateTime.now().toIso8601String(),
+    }, 'Fatura atualizada.');
+
+    serviceController.dispose();
+    costController.dispose();
+    methodController.dispose();
+    notesController.dispose();
+  }
+
   Map<String, dynamic>? get _nextPayment {
     final candidates =
         _payments.where((payment) {
@@ -187,7 +433,10 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           else if (_payments.isEmpty)
             const _StatusCard(message: 'Ainda nao existem faturas.')
           else ...[
-            _PaymentSummaryCard(payment: _nextPayment),
+            _PaymentSummaryCard(
+              payment: _nextPayment,
+              clientLabel: _clientLabel(_nextPayment?['client_id']),
+            ),
             const SizedBox(height: 12),
             ..._payments.map(_paymentCard),
           ],
@@ -291,25 +540,56 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
   }
 
   Widget _paymentCard(Map<String, dynamic> payment) {
+    final clientLabel = _clientLabel(payment['client_id']);
     return Card(
       child: ListTile(
         onTap: () => _showPaymentDetails(payment),
         leading: const Icon(Icons.receipt_long_outlined),
         title: Text(payment['type_of_service']?.toString() ?? 'Fatura'),
-        subtitle: Text(
-          'Aluno #${payment['client_id']} | ${_paymentDateLabel(payment)}',
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        subtitle: Text('$clientLabel | ${_paymentDateLabel(payment)}'),
+        trailing: Wrap(
+          spacing: 2,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text('EUR ${payment['cost']}'),
-            Text(
-              _statusLabel(payment['status']),
-              style: TextStyle(
-                color: _statusColor(payment['status']),
-                fontWeight: FontWeight.w700,
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('EUR ${payment['cost']}'),
+                Text(
+                  _statusLabel(payment['status']),
+                  style: TextStyle(
+                    color: _statusColor(payment['status']),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Acoes da fatura',
+              onSelected: (value) {
+                switch (value) {
+                  case 'paid':
+                    _markAsPaid(payment);
+                    break;
+                  case 'edit':
+                    _editPayment(payment);
+                    break;
+                  case 'cancel':
+                    _cancelPayment(payment);
+                    break;
+                  case 'delete':
+                    _deletePayment(payment);
+                    break;
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'paid', child: Text('Marcar como paga')),
+                PopupMenuItem(value: 'edit', child: Text('Editar')),
+                PopupMenuItem(value: 'cancel', child: Text('Cancelar')),
+                PopupMenuItem(value: 'delete', child: Text('Apagar')),
+              ],
+              icon: const Icon(Icons.more_vert),
             ),
           ],
         ),
@@ -317,7 +597,14 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     );
   }
 
+  String _clientLabel(dynamic clientId) {
+    final id = clientId is int ? clientId : int.tryParse(clientId.toString());
+    if (id == null) return 'Aluno';
+    return _clientNames[id] ?? 'Aluno #$id';
+  }
+
   void _showPaymentDetails(Map<String, dynamic> payment) {
+    final clientLabel = _clientLabel(payment['client_id']);
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -326,7 +613,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Aluno: #${payment['client_id']}'),
+            Text('Aluno: $clientLabel'),
             Text('Valor: ${_formatMoney(payment['cost'])}'),
             Text('Estado: ${_statusLabel(payment['status'])}'),
             Text('Vencimento: ${_formatDate(payment['due_date'])}'),
@@ -341,6 +628,14 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           ],
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _editPayment(payment);
+            },
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Editar'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Fechar'),
@@ -353,8 +648,9 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
 
 class _PaymentSummaryCard extends StatelessWidget {
   final Map<String, dynamic>? payment;
+  final String clientLabel;
 
-  const _PaymentSummaryCard({required this.payment});
+  const _PaymentSummaryCard({required this.payment, required this.clientLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +662,7 @@ class _PaymentSummaryCard extends StatelessWidget {
         title: const Text('Proxima fatura'),
         subtitle: Text(
           hasPayment
-              ? 'Aluno #${payment!['client_id']} | ${_formatDate(payment!['due_date'])}'
+              ? '$clientLabel | ${_formatDate(payment!['due_date'])}'
               : 'Sem faturas pendentes',
         ),
         trailing: Column(
@@ -456,4 +752,25 @@ String _text(dynamic value) => value?.toString().trim() ?? '';
 String? _apiError(dynamic data) {
   if (data is Map && data['detail'] != null) return data['detail'].toString();
   return null;
+}
+
+Map<int, String> _clientNameMap(dynamic contacts) {
+  if (contacts is! List) return {};
+
+  final result = <int, String>{};
+  for (final item in contacts) {
+    if (item is! Map) continue;
+    final idValue = item['id'];
+    final id = idValue is int ? idValue : int.tryParse(idValue.toString());
+    if (id == null) continue;
+
+    final name = item['name']?.toString().trim();
+    final email = item['email']?.toString().trim();
+    result[id] = name != null && name.isNotEmpty
+        ? name
+        : email != null && email.isNotEmpty
+        ? email
+        : 'Aluno #$id';
+  }
+  return result;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 import 'workout_plans_screen.dart';
 import 'chat_screen.dart';
 import 'feed_screen.dart';
@@ -343,6 +344,13 @@ class HomeScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
+                _TrainerDashboard(token: token),
+                const SizedBox(height: 20),
+                const Text(
+                  'Acoes rapidas',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
                 _TrainerShortcutCard(
                   icon: Icons.trending_up,
                   title: 'Progresso dos Alunos',
@@ -411,6 +419,232 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrainerDashboard extends StatefulWidget {
+  final String token;
+
+  const _TrainerDashboard({required this.token});
+
+  @override
+  State<_TrainerDashboard> createState() => _TrainerDashboardState();
+}
+
+class _TrainerDashboardState extends State<_TrainerDashboard> {
+  bool _isLoading = true;
+  String? _error;
+  int _activeClients = 0;
+  int _upcomingSessions = 0;
+  int _pendingInvoices = 0;
+  double _pendingAmount = 0;
+  String _nextSession = 'Sem sessoes marcadas';
+  String _latestProgress = 'Sem registos recentes';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSummary();
+  }
+
+  Future<void> _loadSummary() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final results = await Future.wait([
+        ApiService.get(context, '/api/v1/my-contacts/', widget.token),
+        ApiService.get(context, '/api/v1/training_sessions/', widget.token),
+        ApiService.get(context, '/api/v1/group_sessions/', widget.token),
+        ApiService.get(context, '/api/v1/payments/', widget.token),
+        ApiService.get(context, '/api/v1/progression/', widget.token),
+      ]);
+      if (!mounted) return;
+
+      final contacts = _asMaps(results[0]);
+      final sessions = [..._asMaps(results[1]), ..._asMaps(results[2])];
+      final payments = _asMaps(results[3]);
+      final progression = _asMaps(results[4]);
+      final now = DateTime.now();
+      final upcoming =
+          sessions.where((session) {
+            final date = DateTime.tryParse(session['date']?.toString() ?? '');
+            final status = session['status']?.toString() ?? 'scheduled';
+            return date != null && date.isAfter(now) && status == 'scheduled';
+          }).toList()..sort((a, b) {
+            final aDate = DateTime.tryParse(a['date']?.toString() ?? '');
+            final bDate = DateTime.tryParse(b['date']?.toString() ?? '');
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1;
+            if (bDate == null) return -1;
+            return aDate.compareTo(bDate);
+          });
+
+      final pending = payments.where((payment) {
+        final status = payment['status']?.toString();
+        return status == 'pending' || status == 'overdue';
+      }).toList();
+
+      progression.sort((a, b) {
+        final aDate = DateTime.tryParse(a['date']?.toString() ?? '');
+        final bDate = DateTime.tryParse(b['date']?.toString() ?? '');
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+
+      setState(() {
+        _activeClients = contacts.length;
+        _upcomingSessions = upcoming.length;
+        _pendingInvoices = pending.length;
+        _pendingAmount = pending.fold<double>(0, (sum, payment) {
+          final value = payment['cost'];
+          final amount = value is num
+              ? value.toDouble()
+              : double.tryParse(value?.toString() ?? '') ?? 0;
+          return sum + amount;
+        });
+        _nextSession = upcoming.isEmpty
+            ? 'Sem sessoes marcadas'
+            : _formatDate(upcoming.first['date']);
+        _latestProgress = progression.isEmpty
+            ? 'Sem registos recentes'
+            : _formatDate(progression.first['date']);
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Nao foi possivel carregar o resumo.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Card(
+        child: ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: Text(_error!),
+          trailing: IconButton(
+            tooltip: 'Atualizar',
+            onPressed: _loadSummary,
+            icon: const Icon(Icons.refresh),
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 680;
+        final cards = [
+          _DashboardStatCard(
+            icon: Icons.people_outline,
+            title: 'Alunos ativos',
+            value: _activeClients.toString(),
+            detail: 'Ligados a esta conta',
+          ),
+          _DashboardStatCard(
+            icon: Icons.event_available_outlined,
+            title: 'Proximas sessoes',
+            value: _upcomingSessions.toString(),
+            detail: _nextSession,
+          ),
+          _DashboardStatCard(
+            icon: Icons.receipt_long_outlined,
+            title: 'Faturas pendentes',
+            value: _pendingInvoices.toString(),
+            detail: _formatMoney(_pendingAmount),
+          ),
+          _DashboardStatCard(
+            icon: Icons.trending_up,
+            title: 'Ultimo progresso',
+            value: _latestProgress,
+            detail: 'Registo mais recente',
+          ),
+        ];
+
+        if (!wide) {
+          return Column(children: cards);
+        }
+
+        return GridView.count(
+          crossAxisCount: 2,
+          childAspectRatio: 3.2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: cards,
+        );
+      },
+    );
+  }
+}
+
+List<Map<String, dynamic>> _asMaps(dynamic value) {
+  if (value is! List) return [];
+  return value
+      .whereType<Map>()
+      .map((item) => Map<String, dynamic>.from(item))
+      .toList();
+}
+
+String _formatDate(dynamic value) {
+  final parsed = DateTime.tryParse(value?.toString() ?? '');
+  if (parsed == null) return 'Sem data';
+  final day = parsed.day.toString().padLeft(2, '0');
+  final month = parsed.month.toString().padLeft(2, '0');
+  final hour = parsed.hour.toString().padLeft(2, '0');
+  final minute = parsed.minute.toString().padLeft(2, '0');
+  return '$day/$month/${parsed.year} as $hour:$minute';
+}
+
+String _formatMoney(num value) {
+  return 'EUR ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+}
+
+class _DashboardStatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final String detail;
+
+  const _DashboardStatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(detail),
+        trailing: SizedBox(
+          width: 120,
+          child: Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
       ),

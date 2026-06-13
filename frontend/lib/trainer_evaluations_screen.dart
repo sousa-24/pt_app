@@ -16,6 +16,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
   final _notesController = TextEditingController();
   List<Map<String, dynamic>> _sessions = [];
   List<Map<String, dynamic>> _feedback = [];
+  Map<int, String> _clientNames = {};
   int? _selectedSessionId;
   int _rating = 5;
   bool _isLoading = true;
@@ -37,13 +38,14 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
 
   Future<void> _loadSessions() async {
     try {
-      final data = await ApiService.get(
-        context,
-        '/api/v1/training_sessions/',
-        widget.token,
-      ).timeout(const Duration(seconds: 8));
+      final results = await Future.wait([
+        ApiService.get(context, '/api/v1/training_sessions/', widget.token),
+        ApiService.get(context, '/api/v1/my-contacts/', widget.token),
+      ]).timeout(const Duration(seconds: 8));
       if (!mounted) return;
 
+      final data = results[0];
+      final contacts = results[1];
       setState(() {
         _sessions = data is List
             ? data
@@ -51,6 +53,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
                   .map((item) => Map<String, dynamic>.from(item))
                   .toList()
             : [];
+        _clientNames = _clientNameMap(contacts);
         _isLoading = false;
       });
     } catch (_) {
@@ -142,6 +145,12 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     return null;
   }
 
+  String _clientName(dynamic clientId) {
+    final id = clientId is int ? clientId : int.tryParse(clientId.toString());
+    if (id == null) return 'Aluno';
+    return _clientNames[id] ?? 'Aluno #$id';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,7 +207,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
                 return DropdownMenuItem<int>(
                   value: id,
                   child: Text(
-                    'Aluno #${session['client_id']} - ${_formatDate(session['date'])}',
+                    '${_clientName(session['client_id'])} - ${_formatDate(session['date'])}',
                   ),
                 );
               }).toList(),
@@ -251,7 +260,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.event_available_outlined),
-        title: Text('Aluno #${session['client_id']}'),
+        title: Text(_clientName(session['client_id'])),
         subtitle: Text(_formatDate(session['date'])),
         trailing: Text(_statusLabel(session['status'])),
       ),
@@ -336,4 +345,25 @@ String _formatDate(dynamic value) {
 String? _apiError(dynamic data) {
   if (data is Map && data['detail'] != null) return data['detail'].toString();
   return null;
+}
+
+Map<int, String> _clientNameMap(dynamic contacts) {
+  if (contacts is! List) return {};
+
+  final result = <int, String>{};
+  for (final item in contacts) {
+    if (item is! Map) continue;
+    final idValue = item['id'];
+    final id = idValue is int ? idValue : int.tryParse(idValue.toString());
+    if (id == null) continue;
+
+    final name = item['name']?.toString().trim();
+    final email = item['email']?.toString().trim();
+    result[id] = name != null && name.isNotEmpty
+        ? name
+        : email != null && email.isNotEmpty
+        ? email
+        : 'Aluno #$id';
+  }
+  return result;
 }
