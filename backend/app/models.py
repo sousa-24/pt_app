@@ -14,6 +14,7 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     role = Column(Enum("trainer", "client"), nullable=False)
+    profile_picture_url = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     notifications = relationship("Notification", back_populates="user")

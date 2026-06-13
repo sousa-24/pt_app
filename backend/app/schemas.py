@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
     trainer_id: int | None = None
+    profile_picture_url: str | None = None
 
     model_config = {"from_attributes": True}
 
