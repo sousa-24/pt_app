@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../api_service.dart';
+import '../../l10n/gen/app_localizations.dart';
 import '../../main.dart';
 import 'student_models.dart';
 import 'student_theme.dart';
@@ -47,7 +48,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   bool _isLoadingWorkouts = true;
   String? _workoutErrorMessage;
   int _selectedNavIndex = 0;
-  String _studentName = 'Aluno';
+  String _studentName = '';
+  String? _profilePictureUrl;
   late DateTime _selectedDate;
   bool _isChatOpen = false;
   int _waterMl = 0;
@@ -70,12 +72,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isMenuArea = _selectedNavIndex == 3;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: StudentTheme.lightBg,
       bottomNavigationBar: isMenuArea ? null : _bottomNav(),
       body: Stack(
-        children: [_studentPage(isMenuArea), if (_isChatOpen) _floatingChat()],
+        children: [
+          _studentPage(isMenuArea, l10n),
+          if (_isChatOpen) _floatingChat(),
+        ],
       ),
     );
   }
@@ -96,7 +102,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  Widget _studentPage(bool isMenuArea) {
+  Widget _studentPage(bool isMenuArea, AppLocalizations l10n) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(
@@ -108,7 +114,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             children: [
               if (!isMenuArea)
                 StudentHeader(
-                  studentName: _studentName,
+                  studentName: _studentName.isEmpty ? l10n.accountStudent : _studentName,
                   token: widget.token,
                   onNotificationTap: (type) {
                     if (type == 'message') {
@@ -131,7 +137,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _selectedContent(),
+                      children: _selectedContent(l10n),
                     ),
                   ),
                 ),
@@ -143,7 +149,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  List<Widget> _selectedContent() {
+  List<Widget> _selectedContent(AppLocalizations l10n) {
     if (_selectedNavIndex == 0) {
       return [
         StudentFrequencyCard(
@@ -170,9 +176,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (_selectedNavIndex == 1) {
       return [
-        const StudentSectionTitle(
-          title: 'Treinos da personal',
-          subtitle: 'Plano semanal',
+        StudentSectionTitle(
+          title: l10n.trainerWorkoutsTitle,
+          subtitle: l10n.weeklyPlanSubtitle,
         ),
         const SizedBox(height: 12),
         if (_isLoadingWorkouts)
@@ -180,7 +186,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         else if (_workoutErrorMessage != null)
           _StatusCard(message: _workoutErrorMessage!)
         else if (_workouts.isEmpty)
-          const _StatusCard(message: 'Ainda nao existem treinos atribuidos.')
+          _StatusCard(message: l10n.noWorkoutsAssignedMessage)
         else
           ..._workouts.map(_workoutCard),
       ];
@@ -195,7 +201,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           onDateSelected: _selectCalendarDate,
         ),
         const SizedBox(height: 20),
-        _selectedDayWorkouts(),
+        _selectedDayWorkouts(l10n),
       ];
     }
 
@@ -208,7 +214,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
 
     if (_selectedNavIndex == 6) {
-      return const [StudentProfileCard()];
+      return [StudentProfileCard(token: widget.token)];
     }
 
     if (_selectedNavIndex == 7) {
@@ -217,31 +223,32 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (_selectedNavIndex == 8) {
       return [
-        const StudentSectionTitle(
-          title: 'As minhas sessões',
-          subtitle: 'Agendamentos marcados pela personal',
+        StudentSectionTitle(
+          title: l10n.mySessionsTitle,
+          subtitle: l10n.sessionsScheduledByTrainerSubtitle,
         ),
         const SizedBox(height: 12),
         if (_trainingSessions.isEmpty && _enrolledGroupSessions.isEmpty)
-          const _StatusCard(message: 'Ainda não existem sessões agendadas.')
+          _StatusCard(message: l10n.noSessionsScheduledMessage)
         else ...[
-          ..._trainingSessions.map(_sessionCard),
-          ..._enrolledGroupSessions.map(_sessionCard),
+          ..._trainingSessions.map((s) => _sessionCard(s, l10n)),
+          ..._enrolledGroupSessions.map((s) => _sessionCard(s, l10n)),
         ],
         if (_availableGroupSessions.isNotEmpty) ...[
           const SizedBox(height: 22),
-          const StudentSectionTitle(
-            title: 'Aulas em grupo disponíveis',
-            subtitle: 'Inscreve-te nas vagas abertas pela personal',
+          StudentSectionTitle(
+            title: l10n.availableGroupClassesTitle,
+            subtitle: l10n.enrollOpenSlotsSubtitle,
           ),
           const SizedBox(height: 12),
           ..._availableGroupSessions.map(
             (session) => _sessionCard(
               session,
+              l10n,
               action: TextButton.icon(
                 onPressed: () => _enrollGroupSession(session),
                 icon: const Icon(Icons.how_to_reg),
-                label: const Text('Inscrever-me'),
+                label: Text(l10n.enrollMeAction),
               ),
             ),
           ),
@@ -251,7 +258,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     return [
       StudentMenuScreen(
-        studentName: _studentName,
+        studentName: _studentName.isEmpty ? l10n.accountStudent : _studentName,
+        profilePictureUrl: _profilePictureUrl,
         onBack: () => setState(() => _selectedNavIndex = 0),
         onLogout: _logout,
         onOpenChat: _openChat,
@@ -260,15 +268,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     ];
   }
 
-  Widget _selectedDayWorkouts() {
+  Widget _selectedDayWorkouts(AppLocalizations l10n) {
     final plans = _plansForDate(_selectedDate);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         StudentSectionTitle(
-          title:
-              'Treinos de ${StudentDateLabels.weekdayFull(_selectedDate.weekday)}',
+          title: l10n.workoutsForWeekdayTitle(
+            StudentDateLabels.weekdayFull(_selectedDate.weekday),
+          ),
           subtitle: StudentDateLabels.dateLabel(_selectedDate),
         ),
         const SizedBox(height: 12),
@@ -277,9 +286,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: StudentTheme.cardDecoration(),
-            child: const Text(
-              'Sem treino marcado para este dia.',
-              style: TextStyle(color: StudentTheme.mutedText, fontSize: 14),
+            child: Text(
+              l10n.noWorkoutScheduledMessage,
+              style: const TextStyle(color: StudentTheme.mutedText, fontSize: 14),
             ),
           )
         else
@@ -296,7 +305,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  Widget _sessionCard(StudentTrainingSession session, {Widget? action}) {
+  Widget _sessionCard(
+    StudentTrainingSession session,
+    AppLocalizations l10n, {
+    Widget? action,
+  }) {
     return GestureDetector(
       onTap: () => _showSessionDetails(session),
       child: Container(
@@ -325,7 +338,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _sessionDateLabel(session.date),
+                    _sessionDateLabel(session.date, l10n),
                     style: const TextStyle(
                       color: StudentTheme.darkText,
                       fontSize: 16,
@@ -334,7 +347,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _sessionSubtitle(session),
+                    _sessionSubtitle(session, l10n),
                     style: const TextStyle(
                       color: StudentTheme.mutedText,
                       fontSize: 13,
@@ -356,18 +369,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.chevron_right,
                   color: StudentTheme.mutedText,
                   size: 22,
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'Ver',
-                  style: TextStyle(
+                  l10n.viewAction,
+                  style: const TextStyle(
                     color: StudentTheme.mutedText,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -382,6 +395,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   void _showSessionDetails(StudentTrainingSession session) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: StudentTheme.navy,
@@ -432,7 +446,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _sessionTypeTitle(session),
+                              _sessionTypeTitle(session, l10n),
                               style: const TextStyle(
                                 color: StudentTheme.darkText,
                                 fontSize: 18,
@@ -441,7 +455,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _sessionStatusLabel(session.status),
+                              _sessionStatusLabel(session.status, l10n),
                               style: TextStyle(
                                 color: _sessionStatusColor(session.status),
                                 fontSize: 13,
@@ -456,35 +470,38 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   const SizedBox(height: 20),
                   _sessionDetailRow(
                     Icons.calendar_today_outlined,
-                    'Data e hora',
-                    _sessionDateLabel(session.date),
+                    l10n.dateAndTimeLabel,
+                    _sessionDateLabel(session.date, l10n),
                   ),
                   _sessionDetailRow(
                     Icons.category_outlined,
-                    'Tipo',
+                    l10n.typeLabel,
                     session.sessionType == 'group'
-                        ? 'Aula em grupo'
-                        : 'Sessão individual',
+                        ? l10n.groupClassLabelShort
+                        : l10n.individualSessionLabel,
                   ),
                   if (session.sessionType == 'group')
                     _sessionDetailRow(
                       Icons.groups_outlined,
-                      'Vagas',
-                      '${session.registeredStudents}/${session.maxStudents?.toString() ?? '-'} inscritos',
+                      l10n.slotsLabel,
+                      l10n.enrolledCountLabel(
+                        session.registeredStudents.toString(),
+                        session.maxStudents?.toString() ?? '-',
+                      ),
                     ),
                   if (session.workoutPlanId != null &&
                       session.workoutPlanId!.isNotEmpty)
                     _sessionDetailRow(
                       Icons.fitness_center_outlined,
-                      'Plano associado',
-                      _workoutTitleForSession(session),
+                      l10n.associatedPlanLabel,
+                      _workoutTitleForSession(session, l10n),
                     ),
                   _sessionDetailRow(
                     Icons.notes_outlined,
-                    'Notas da personal',
+                    l10n.trainerNotesLabel,
                     session.notes?.trim().isNotEmpty == true
                         ? session.notes!.trim()
-                        : 'Sem notas para esta sessão.',
+                        : l10n.noNotesForSessionMessage,
                   ),
                   const SizedBox(height: 14),
                   if (session.sessionType == 'group' &&
@@ -501,7 +518,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                           _confirmUnenrollGroupSession(session);
                         },
                         icon: const Icon(Icons.event_busy_outlined),
-                        label: const Text('Cancelar inscrição'),
+                        label: Text(l10n.cancelEnrollmentAction),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -510,7 +527,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Fechar'),
+                      child: Text(l10n.close),
                     ),
                   ),
                 ],
@@ -600,6 +617,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   void _showWorkoutDetails(StudentWorkoutPlan workout) {
     final isCompleted = _completedWorkoutIds.contains(workout.id);
+    final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
       context: context,
@@ -657,7 +675,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              isCompleted ? 'Concluído' : 'Pendente',
+                              isCompleted
+                                  ? l10n.completedStatusLabel
+                                  : l10n.pendingStatusLabel,
                               style: TextStyle(
                                 color: isCompleted
                                     ? StudentTheme.blue
@@ -674,15 +694,15 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   const SizedBox(height: 18),
                   _sessionDetailRow(
                     Icons.timer_outlined,
-                    'Duração estimada',
-                    '${workout.durationMinutes} min',
+                    l10n.estimatedDurationLabel,
+                    l10n.durationMinutesValue(workout.durationMinutes.toString()),
                   ),
                   _sessionDetailRow(
                     Icons.fitness_center_outlined,
-                    'Exercícios',
+                    l10n.exercisesLabel,
                     workout.exercises.isEmpty
-                        ? 'Sem exercícios definidos.'
-                        : '${workout.exercises.length} exercício(s)',
+                        ? l10n.noExercisesDefinedMessage
+                        : l10n.exercisesCountLabel(workout.exercises.length.toString()),
                   ),
                   if (workout.exercises.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -724,8 +744,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       ),
                       label: Text(
                         isCompleted
-                            ? 'Marcar como pendente'
-                            : 'Marcar como concluído',
+                            ? l10n.markAsPendingAction
+                            : l10n.markAsCompletedAction,
                       ),
                     ),
                   ),
@@ -734,7 +754,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Fechar'),
+                      child: Text(l10n.close),
                     ),
                   ),
                 ],
@@ -756,7 +776,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (_waterMl == _waterGoalMl) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meta de hidratacao concluida hoje.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.hydrationGoalCompletedMessage)),
       );
     }
   }
@@ -814,11 +834,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     if (!mounted || userData == null) return;
 
     final name = userData['name'];
-    if (name is String && name.trim().isNotEmpty) {
-      setState(() {
+    final pictureUrl = userData['profile_picture_url'];
+    setState(() {
+      if (name is String && name.trim().isNotEmpty) {
         _studentName = name.trim();
-      });
-    }
+      }
+      _profilePictureUrl = pictureUrl is String ? pictureUrl : null;
+    });
   }
 
   Future<void> _loadWorkoutPlans() async {
@@ -826,7 +848,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     if (token == null || token.isEmpty) {
       setState(() {
         _isLoadingWorkouts = false;
-        _workoutErrorMessage = 'Entre com login para acessar os treinos.';
+        _workoutErrorMessage = AppLocalizations.of(context)!.loginToAccessWorkoutsMessage;
       });
       return;
     }
@@ -839,11 +861,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ).timeout(const Duration(seconds: 8));
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         if (data is List) {
           _workouts = List.generate(
             data.length,
-            (index) => _workoutFromApi(data[index], index),
+            (index) => _workoutFromApi(data[index], index, l10n),
           );
         }
         _isLoadingWorkouts = false;
@@ -852,7 +875,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       if (!mounted) return;
 
       setState(() {
-        _workoutErrorMessage = 'Nao foi possivel carregar os treinos agora.';
+        _workoutErrorMessage = AppLocalizations.of(context)!.workoutsLoadError;
         _isLoadingWorkouts = false;
       });
     }
@@ -940,9 +963,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
     if (data is Map && data['id'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscrição realizada com sucesso.')),
+        SnackBar(content: Text(l10n.enrollmentSuccessMessage)),
       );
       _loadEnrolledGroupSessions();
       _loadAvailableGroupSessions();
@@ -950,13 +974,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       final detail = data is Map ? data['detail']?.toString() : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(detail ?? 'Não foi possível fazer a inscrição.'),
+          content: Text(detail ?? l10n.enrollmentError),
         ),
       );
     }
   }
 
-  StudentWorkoutPlan _workoutFromApi(dynamic value, int index) {
+  StudentWorkoutPlan _workoutFromApi(dynamic value, int index, AppLocalizations l10n) {
     final plan = value is Map<String, dynamic> ? value : <String, dynamic>{};
     final exercisesData = plan['exercises'] is List
         ? plan['exercises'] as List
@@ -964,7 +988,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final exercises = exercisesData.whereType<Map<String, dynamic>>().map((
       exercise,
     ) {
-      final name = _text(exercise['name'], 'Exercicio');
+      final name = _text(exercise['name'], l10n.exerciseFallback);
       final sets = exercise['sets'];
       final reps = exercise['reps'];
 
@@ -974,10 +998,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     return StudentWorkoutPlan(
       id: _text(plan['id'], 'workout-$index'),
-      title: _text(plan['title'], 'Treino ${index + 1}'),
+      title: _text(plan['title'], l10n.workoutFallbackTitle((index + 1).toString())),
       focus: exercises.isEmpty
-          ? 'Plano atribuido'
-          : '${exercises.length} exercicios',
+          ? l10n.planAssignedLabel
+          : l10n.exercisesCountShort(exercises.length.toString()),
       weekday: (index % 7) + 1,
       scheduledDate: _sessionDateForWorkout(
         _text(plan['id'], 'workout-$index'),
@@ -1054,24 +1078,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
   }
 
-  static String _sessionDateLabel(DateTime date) {
+  static String _sessionDateLabel(DateTime date, AppLocalizations l10n) {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     final year = date.year.toString();
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
 
-    return '$day/$month/$year às $hour:$minute';
+    return l10n.dateTimeAt('$day/$month/$year', '$hour:$minute');
   }
 
-  static String _sessionStatusLabel(String status) {
+  static String _sessionStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
       case 'scheduled':
-        return 'Agendada';
+        return l10n.sessionStatusScheduled;
       case 'completed':
-        return 'Concluída';
+        return l10n.sessionStatusCompleted;
       case 'cancelled':
-        return 'Cancelada';
+        return l10n.sessionStatusCancelled;
       default:
         return status;
     }
@@ -1090,51 +1114,56 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
-  static String _sessionSubtitle(StudentTrainingSession session) {
-    final status = _sessionStatusLabel(session.status);
+  static String _sessionSubtitle(StudentTrainingSession session, AppLocalizations l10n) {
+    final status = _sessionStatusLabel(session.status, l10n);
     if (session.sessionType != 'group') return status;
 
     final maxStudents = session.maxStudents?.toString() ?? '-';
-    return 'Aula em grupo · ${session.registeredStudents}/$maxStudents inscritos · $status';
+    return l10n.groupClassSubtitle(
+      session.registeredStudents.toString(),
+      maxStudents,
+      status,
+    );
   }
 
-  static String _sessionTypeTitle(StudentTrainingSession session) {
+  static String _sessionTypeTitle(StudentTrainingSession session, AppLocalizations l10n) {
     return session.sessionType == 'group'
-        ? 'Detalhes da aula em grupo'
-        : 'Detalhes da sessão';
+        ? l10n.groupClassDetailsTitle
+        : l10n.sessionDetailsTitle;
   }
 
-  String _workoutTitleForSession(StudentTrainingSession session) {
+  String _workoutTitleForSession(StudentTrainingSession session, AppLocalizations l10n) {
     final workoutPlanId = session.workoutPlanId;
     if (workoutPlanId == null || workoutPlanId.isEmpty) {
-      return 'Sem plano associado';
+      return l10n.noAssociatedPlanMessage;
     }
 
     for (final workout in _workouts) {
       if (workout.id == workoutPlanId) return workout.title;
     }
 
-    return 'Plano #$workoutPlanId';
+    return l10n.planNumberLabel(workoutPlanId);
   }
 
   Future<void> _confirmUnenrollGroupSession(
     StudentTrainingSession session,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancelar inscrição?'),
+        title: Text(l10n.cancelEnrollmentTitle),
         content: Text(
-          'Queres cancelar a inscrição na aula de ${_sessionDateLabel(session.date)}?',
+          l10n.confirmCancelEnrollmentMessage(_sessionDateLabel(session.date, l10n)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Voltar'),
+            child: Text(l10n.backAction),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cancelar inscrição'),
+            child: Text(l10n.cancelEnrollmentAction),
           ),
         ],
       ),
@@ -1156,9 +1185,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     );
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
     if (data is Map && data['message'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscrição cancelada com sucesso.')),
+        SnackBar(content: Text(l10n.enrollmentCancelledMessage)),
       );
       _loadEnrolledGroupSessions();
       _loadAvailableGroupSessions();
@@ -1166,7 +1196,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       final detail = data is Map ? data['detail']?.toString() : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(detail ?? 'Não foi possível cancelar a inscrição.'),
+          content: Text(detail ?? l10n.enrollmentCancelError),
         ),
       );
     }
@@ -1177,7 +1207,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Entre com login para acessar o chat.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.loginToAccessChatMessage)),
       );
       return;
     }

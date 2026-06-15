@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'client_selector.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class ScheduleSessionScreen extends StatefulWidget {
   final String token;
@@ -70,21 +71,22 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   }
 
   Future<void> submitSession() async {
+    final l10n = AppLocalizations.of(context)!;
     final maxStudents = int.tryParse(maxStudentsController.text);
     final dateTime = selectedDateTime;
 
     if (dateTime == null) {
-      setState(() => errorMessage = 'Escolhe a data e a hora.');
+      setState(() => errorMessage = l10n.chooseDateAndTimeMessage);
       return;
     }
 
     if (sessionType == 'individual' && selectedClientId == null) {
-      setState(() => errorMessage = 'Seleciona o aluno, a data e a hora.');
+      setState(() => errorMessage = l10n.selectStudentDateTimeMessage);
       return;
     }
 
     if (sessionType == 'group' && (maxStudents == null || maxStudents < 1)) {
-      setState(() => errorMessage = 'Indica um limite de alunos valido.');
+      setState(() => errorMessage = l10n.validMaxStudentsMessage);
       return;
     }
 
@@ -93,16 +95,14 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
     if (dateTime.isBefore(now)) {
       setState(() {
-        errorMessage =
-            'A sessão de treino não pode ser agendada para uma data/hora passada.';
+        errorMessage = l10n.sessionPastDateError;
       });
       return;
     }
 
     if (dateTime.isBefore(earliestDateTime)) {
       setState(() {
-        errorMessage =
-            'A sessão de treino deve ser agendada com pelo menos 24 horas de antecedência.';
+        errorMessage = l10n.sessionTooSoonError;
       });
       return;
     }
@@ -141,12 +141,12 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Sucesso'),
-          content: const Text('Agendamento feito com sucesso.'),
+          title: Text(l10n.successTitle),
+          content: Text(l10n.schedulingSuccessMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(l10n.okAction),
             ),
           ],
         ),
@@ -155,33 +155,32 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       Navigator.pop(context, true);
     } else {
       setState(() {
-        errorMessage =
-            getApiErrorMessage(data) ??
-            'Não foi possível agendar a sessão de treino.';
+        errorMessage = getApiErrorMessage(data) ?? l10n.sessionScheduleError;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Agendar sessão')),
+      appBar: AppBar(title: Text(l10n.scheduleSessionTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: 'individual',
-                  icon: Icon(Icons.person_outline),
-                  label: Text('Individual'),
+                  icon: const Icon(Icons.person_outline),
+                  label: Text(l10n.individualOptionLabel),
                 ),
                 ButtonSegment(
                   value: 'group',
-                  icon: Icon(Icons.groups_outlined),
-                  label: Text('Grupo'),
+                  icon: const Icon(Icons.groups_outlined),
+                  label: Text(l10n.groupOptionLabel),
                 ),
               ],
               selected: {sessionType},
@@ -202,9 +201,9 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
               TextField(
                 controller: maxStudentsController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Limite de alunos',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.maxStudentsLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
             const SizedBox(height: 16),
@@ -216,7 +215,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     icon: const Icon(Icons.calendar_today),
                     label: Text(
                       selectedDate == null
-                          ? 'Escolher data'
+                          ? l10n.chooseDateAction
                           : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                     ),
                   ),
@@ -228,7 +227,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     icon: const Icon(Icons.access_time),
                     label: Text(
                       selectedTime == null
-                          ? 'Escolher hora'
+                          ? l10n.chooseTimeAction
                           : selectedTime!.format(context),
                     ),
                   ),
@@ -239,9 +238,9 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             TextField(
               controller: notesController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Notas (opcional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.notesOptionalLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 24),
@@ -256,8 +255,8 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     ? const CircularProgressIndicator()
                     : Text(
                         sessionType == 'group'
-                            ? 'Criar aula em grupo'
-                            : 'Agendar sessão',
+                            ? l10n.createGroupClassAction
+                            : l10n.scheduleSessionTitle,
                       ),
               ),
             ),

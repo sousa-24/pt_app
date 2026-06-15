@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class TrainerEvaluationsScreen extends StatefulWidget {
   final String token;
@@ -46,6 +47,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
 
       final data = results[0];
       final contacts = results[1];
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _sessions = data is List
             ? data
@@ -53,22 +55,23 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
                   .map((item) => Map<String, dynamic>.from(item))
                   .toList()
             : [];
-        _clientNames = _clientNameMap(contacts);
+        _clientNames = _clientNameMap(contacts, l10n);
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _message = 'Nao foi possivel carregar as sessoes.';
+        _message = AppLocalizations.of(context)!.evaluationsLoadError;
         _isLoading = false;
       });
     }
   }
 
   Future<void> _saveEvaluation() async {
+    final l10n = AppLocalizations.of(context)!;
     final session = _selectedSession;
     if (session == null) {
-      setState(() => _message = 'Seleciona uma sessao.');
+      setState(() => _message = l10n.selectSessionMessage);
       return;
     }
 
@@ -95,12 +98,12 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     if (data is Map && data['id'] != null) {
       _notesController.clear();
       setState(() {
-        _message = 'Avaliacao guardada com sucesso.';
+        _message = l10n.evaluationSavedMessage;
         _isSaving = false;
       });
     } else {
       setState(() {
-        _message = _apiError(data) ?? 'Nao foi possivel guardar a avaliacao.';
+        _message = _apiError(data) ?? l10n.evaluationSaveError;
         _isSaving = false;
       });
     }
@@ -132,7 +135,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _message = 'Nao foi possivel carregar o feedback do aluno.';
+        _message = AppLocalizations.of(context)!.feedbackLoadError;
         _isLoadingFeedback = false;
       });
     }
@@ -145,34 +148,35 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     return null;
   }
 
-  String _clientName(dynamic clientId) {
+  String _clientName(dynamic clientId, AppLocalizations l10n) {
     final id = clientId is int ? clientId : int.tryParse(clientId.toString());
-    if (id == null) return 'Aluno';
-    return _clientNames[id] ?? 'Aluno #$id';
+    if (id == null) return l10n.accountStudent;
+    return _clientNames[id] ?? l10n.studentNumberLabel(id.toString());
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Avaliações')),
+      appBar: AppBar(title: Text(l10n.evaluationsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else if (_sessions.isEmpty)
-            const Center(child: Text('Ainda nao existem sessoes para avaliar.'))
+            Center(child: Text(l10n.noEvaluableSessionsMessage))
           else ...[
-            _evaluationForm(),
+            _evaluationForm(l10n),
             const SizedBox(height: 18),
-            _feedbackPanel(),
+            _feedbackPanel(l10n),
             const SizedBox(height: 18),
-            const Text(
-              'Sessões recentes',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.recentSessionsTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            ..._sessions.map(_sessionCard),
+            ..._sessions.map((session) => _sessionCard(session, l10n)),
           ],
           if (_message != null) ...[
             const SizedBox(height: 12),
@@ -183,31 +187,31 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     );
   }
 
-  Widget _evaluationForm() {
+  Widget _evaluationForm(AppLocalizations l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Avaliar performance do aluno',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.evaluateStudentPerformanceTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               initialValue: _selectedSessionId,
               isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Sessao',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.sessionLabel,
+                border: const OutlineInputBorder(),
               ),
               items: _sessions.map((session) {
                 final id = session['id'] as int;
                 return DropdownMenuItem<int>(
                   value: id,
                   child: Text(
-                    '${_clientName(session['client_id'])} - ${_formatDate(session['date'])}',
+                    '${_clientName(session['client_id'], l10n)} - ${_formatDate(session['date'], l10n)}',
                   ),
                 );
               }).toList(),
@@ -236,9 +240,9 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
             TextField(
               controller: _notesController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Notas da avaliacao',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.evaluationNotesLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 14),
@@ -247,7 +251,7 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveEvaluation,
                 icon: const Icon(Icons.assignment_turned_in_outlined),
-                label: Text(_isSaving ? 'A guardar...' : 'Guardar avaliacao'),
+                label: Text(_isSaving ? l10n.savingLabel : l10n.saveEvaluationAction),
               ),
             ),
           ],
@@ -256,23 +260,23 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     );
   }
 
-  Widget _sessionCard(Map<String, dynamic> session) {
+  Widget _sessionCard(Map<String, dynamic> session, AppLocalizations l10n) {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.event_available_outlined),
-        title: Text(_clientName(session['client_id'])),
-        subtitle: Text(_formatDate(session['date'])),
-        trailing: Text(_statusLabel(session['status'])),
+        title: Text(_clientName(session['client_id'], l10n)),
+        subtitle: Text(_formatDate(session['date'], l10n)),
+        trailing: Text(_statusLabel(session['status'], l10n)),
       ),
     );
   }
 
-  Widget _feedbackPanel() {
+  Widget _feedbackPanel(AppLocalizations l10n) {
     if (_selectedSessionId == null) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('Seleciona uma sessao para ver feedback do aluno.'),
+          padding: const EdgeInsets.all(16),
+          child: Text(l10n.selectSessionForFeedbackMessage),
         ),
       );
     }
@@ -287,10 +291,10 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
     }
 
     if (_feedback.isEmpty) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('Ainda nao existe feedback do aluno para esta sessao.'),
+          padding: const EdgeInsets.all(16),
+          child: Text(l10n.noFeedbackForSessionMessage),
         ),
       );
     }
@@ -301,17 +305,17 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Feedback do aluno',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.studentFeedbackTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             ..._feedback.map(
               (item) => ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.star_outline),
-                title: Text('Nota ${item['rating']}/5'),
-                subtitle: Text(item['notes']?.toString() ?? 'Sem notas.'),
+                title: Text(l10n.ratingOutOf5Label(item['rating'].toString())),
+                subtitle: Text(item['notes']?.toString() ?? l10n.noNotesMessage),
               ),
             ),
           ],
@@ -321,25 +325,25 @@ class _TrainerEvaluationsScreenState extends State<TrainerEvaluationsScreen> {
   }
 }
 
-String _statusLabel(dynamic status) {
+String _statusLabel(dynamic status, AppLocalizations l10n) {
   switch (status?.toString()) {
     case 'completed':
-      return 'Concluida';
+      return l10n.sessionStatusCompleted;
     case 'cancelled':
-      return 'Cancelada';
+      return l10n.sessionStatusCancelled;
     default:
-      return 'Agendada';
+      return l10n.sessionStatusScheduled;
   }
 }
 
-String _formatDate(dynamic value) {
+String _formatDate(dynamic value, AppLocalizations l10n) {
   final parsed = DateTime.tryParse(value?.toString() ?? '');
-  if (parsed == null) return value?.toString() ?? 'Sem data';
+  if (parsed == null) return value?.toString() ?? l10n.noDate;
   final day = parsed.day.toString().padLeft(2, '0');
   final month = parsed.month.toString().padLeft(2, '0');
   final hour = parsed.hour.toString().padLeft(2, '0');
   final minute = parsed.minute.toString().padLeft(2, '0');
-  return '$day/$month/${parsed.year} as $hour:$minute';
+  return l10n.dateTimeAt('$day/$month/${parsed.year}', '$hour:$minute');
 }
 
 String? _apiError(dynamic data) {
@@ -347,7 +351,7 @@ String? _apiError(dynamic data) {
   return null;
 }
 
-Map<int, String> _clientNameMap(dynamic contacts) {
+Map<int, String> _clientNameMap(dynamic contacts, AppLocalizations l10n) {
   if (contacts is! List) return {};
 
   final result = <int, String>{};
@@ -363,7 +367,7 @@ Map<int, String> _clientNameMap(dynamic contacts) {
         ? name
         : email != null && email.isNotEmpty
         ? email
-        : 'Aluno #$id';
+        : l10n.studentNumberLabel(id.toString());
   }
   return result;
 }

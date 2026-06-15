@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../student_theme.dart';
 import '../../../api_service.dart';
+import '../../../l10n/gen/app_localizations.dart';
 
 class StudentHeader extends StatefulWidget {
   final String studentName;
@@ -146,6 +147,7 @@ class _StudentHeaderState extends State<StudentHeader> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 34),
@@ -159,17 +161,17 @@ class _StudentHeaderState extends State<StudentHeader> {
             Stack(
               alignment: Alignment.center,
               children: [
-                const Column(
+                Column(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.fitness_center,
                       color: StudentTheme.blue,
                       size: 44,
                     ),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Text(
-                      'FITPRO',
-                      style: TextStyle(
+                      l10n.appTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
@@ -251,7 +253,7 @@ class _StudentHeaderState extends State<StudentHeader> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Boa tarde, ${_firstName(widget.studentName)}!',
+                l10n.goodAfternoonGreeting(_firstName(widget.studentName, l10n)),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -265,9 +267,9 @@ class _StudentHeaderState extends State<StudentHeader> {
     );
   }
 
-  String _firstName(String name) {
+  String _firstName(String name, AppLocalizations l10n) {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) return 'Aluno';
+    if (trimmed.isEmpty) return l10n.accountStudent;
     return trimmed.split(' ').first;
   }
 }
@@ -287,6 +289,7 @@ class _NotificationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.55,
@@ -307,9 +310,9 @@ class _NotificationPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 8, 4),
             child: Row(
               children: [
-                const Text(
-                  'Notificações',
-                  style: TextStyle(
+                Text(
+                  l10n.notificationsTitle,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -318,9 +321,9 @@ class _NotificationPanel extends StatelessWidget {
                 const Spacer(),
                 TextButton(
                   onPressed: onMarkAllRead,
-                  child: const Text(
-                    'Marcar tudo lido',
-                    style: TextStyle(color: Color(0xFFCBFF4D), fontSize: 13),
+                  child: Text(
+                    l10n.markAllReadAction,
+                    style: const TextStyle(color: Color(0xFFCBFF4D), fontSize: 13),
                   ),
                 ),
               ],
@@ -331,10 +334,10 @@ class _NotificationPanel extends StatelessWidget {
             child: loading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFFCBFF4D)))
                 : notifications.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'Sem notificações',
-                          style: TextStyle(color: Colors.white54),
+                          l10n.noNotificationsMessage,
+                          style: const TextStyle(color: Colors.white54),
                         ),
                       )
                     : ListView.separated(

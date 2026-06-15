@@ -1,0 +1,558 @@
+{
+  "@@locale": "pt",
+  "appTitle": "FITPRO",
+  "appSubtitle": "O seu app",
+  "loginAs": "Entrar como",
+  "accountStudent": "Aluno",
+  "accountTrainer": "Personal",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "showPasswordTooltip": "Ver senha",
+  "hidePasswordTooltip": "Esconder senha",
+  "loginButton": "LOGIN",
+  "createAccountButton": "Criar nova conta",
+  "accountCreatedMessage": "Conta criada! Faca login para entrar.",
+  "notStudentAccountError": "Esta conta nao e de aluno",
+  "notTrainerAccountError": "Esta conta nao e de personal",
+  "invalidCredentialsError": "Email ou password invalidos",
+  "connectionError": "Nao foi possivel ligar ao servidor",
+  "changeLanguageTooltip": "Mudar idioma",
+  "fillAllFieldsMessage": "Preenche todos os campos",
+  "inviteCodeRequiredError": "Aluno precisa de codigo de convite",
+  "registrationFailedError": "Falha no cadastro",
+  "fullNameLabel": "Nome completo",
+  "inviteCodeLabel": "Codigo de convite",
+  "createAccountAction": "CRIAR CONTA",
+  "alreadyHaveAccountAction": "Ja tenho conta",
+
+  "cancel": "Cancelar",
+  "edit": "Editar",
+  "delete": "Apagar",
+  "save": "Guardar",
+  "close": "Fechar",
+  "requiredField": "Obrigatorio",
+
+  "invoicesTitle": "Faturas",
+  "refreshTooltip": "Atualizar",
+  "newInvoiceTitle": "Nova fatura",
+  "serviceLabel": "Servico",
+  "amountLabel": "Valor",
+  "invalidAmount": "Valor invalido",
+  "dueDateLabel": "Data de vencimento",
+  "paymentMethodOptionalLabel": "Metodo de pagamento (opcional)",
+  "notesOptionalLabel": "Notas (opcional)",
+  "creatingLabel": "A criar...",
+  "createInvoiceLabel": "Criar fatura",
+  "noInvoicesYet": "Ainda nao existem faturas.",
+  "selectStudentMessage": "Seleciona um aluno.",
+  "selectDueDateMessage": "Escolhe a data de vencimento.",
+  "invoiceCreatedMessage": "Fatura criada com sucesso.",
+  "invoiceCreateError": "Nao foi possivel criar a fatura.",
+  "invoicesLoadError": "Nao foi possivel carregar as faturas.",
+  "invoiceUpdateError": "Nao foi possivel atualizar a fatura.",
+  "invoiceUpdatedMessage": "Fatura atualizada.",
+  "invoiceMarkedPaidMessage": "Fatura marcada como paga.",
+  "invoiceCancelledMessage": "Fatura cancelada.",
+  "invoiceDeletedMessage": "Fatura apagada.",
+  "invoiceDeleteError": "Nao foi possivel apagar a fatura.",
+  "deleteInvoiceTitle": "Apagar fatura?",
+  "actionCannotBeUndone": "Esta acao nao pode ser desfeita.",
+  "editInvoiceTitle": "Editar fatura",
+  "statusLabel": "Estado",
+  "statusPending": "Pendente",
+  "statusPaid": "Pago",
+  "statusOverdue": "Atrasado",
+  "statusCancelled": "Cancelado",
+  "paymentMethodLabel": "Metodo de pagamento",
+  "notesLabel": "Notas",
+  "fillValidServiceAndValue": "Preenche servico e valor validos.",
+  "invoiceFallback": "Fatura",
+  "invoiceActionsTooltip": "Acoes da fatura",
+  "markAsPaidAction": "Marcar como paga",
+  "studentNumberLabel": "Aluno #{id}",
+  "@studentNumberLabel": {
+    "placeholders": { "id": {} }
+  },
+  "studentDetailLabel": "Aluno: {name}",
+  "@studentDetailLabel": {
+    "placeholders": { "name": {} }
+  },
+  "amountDetailLabel": "Valor: {amount}",
+  "@amountDetailLabel": {
+    "placeholders": { "amount": {} }
+  },
+  "statusDetailLabel": "Estado: {status}",
+  "@statusDetailLabel": {
+    "placeholders": { "status": {} }
+  },
+  "dueDateDetailLabel": "Vencimento: {date}",
+  "@dueDateDetailLabel": {
+    "placeholders": { "date": {} }
+  },
+  "paidOnDetailLabel": "Pago em: {date}",
+  "@paidOnDetailLabel": {
+    "placeholders": { "date": {} }
+  },
+  "methodDetailLabel": "Metodo: {method}",
+  "@methodDetailLabel": {
+    "placeholders": { "method": {} }
+  },
+  "nextInvoiceTitle": "Proxima fatura",
+  "noPendingInvoices": "Sem faturas pendentes",
+  "upToDate": "Em dia",
+  "noPendingShort": "Sem pendentes",
+  "paidOnDate": "Pago em {date}",
+  "@paidOnDate": {
+    "placeholders": { "date": {} }
+  },
+  "dueOnDate": "Vence em {date}",
+  "@dueOnDate": {
+    "placeholders": { "date": {} }
+  },
+  "noDate": "Sem data",
+
+  "mySessionsTitle": "As minhas sessoes",
+  "sessionsLoadError": "Nao foi possivel carregar as sessoes agendadas.",
+  "serverContactError": "Nao foi possivel contactar o servidor.",
+  "enrollmentSuccessMessage": "Inscricao realizada com sucesso.",
+  "enrollmentError": "Nao foi possivel fazer a inscricao.",
+  "editGroupClassTitle": "Editar aula em grupo",
+  "editSessionTitle": "Editar sessao",
+  "dateLabel": "Data",
+  "timeLabel": "Hora",
+  "sessionStatusScheduled": "Agendada",
+  "sessionStatusCompleted": "Concluida",
+  "sessionStatusCancelled": "Cancelada",
+  "maxStudentsLabel": "Limite de alunos",
+  "chooseDateAndTimeMessage": "Escolhe a data e a hora.",
+  "validMaxStudentsMessage": "Indica um limite de alunos valido.",
+  "sessionUpdatedMessage": "Sessao atualizada.",
+  "sessionUpdateError": "Nao foi possivel atualizar a sessao.",
+  "deleteClassTitle": "Apagar aula?",
+  "deleteSessionTitle": "Apagar sessao?",
+  "classDeletedMessage": "Aula apagada.",
+  "sessionDeletedMessage": "Sessao apagada.",
+  "sessionDeleteError": "Nao foi possivel apagar a sessao.",
+  "dateToBeDefinedLabel": "data por definir",
+  "dateTimeAt": "{date} as {time}",
+  "@dateTimeAt": {
+    "placeholders": { "date": {}, "time": {} }
+  },
+  "groupClassLabel": "Aula em grupo - {registered}/{max} inscritos",
+  "@groupClassLabel": {
+    "placeholders": { "registered": {}, "max": {} }
+  },
+  "noIndividualSessionsMessage": "Nao existem sessoes individuais agendadas",
+  "groupClassesTitle": "Aulas em grupo",
+  "availableGroupClassesTitle": "Aulas em grupo disponiveis",
+  "enrollMeAction": "Inscrever-me",
+  "sessionOnDate": "Sessao em {date}",
+  "@sessionOnDate": {
+    "placeholders": { "date": {} }
+  },
+  "individualSessionLabel": "Sessao individual",
+  "classOnDate": "Aula em {date}",
+  "@classOnDate": {
+    "placeholders": { "date": {} }
+  },
+
+  "homeAppBarTitle": "PT App",
+  "trainerMenuTitle": "Menu do Treinador",
+  "studentMenuTitle": "Menu do Aluno",
+  "viewWorkoutPlansMenu": "Ver Planos de Treino",
+  "createWorkoutPlanMenu": "Criar Plano de Treino",
+  "scheduledSessionsMenu": "Sessoes Agendadas",
+  "scheduleSessionMenu": "Agendar Sessao",
+  "generateInviteCodeMenu": "Gerar Codigo de Convite",
+  "viewNutriPlansMenu": "Ver Planos Nutricionais",
+  "feedChallengesMenu": "Feed & Desafios",
+  "studentsProgressMenu": "Progresso dos Alunos",
+  "evaluationsMenu": "Avaliacoes",
+  "createNutriPlanMenu": "Criar Plano Nutricional",
+  "chatWithStudentsMenu": "Chat com Alunos",
+  "workoutPlansMenu": "Planos de Treino",
+  "myProgressMenu": "O Meu Progresso",
+  "mealPlansMenu": "Planos Alimentares",
+  "chatWithTrainerMenu": "Chat com o PT",
+  "myProfileMenu": "O Meu Perfil",
+  "logoutMenu": "Sair da Conta",
+  "welcomeTrainerMessage": "Bem-vindo, Treinador!",
+  "welcomeMessage": "Bem-vindo!",
+  "useMenuHint": "Utiliza o menu no canto superior esquerdo para navegar.",
+  "trainerAreaTitle": "Area do Personal",
+  "quickActionsTitle": "Acoes rapidas",
+  "progressShortcutSubtitle": "Escolhe um aluno, ve o grafico e regista medidas.",
+  "invoicesShortcutSubtitle": "Cria faturas e consulta pagamentos registados.",
+  "evaluationsShortcutSubtitle": "Avalia a performance dos alunos nas sessoes.",
+  "openStudentAreaButton": "Abrir area do aluno",
+  "onlyForClientUsersMessage": "Disponivel apenas para utilizadores do tipo aluno (client).",
+  "noSessionsScheduledLabel": "Sem sessoes marcadas",
+  "noRecentRecordsLabel": "Sem registos recentes",
+  "summaryLoadError": "Nao foi possivel carregar o resumo.",
+  "activeStudentsLabel": "Alunos ativos",
+  "linkedToAccountLabel": "Ligados a esta conta",
+  "upcomingSessionsLabel": "Proximas sessoes",
+  "pendingInvoicesLabel": "Faturas pendentes",
+  "lastProgressLabel": "Ultimo progresso",
+  "mostRecentRecordLabel": "Registo mais recente",
+
+  "trainerWorkoutsTitle": "Treinos da personal",
+  "weeklyPlanSubtitle": "Plano semanal",
+  "noWorkoutsAssignedMessage": "Ainda nao existem treinos atribuidos.",
+  "sessionsScheduledByTrainerSubtitle": "Agendamentos marcados pela personal",
+  "noSessionsScheduledMessage": "Ainda nao existem sessoes agendadas.",
+  "enrollOpenSlotsSubtitle": "Inscreve-te nas vagas abertas pela personal",
+  "workoutsForWeekdayTitle": "Treinos de {weekday}",
+  "@workoutsForWeekdayTitle": {
+    "placeholders": { "weekday": {} }
+  },
+  "noWorkoutScheduledMessage": "Sem treino marcado para este dia.",
+  "viewAction": "Ver",
+  "dateAndTimeLabel": "Data e hora",
+  "typeLabel": "Tipo",
+  "groupClassLabelShort": "Aula em grupo",
+  "slotsLabel": "Vagas",
+  "enrolledCountLabel": "{registered}/{max} inscritos",
+  "@enrolledCountLabel": {
+    "placeholders": { "registered": {}, "max": {} }
+  },
+  "associatedPlanLabel": "Plano associado",
+  "trainerNotesLabel": "Notas da personal",
+  "noNotesForSessionMessage": "Sem notas para esta sessao.",
+  "cancelEnrollmentAction": "Cancelar inscricao",
+  "completedStatusLabel": "Concluido",
+  "pendingStatusLabel": "Pendente",
+  "estimatedDurationLabel": "Duracao estimada",
+  "durationMinutesValue": "{minutes} min",
+  "@durationMinutesValue": {
+    "placeholders": { "minutes": {} }
+  },
+  "exercisesLabel": "Exercicios",
+  "noExercisesDefinedMessage": "Sem exercicios definidos.",
+  "exercisesCountLabel": "{count} exercicio(s)",
+  "@exercisesCountLabel": {
+    "placeholders": { "count": {} }
+  },
+  "markAsPendingAction": "Marcar como pendente",
+  "markAsCompletedAction": "Marcar como concluido",
+  "hydrationGoalCompletedMessage": "Meta de hidratacao concluida hoje.",
+  "loginToAccessWorkoutsMessage": "Entre com login para acessar os treinos.",
+  "workoutsLoadError": "Nao foi possivel carregar os treinos agora.",
+  "exerciseFallback": "Exercicio",
+  "workoutFallbackTitle": "Treino {number}",
+  "@workoutFallbackTitle": {
+    "placeholders": { "number": {} }
+  },
+  "planAssignedLabel": "Plano atribuido",
+  "exercisesCountShort": "{count} exercicios",
+  "@exercisesCountShort": {
+    "placeholders": { "count": {} }
+  },
+  "groupClassSubtitle": "Aula em grupo - {registered}/{max} inscritos - {status}",
+  "@groupClassSubtitle": {
+    "placeholders": { "registered": {}, "max": {}, "status": {} }
+  },
+  "groupClassDetailsTitle": "Detalhes da aula em grupo",
+  "sessionDetailsTitle": "Detalhes da sessao",
+  "noAssociatedPlanMessage": "Sem plano associado",
+  "planNumberLabel": "Plano #{id}",
+  "@planNumberLabel": {
+    "placeholders": { "id": {} }
+  },
+  "cancelEnrollmentTitle": "Cancelar inscricao?",
+  "confirmCancelEnrollmentMessage": "Queres cancelar a inscricao na aula de {date}?",
+  "@confirmCancelEnrollmentMessage": {
+    "placeholders": { "date": {} }
+  },
+  "backAction": "Voltar",
+  "enrollmentCancelledMessage": "Inscricao cancelada com sucesso.",
+  "enrollmentCancelError": "Nao foi possivel cancelar a inscricao.",
+  "loginToAccessChatMessage": "Entre com login para acessar o chat.",
+
+  "nutriPlanEditTitle": "Editar Plano Alimentar",
+  "nutriPlanCreateTitle": "Criar Plano Alimentar",
+  "planTitleLabel": "Titulo do plano",
+  "mealsLabel": "Refeicoes",
+  "mealNumberLabel": "Refeicao {number}",
+  "@mealNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeMealTooltip": "Remover refeicao",
+  "mealNameLabel": "Nome da refeicao",
+  "foodsLabel": "Alimentos",
+  "itemNumberLabel": "Item {number}",
+  "@itemNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeFoodTooltip": "Remover alimento",
+  "foodNameLabel": "Nome do alimento",
+  "weightGramsLabel": "Peso (g)",
+  "caloriesLabel": "Calorias",
+  "proteinLabel": "Proteina",
+  "carbsLabel": "Hidratos",
+  "fatsLabel": "Gorduras",
+  "addFoodAction": "Adicionar alimento",
+  "addMealAction": "Adicionar refeicao",
+  "saveChangesAction": "Guardar alteracoes",
+  "createPlanAction": "Criar plano",
+  "fillTitleAndStudentMessage": "Preenche o titulo e seleciona um aluno.",
+  "fillAllMealNamesMessage": "Preenche o nome de todas as refeicoes.",
+  "fillValidFoodFieldsMessage": "Preenche todos os campos dos alimentos com valores validos.",
+  "successTitle": "Sucesso",
+  "mealPlanCreatedMessage": "Plano alimentar criado com sucesso.",
+  "okAction": "OK",
+  "mealPlanUpdateError": "Nao foi possivel atualizar o plano alimentar.",
+  "mealPlanCreateError": "Nao foi possivel criar o plano alimentar.",
+
+  "evaluationsTitle": "Avaliacoes",
+  "evaluationsLoadError": "Nao foi possivel carregar as sessoes.",
+  "selectSessionMessage": "Seleciona uma sessao.",
+  "evaluationSavedMessage": "Avaliacao guardada com sucesso.",
+  "evaluationSaveError": "Nao foi possivel guardar a avaliacao.",
+  "feedbackLoadError": "Nao foi possivel carregar o feedback do aluno.",
+  "noEvaluableSessionsMessage": "Ainda nao existem sessoes para avaliar.",
+  "recentSessionsTitle": "Sessoes recentes",
+  "evaluateStudentPerformanceTitle": "Avaliar performance do aluno",
+  "sessionLabel": "Sessao",
+  "evaluationNotesLabel": "Notas da avaliacao",
+  "savingLabel": "A guardar...",
+  "saveEvaluationAction": "Guardar avaliacao",
+  "selectSessionForFeedbackMessage": "Seleciona uma sessao para ver feedback do aluno.",
+  "noFeedbackForSessionMessage": "Ainda nao existe feedback do aluno para esta sessao.",
+  "studentFeedbackTitle": "Feedback do aluno",
+  "ratingOutOf5Label": "Nota {rating}/5",
+  "@ratingOutOf5Label": {
+    "placeholders": { "rating": {} }
+  },
+  "noNotesMessage": "Sem notas.",
+
+  "nutriPlansLoadError": "Nao foi possivel carregar os planos alimentares.",
+  "deleteMealPlanTitle": "Apagar plano alimentar?",
+  "confirmDeleteMealPlanMessage": "Queres apagar \"{title}\"? Esta acao nao pode ser desfeita.",
+  "@confirmDeleteMealPlanMessage": {
+    "placeholders": { "title": {} }
+  },
+  "mealPlanDeletedMessage": "Plano alimentar apagado.",
+  "mealPlanDeleteError": "Nao foi possivel apagar o plano.",
+  "mealPlansTitle": "Planos Alimentares",
+  "noMealPlansMessage": "Ainda nao existem planos alimentares.",
+  "mealPlanFallback": "Plano alimentar",
+  "thisPlanFallback": "este plano",
+  "createdOnLabel": "Criado em: {date}",
+  "@createdOnLabel": {
+    "placeholders": { "date": {} }
+  },
+  "recentlyLabel": "recentemente",
+  "editMealPlanTooltip": "Editar plano alimentar",
+  "deleteMealPlanTooltip": "Apagar plano alimentar",
+  "mealFallback": "Refeicao",
+  "foodFallback": "Alimento",
+  "foodDetailsLabel": "Peso: {weight}g | Calorias: {calories} | Proteina: {protein}g | Hidratos: {carbs}g | Gordura: {fats}g",
+  "@foodDetailsLabel": {
+    "placeholders": { "weight": {}, "calories": {}, "protein": {}, "carbs": {}, "fats": {} }
+  },
+
+  "fillExerciseFieldsMessage": "Preenche o nome, as series e as repeticoes de todos os exercicios.",
+  "workoutPlanCreatedMessage": "Plano de treino criado com sucesso.",
+  "workoutPlanUpdateError": "Nao foi possivel atualizar o plano de treino.",
+  "workoutPlanCreateError": "Nao foi possivel criar o plano de treino.",
+  "workoutPlanEditTitle": "Editar Plano de Treino",
+  "workoutPlanCreateTitle": "Criar Plano de Treino",
+  "exerciseNumberLabel": "Exercicio {number}",
+  "@exerciseNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeExerciseTooltip": "Remover exercicio",
+  "exerciseNameLabel": "Nome do exercicio",
+  "setsLabel": "Series",
+  "repsLabel": "Repeticoes",
+  "addExerciseAction": "Adicionar exercicio",
+
+  "selectStudentDateTimeMessage": "Seleciona o aluno, a data e a hora.",
+  "sessionPastDateError": "A sessao de treino nao pode ser agendada para uma data/hora passada.",
+  "sessionTooSoonError": "A sessao de treino deve ser agendada com pelo menos 24 horas de antecedencia.",
+  "schedulingSuccessMessage": "Agendamento feito com sucesso.",
+  "sessionScheduleError": "Nao foi possivel agendar a sessao de treino.",
+  "scheduleSessionTitle": "Agendar sessao",
+  "individualOptionLabel": "Individual",
+  "groupOptionLabel": "Grupo",
+  "chooseDateAction": "Escolher data",
+  "chooseTimeAction": "Escolher hora",
+  "createGroupClassAction": "Criar aula em grupo",
+
+  "workoutPlansLoadError": "Nao foi possivel carregar os planos de treino.",
+  "deletePlanTitle": "Apagar plano?",
+  "confirmDeletePlanMessage": "Queres apagar \"{title}\"? Esta acao nao pode ser desfeita.",
+  "@confirmDeletePlanMessage": {
+    "placeholders": { "title": {} }
+  },
+  "workoutPlanDeletedMessage": "Plano de treino apagado.",
+  "myWorkoutsTitle": "Os Meus Treinos",
+  "noWorkoutPlansAssignedMessage": "Ainda nao tens planos de treino atribuidos.",
+  "workoutPlanFallback": "Plano de Treino",
+  "editPlanTooltip": "Editar plano",
+  "deletePlanTooltip": "Apagar plano",
+  "setsRepsLabel": "{sets} series x {reps} repeticoes",
+  "@setsRepsLabel": {
+    "placeholders": { "sets": {}, "reps": {} }
+  },
+
+  "myProgressionTitle": "A Minha Progressao",
+  "noProgressionDataMessage": "Ainda nao existem dados de progressao",
+  "studentProgressTitle": "Progresso do Aluno",
+  "historyRecordsTitle": "Registos de Historico",
+  "dateLabelValue": "Data: {date}",
+  "@dateLabelValue": {
+    "placeholders": { "date": {} }
+  },
+  "weightKgLabel": "Peso: {weight} kg",
+  "@weightKgLabel": {
+    "placeholders": { "weight": {} }
+  },
+  "bodyFatPercentLabel": "Massa gorda: {value}%",
+  "@bodyFatPercentLabel": {
+    "placeholders": { "value": {} }
+  },
+  "muscleMassKgLabel": "Massa muscular: {value} kg",
+  "@muscleMassKgLabel": {
+    "placeholders": { "value": {} }
+  },
+  "notesValueLabel": "Notas: {notes}",
+  "@notesValueLabel": {
+    "placeholders": { "notes": {} }
+  },
+  "noProgressRecordsFoundMessage": "Nenhum registo de progresso encontrado.",
+
+  "profileLoadError": "Nao foi possivel carregar o perfil.",
+  "profilePictureUpdateError": "Nao foi possivel atualizar a foto.",
+  "uploadingLabel": "A enviar...",
+  "changePictureAction": "Alterar foto",
+  "nameLabel": "Nome",
+  "accountTypeLabel": "Tipo de conta",
+
+  "chatTitle": "FITPRO Chat",
+  "chatErrorMessage": "Erro: {detail}",
+  "@chatErrorMessage": {
+    "placeholders": { "detail": {} }
+  },
+  "connectionErrorMessage": "Erro de ligacao: {error}",
+  "@connectionErrorMessage": {
+    "placeholders": { "error": {} }
+  },
+  "noContactsYetMessage": "Ainda sem contactos",
+  "selectContactLabel": "Selecionar contacto",
+  "selectContactToChatMessage": "Seleciona um contacto para comecar a conversar",
+  "selectContactFirstHint": "Seleciona primeiro um contacto",
+  "writeMessageHint": "Escrever mensagem...",
+  "connectingLabel": "A ligar...",
+  "conversationsTitle": "Conversas",
+  "searchStudentHint": "Procurar aluno",
+  "tapToOpenConversationLabel": "Toque para abrir a conversa",
+  "selectAStudentLabel": "Selecione um aluno",
+  "selectStudentDropdownHint": "Selecionar aluno",
+  "searchTooltip": "Pesquisar",
+  "moreOptionsTooltip": "Mais opcoes",
+  "onlineLabel": "Online",
+  "chooseStudentToStartChatMessage": "Escolha um aluno para iniciar a conversa",
+  "addAction": "Adicionar",
+  "sendAction": "Enviar",
+  "todayAtLabel": "Hoje {time}",
+  "@todayAtLabel": {
+    "placeholders": { "time": {} }
+  },
+  "yesterdayAtLabel": "Ontem {time}",
+  "@yesterdayAtLabel": {
+    "placeholders": { "time": {} }
+  },
+
+  "progressLoadError": "Nao foi possivel carregar o progresso deste aluno.",
+  "selectStudentFirstMessage": "Seleciona um aluno primeiro.",
+  "progressSavedMessage": "Progresso registado com sucesso.",
+  "progressSaveError": "Nao foi possivel guardar o progresso.",
+  "selectStudentToViewProgressMessage": "Seleciona um aluno para ver o progresso.",
+  "noRecordsYetMessage": "Ainda nao existem registos.",
+  "registerPhysicalEvaluationTitle": "Registar avaliacao fisica",
+  "weightLabel": "Peso",
+  "bodyFatLabel": "Massa gorda",
+  "muscleMassLabel": "Massa muscular",
+  "saveProgressAction": "Guardar progresso",
+  "progressSummaryLabel": "Peso: {weight} | Massa gorda: {bodyFat} | Massa muscular: {muscleMass}",
+  "@progressSummaryLabel": {
+    "placeholders": { "weight": {}, "bodyFat": {}, "muscleMass": {} }
+  },
+
+  "generateCodeToInviteClientMessage": "Gera um codigo para convidar um cliente",
+  "expiresAtLabel": "Expira em: {date}",
+  "@expiresAtLabel": {
+    "placeholders": { "date": {} }
+  },
+  "codeCopiedMessage": "Codigo copiado!",
+  "copyCodeAction": "Copiar codigo",
+  "generateCodeAction": "Gerar codigo",
+  "generateNewCodeAction": "Gerar novo codigo",
+
+  "editProfileMenu": "Editar Perfil",
+  "workoutsMenu": "Treinos",
+  "myMealPlanMenu": "Meu Plano Alimentar",
+  "myProgressMenuShort": "O Meu\nProgresso",
+  "mealPlanMenuShort": "Plano\nAlimentar",
+  "calendarMenu": "Calendario",
+  "sessionsMenu": "Sessoes",
+
+  "hydrationTitle": "Hidratacao",
+  "goalCompletedTodayLabel": "Meta concluida hoje",
+  "drinkNowLabel": "Beba {cups} agora",
+  "@drinkNowLabel": {
+    "placeholders": { "cups": {} }
+  },
+  "onTrackLabel": "Voce esta em dia",
+  "dailyGoalCompletedLabel": "Meta diaria concluida",
+  "remainingTodayLabel": "Faltam {amount} hoje",
+  "@remainingTodayLabel": {
+    "placeholders": { "amount": {} }
+  },
+  "loggedOfGoalLabel": "{current} de {goal} registrados",
+  "@loggedOfGoalLabel": {
+    "placeholders": { "current": {}, "goal": {} }
+  },
+  "nextReminderLabel": "Proximo lembrete: {time}",
+  "@nextReminderLabel": {
+    "placeholders": { "time": {} }
+  },
+  "resetAction": "Zerar",
+  "ofGoalLitersLabel": "de {value} L",
+  "@ofGoalLitersLabel": {
+    "placeholders": { "value": {} }
+  },
+  "cupSingularLabel": "1 copo",
+  "cupsPluralLabel": "{count} copos",
+  "@cupsPluralLabel": {
+    "placeholders": { "count": {} }
+  },
+  "tomorrowAtLabel": "amanha {time}",
+  "@tomorrowAtLabel": {
+    "placeholders": { "time": {} }
+  },
+
+  "goodAfternoonGreeting": "Boa tarde, {name}!",
+  "@goodAfternoonGreeting": {
+    "placeholders": { "name": {} }
+  },
+  "notificationsTitle": "Notificacoes",
+  "markAllReadAction": "Marcar tudo lido",
+  "noNotificationsMessage": "Sem notificacoes",
+
+  "viewWorkoutAction": "Ver treino",
+  "viewCompletedWorkoutAction": "Ver treino concluido",
+
+  "feedScreenTitle": "FITPRO Feed & Desafios",
+  "feedChallengeWeeklyTitle": "Desafio Superacao Semanal",
+  "feedChallengeWeeklySubtitle": "Concluir 4 treinos de alta intensidade esta semana.",
+  "feedChallengeWeeklyStatus": "3/4 Treinos",
+  "feedTipTitle": "Dica de Nutricao do PT",
+  "feedTipSubtitle": "A hidratacao pos-treino acelera a recuperacao muscular em ate 20%. Mantem a garrafa de agua por perto!",
+  "feedTipStatus": "Dica do Dia",
+  "feedWaterGoalTitle": "Meta Absorcao de Agua",
+  "feedWaterGoalSubtitle": "Bater a meta diaria de 3L de agua por 5 dias seguidos.",
+  "feedWaterGoalStatus": "2/5 Dias"
+}

@@ -38,6 +38,11 @@ dependencies:
   web_socket_channel: ^2.4.0
   fl_chart: ^1.2.0
   shared_preferences: ^2.3.3
+  image_picker: ^1.1.2
+  http_parser: ^4.0.2
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +67,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Generates the AppLocalizations class from the .arb files in lib/l10n
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

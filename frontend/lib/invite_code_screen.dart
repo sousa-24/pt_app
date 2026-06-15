@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class InviteCodeScreen extends StatefulWidget {
   final String token;
@@ -37,18 +38,19 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Generate Invite Code'),
+        title: Text(l10n.generateInviteCodeMenu),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Generate a code to invite a client',
-              style: TextStyle(fontSize: 16),
+            Text(
+              l10n.generateCodeToInviteClientMessage,
+              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
@@ -71,7 +73,7 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Expires at: $expiresAt',
+                      l10n.expiresAtLabel(expiresAt ?? ''),
                       style: const TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 16),
@@ -79,11 +81,11 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: generatedCode!));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Code copied to clipboard!')),
+                          SnackBar(content: Text(l10n.codeCopiedMessage)),
                         );
                       },
                       icon: const Icon(Icons.copy),
-                      label: const Text('Copy Code'),
+                      label: Text(l10n.copyCodeAction),
                     ),
                   ],
                 ),
@@ -96,7 +98,11 @@ class _InviteCodeScreenState extends State<InviteCodeScreen> {
                 onPressed: isLoading ? null : generateCode,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : Text(generatedCode == null ? 'Generate Code' : 'Generate New Code'),
+                    : Text(
+                        generatedCode == null
+                            ? l10n.generateCodeAction
+                            : l10n.generateNewCodeAction,
+                      ),
               ),
             ),
           ],

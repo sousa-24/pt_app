@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'create_nutri_plans_screen.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class NutriPlansScreen extends StatefulWidget {
   final String token;
@@ -38,19 +39,20 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
       ).timeout(const Duration(seconds: 10));
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         if (data is List) {
           plans = data;
           errorMessage = '';
         } else {
-          errorMessage = 'Nao foi possivel carregar os planos alimentares.';
+          errorMessage = l10n.nutriPlansLoadError;
         }
         isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        errorMessage = 'Nao foi possivel contactar o servidor.';
+        errorMessage = AppLocalizations.of(context)!.serverContactError;
         isLoading = false;
       });
     }
@@ -71,22 +73,25 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
   }
 
   Future<void> deletePlan(Map<String, dynamic> plan) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar plano alimentar?'),
+        title: Text(l10n.deleteMealPlanTitle),
         content: Text(
-          'Queres apagar "${plan['title'] ?? 'este plano'}"? Esta acao nao pode ser desfeita.',
+          l10n.confirmDeleteMealPlanMessage(
+            plan['title'] ?? l10n.thisPlanFallback,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, true),
             icon: const Icon(Icons.delete_outline),
-            label: const Text('Apagar'),
+            label: Text(l10n.delete),
           ),
         ],
       ),
@@ -103,18 +108,19 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
 
     if (data is Map && data['message'] != null) {
       fetchPlans();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Plano alimentar apagado.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.mealPlanDeletedMessage)),
+      );
     } else {
-      setState(() => errorMessage = 'Nao foi possivel apagar o plano.');
+      setState(() => errorMessage = l10n.mealPlanDeleteError);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Planos Alimentares')),
+      appBar: AppBar(title: Text(l10n.mealPlansTitle)),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage.isNotEmpty
@@ -125,7 +131,7 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
               ),
             )
           : plans.isEmpty
-          ? const Center(child: Text('Ainda nao existem planos alimentares.'))
+          ? Center(child: Text(l10n.noMealPlansMessage))
           : ListView.builder(
               itemCount: plans.length,
               itemBuilder: (context, index) {
@@ -138,22 +144,24 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
                     : const [];
 
                 return ExpansionTile(
-                  title: Text(planMap['title'] ?? 'Plano alimentar'),
+                  title: Text(planMap['title'] ?? l10n.mealPlanFallback),
                   subtitle: Text(
-                    'Criado em: ${planMap['created_at'] ?? 'recentemente'}',
+                    l10n.createdOnLabel(
+                      planMap['created_at'] ?? l10n.recentlyLabel,
+                    ),
                   ),
                   trailing: isTrainer
                       ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              tooltip: 'Editar plano alimentar',
+                              tooltip: l10n.editMealPlanTooltip,
                               icon: const Icon(Icons.edit_outlined),
                               color: Theme.of(context).colorScheme.primary,
                               onPressed: () => editPlan(planMap),
                             ),
                             IconButton(
-                              tooltip: 'Apagar plano alimentar',
+                              tooltip: l10n.deleteMealPlanTooltip,
                               icon: const Icon(Icons.delete_outline),
                               color: Colors.redAccent,
                               onPressed: () => deletePlan(planMap),
@@ -174,8 +182,8 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
                         return [
                           ListTile(
                             leading: const Icon(Icons.restaurant_menu),
-                            title: Text(mealMap['name'] ?? 'Refeicao'),
-                            subtitle: const Text('Refeicao'),
+                            title: Text(mealMap['name'] ?? l10n.mealFallback),
+                            subtitle: Text(l10n.mealFallback),
                           ),
                           ...List<Widget>.from(
                             foodItems.map((item) {
@@ -184,13 +192,15 @@ class _NutriPlansScreenState extends State<NutriPlansScreen> {
                                   : <String, dynamic>{};
                               return ListTile(
                                 leading: const Icon(Icons.food_bank),
-                                title: Text(food['name'] ?? 'Alimento'),
+                                title: Text(food['name'] ?? l10n.foodFallback),
                                 subtitle: Text(
-                                  'Peso: ${food['weight']}g | '
-                                  'Calorias: ${food['calories']} | '
-                                  'Proteina: ${food['protein']}g | '
-                                  'Hidratos: ${food['carbs']}g | '
-                                  'Gordura: ${food['fats']}g',
+                                  l10n.foodDetailsLabel(
+                                    food['weight'].toString(),
+                                    food['calories'].toString(),
+                                    food['protein'].toString(),
+                                    food['carbs'].toString(),
+                                    food['fats'].toString(),
+                                  ),
                                 ),
                               );
                             }).toList(),

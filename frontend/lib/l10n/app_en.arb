@@ -1,0 +1,531 @@
+{
+  "@@locale": "en",
+  "appTitle": "FITPRO",
+  "appSubtitle": "Your app",
+  "loginAs": "Login as",
+  "accountStudent": "Student",
+  "accountTrainer": "Trainer",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "showPasswordTooltip": "Show password",
+  "hidePasswordTooltip": "Hide password",
+  "loginButton": "LOGIN",
+  "createAccountButton": "Create new account",
+  "accountCreatedMessage": "Account created! Log in to continue.",
+  "notStudentAccountError": "This account is not a student account",
+  "notTrainerAccountError": "This account is not a trainer account",
+  "invalidCredentialsError": "Invalid email or password",
+  "connectionError": "Could not connect to server",
+  "changeLanguageTooltip": "Change language",
+  "fillAllFieldsMessage": "Fill in all fields",
+  "inviteCodeRequiredError": "Student needs an invite code",
+  "registrationFailedError": "Registration failed",
+  "fullNameLabel": "Full name",
+  "inviteCodeLabel": "Invite code",
+  "createAccountAction": "CREATE ACCOUNT",
+  "alreadyHaveAccountAction": "I already have an account",
+
+  "cancel": "Cancel",
+  "edit": "Edit",
+  "delete": "Delete",
+  "save": "Save",
+  "close": "Close",
+  "requiredField": "Required",
+
+  "invoicesTitle": "Invoices",
+  "refreshTooltip": "Refresh",
+  "newInvoiceTitle": "New invoice",
+  "serviceLabel": "Service",
+  "amountLabel": "Amount",
+  "invalidAmount": "Invalid amount",
+  "dueDateLabel": "Due date",
+  "paymentMethodOptionalLabel": "Payment method (optional)",
+  "notesOptionalLabel": "Notes (optional)",
+  "creatingLabel": "Creating...",
+  "createInvoiceLabel": "Create invoice",
+  "noInvoicesYet": "No invoices yet.",
+  "selectStudentMessage": "Select a student.",
+  "selectDueDateMessage": "Choose the due date.",
+  "invoiceCreatedMessage": "Invoice created successfully.",
+  "invoiceCreateError": "Could not create the invoice.",
+  "invoicesLoadError": "Could not load invoices.",
+  "invoiceUpdateError": "Could not update the invoice.",
+  "invoiceUpdatedMessage": "Invoice updated.",
+  "invoiceMarkedPaidMessage": "Invoice marked as paid.",
+  "invoiceCancelledMessage": "Invoice cancelled.",
+  "invoiceDeletedMessage": "Invoice deleted.",
+  "invoiceDeleteError": "Could not delete the invoice.",
+  "deleteInvoiceTitle": "Delete invoice?",
+  "actionCannotBeUndone": "This action cannot be undone.",
+  "editInvoiceTitle": "Edit invoice",
+  "statusLabel": "Status",
+  "statusPending": "Pending",
+  "statusPaid": "Paid",
+  "statusOverdue": "Overdue",
+  "statusCancelled": "Cancelled",
+  "paymentMethodLabel": "Payment method",
+  "notesLabel": "Notes",
+  "fillValidServiceAndValue": "Fill in a valid service and amount.",
+  "invoiceFallback": "Invoice",
+  "invoiceActionsTooltip": "Invoice actions",
+  "markAsPaidAction": "Mark as paid",
+  "studentNumberLabel": "Student #{id}",
+  "studentDetailLabel": "Student: {name}",
+  "amountDetailLabel": "Amount: {amount}",
+  "statusDetailLabel": "Status: {status}",
+  "dueDateDetailLabel": "Due date: {date}",
+  "paidOnDetailLabel": "Paid on: {date}",
+  "methodDetailLabel": "Method: {method}",
+  "nextInvoiceTitle": "Next invoice",
+  "noPendingInvoices": "No pending invoices",
+  "upToDate": "Up to date",
+  "noPendingShort": "No pending",
+  "paidOnDate": "Paid on {date}",
+  "dueOnDate": "Due on {date}",
+  "noDate": "No date",
+
+  "mySessionsTitle": "My sessions",
+  "sessionsLoadError": "Could not load the scheduled sessions.",
+  "serverContactError": "Could not contact the server.",
+  "enrollmentSuccessMessage": "Enrollment successful.",
+  "enrollmentError": "Could not complete the enrollment.",
+  "editGroupClassTitle": "Edit group class",
+  "editSessionTitle": "Edit session",
+  "dateLabel": "Date",
+  "timeLabel": "Time",
+  "sessionStatusScheduled": "Scheduled",
+  "sessionStatusCompleted": "Completed",
+  "sessionStatusCancelled": "Cancelled",
+  "maxStudentsLabel": "Student limit",
+  "chooseDateAndTimeMessage": "Choose the date and time.",
+  "validMaxStudentsMessage": "Enter a valid student limit.",
+  "sessionUpdatedMessage": "Session updated.",
+  "sessionUpdateError": "Could not update the session.",
+  "deleteClassTitle": "Delete class?",
+  "deleteSessionTitle": "Delete session?",
+  "classDeletedMessage": "Class deleted.",
+  "sessionDeletedMessage": "Session deleted.",
+  "sessionDeleteError": "Could not delete the session.",
+  "dateToBeDefinedLabel": "date to be defined",
+  "dateTimeAt": "{date} at {time}",
+  "@dateTimeAt": {
+    "placeholders": { "date": {}, "time": {} }
+  },
+  "groupClassLabel": "Group class - {registered}/{max} enrolled",
+  "@groupClassLabel": {
+    "placeholders": { "registered": {}, "max": {} }
+  },
+  "noIndividualSessionsMessage": "There are no individual sessions scheduled",
+  "groupClassesTitle": "Group classes",
+  "availableGroupClassesTitle": "Available group classes",
+  "enrollMeAction": "Enroll me",
+  "sessionOnDate": "Session on {date}",
+  "@sessionOnDate": {
+    "placeholders": { "date": {} }
+  },
+  "individualSessionLabel": "Individual session",
+  "classOnDate": "Class on {date}",
+  "@classOnDate": {
+    "placeholders": { "date": {} }
+  },
+
+  "homeAppBarTitle": "PT App",
+  "trainerMenuTitle": "Trainer Menu",
+  "studentMenuTitle": "Student Menu",
+  "viewWorkoutPlansMenu": "View Workout Plans",
+  "createWorkoutPlanMenu": "Create Workout Plan",
+  "scheduledSessionsMenu": "Scheduled Sessions",
+  "scheduleSessionMenu": "Schedule Session",
+  "generateInviteCodeMenu": "Generate Invite Code",
+  "viewNutriPlansMenu": "View Nutrition Plans",
+  "feedChallengesMenu": "Feed & Challenges",
+  "studentsProgressMenu": "Students' Progress",
+  "evaluationsMenu": "Evaluations",
+  "createNutriPlanMenu": "Create Nutrition Plan",
+  "chatWithStudentsMenu": "Chat with Students",
+  "workoutPlansMenu": "Workout Plans",
+  "myProgressMenu": "My Progress",
+  "mealPlansMenu": "Meal Plans",
+  "chatWithTrainerMenu": "Chat with Trainer",
+  "myProfileMenu": "My Profile",
+  "logoutMenu": "Log Out",
+  "welcomeTrainerMessage": "Welcome, Trainer!",
+  "welcomeMessage": "Welcome!",
+  "useMenuHint": "Use the menu in the top left corner to navigate.",
+  "trainerAreaTitle": "Trainer Area",
+  "quickActionsTitle": "Quick actions",
+  "progressShortcutSubtitle": "Choose a student, view the chart and record measurements.",
+  "invoicesShortcutSubtitle": "Create invoices and check recorded payments.",
+  "evaluationsShortcutSubtitle": "Evaluate students' performance in sessions.",
+  "openStudentAreaButton": "Open student area",
+  "onlyForClientUsersMessage": "Only available for client-type users.",
+  "noSessionsScheduledLabel": "No sessions scheduled",
+  "noRecentRecordsLabel": "No recent records",
+  "summaryLoadError": "Could not load the summary.",
+  "activeStudentsLabel": "Active students",
+  "linkedToAccountLabel": "Linked to this account",
+  "upcomingSessionsLabel": "Upcoming sessions",
+  "pendingInvoicesLabel": "Pending invoices",
+  "lastProgressLabel": "Latest progress",
+  "mostRecentRecordLabel": "Most recent record",
+
+  "trainerWorkoutsTitle": "Trainer's workouts",
+  "weeklyPlanSubtitle": "Weekly plan",
+  "noWorkoutsAssignedMessage": "No workouts assigned yet.",
+  "sessionsScheduledByTrainerSubtitle": "Sessions scheduled by your trainer",
+  "noSessionsScheduledMessage": "There are no sessions scheduled yet.",
+  "enrollOpenSlotsSubtitle": "Enroll in the slots opened by your trainer",
+  "workoutsForWeekdayTitle": "Workouts for {weekday}",
+  "@workoutsForWeekdayTitle": {
+    "placeholders": { "weekday": {} }
+  },
+  "noWorkoutScheduledMessage": "No workout scheduled for this day.",
+  "viewAction": "View",
+  "dateAndTimeLabel": "Date and time",
+  "typeLabel": "Type",
+  "groupClassLabelShort": "Group class",
+  "slotsLabel": "Slots",
+  "enrolledCountLabel": "{registered}/{max} enrolled",
+  "@enrolledCountLabel": {
+    "placeholders": { "registered": {}, "max": {} }
+  },
+  "associatedPlanLabel": "Associated plan",
+  "trainerNotesLabel": "Trainer's notes",
+  "noNotesForSessionMessage": "No notes for this session.",
+  "cancelEnrollmentAction": "Cancel enrollment",
+  "completedStatusLabel": "Completed",
+  "pendingStatusLabel": "Pending",
+  "estimatedDurationLabel": "Estimated duration",
+  "durationMinutesValue": "{minutes} min",
+  "@durationMinutesValue": {
+    "placeholders": { "minutes": {} }
+  },
+  "exercisesLabel": "Exercises",
+  "noExercisesDefinedMessage": "No exercises defined.",
+  "exercisesCountLabel": "{count} exercise(s)",
+  "@exercisesCountLabel": {
+    "placeholders": { "count": {} }
+  },
+  "markAsPendingAction": "Mark as pending",
+  "markAsCompletedAction": "Mark as completed",
+  "hydrationGoalCompletedMessage": "Hydration goal completed today.",
+  "loginToAccessWorkoutsMessage": "Log in to access the workouts.",
+  "workoutsLoadError": "Could not load the workouts right now.",
+  "exerciseFallback": "Exercise",
+  "workoutFallbackTitle": "Workout {number}",
+  "@workoutFallbackTitle": {
+    "placeholders": { "number": {} }
+  },
+  "planAssignedLabel": "Plan assigned",
+  "exercisesCountShort": "{count} exercises",
+  "@exercisesCountShort": {
+    "placeholders": { "count": {} }
+  },
+  "groupClassSubtitle": "Group class - {registered}/{max} enrolled - {status}",
+  "@groupClassSubtitle": {
+    "placeholders": { "registered": {}, "max": {}, "status": {} }
+  },
+  "groupClassDetailsTitle": "Group class details",
+  "sessionDetailsTitle": "Session details",
+  "noAssociatedPlanMessage": "No associated plan",
+  "planNumberLabel": "Plan #{id}",
+  "@planNumberLabel": {
+    "placeholders": { "id": {} }
+  },
+  "cancelEnrollmentTitle": "Cancel enrollment?",
+  "confirmCancelEnrollmentMessage": "Do you want to cancel your enrollment in the class on {date}?",
+  "@confirmCancelEnrollmentMessage": {
+    "placeholders": { "date": {} }
+  },
+  "backAction": "Back",
+  "enrollmentCancelledMessage": "Enrollment cancelled successfully.",
+  "enrollmentCancelError": "Could not cancel the enrollment.",
+  "loginToAccessChatMessage": "Log in to access the chat.",
+
+  "nutriPlanEditTitle": "Edit Meal Plan",
+  "nutriPlanCreateTitle": "Create Meal Plan",
+  "planTitleLabel": "Plan title",
+  "mealsLabel": "Meals",
+  "mealNumberLabel": "Meal {number}",
+  "@mealNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeMealTooltip": "Remove meal",
+  "mealNameLabel": "Meal name",
+  "foodsLabel": "Foods",
+  "itemNumberLabel": "Item {number}",
+  "@itemNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeFoodTooltip": "Remove food",
+  "foodNameLabel": "Food name",
+  "weightGramsLabel": "Weight (g)",
+  "caloriesLabel": "Calories",
+  "proteinLabel": "Protein",
+  "carbsLabel": "Carbs",
+  "fatsLabel": "Fats",
+  "addFoodAction": "Add food",
+  "addMealAction": "Add meal",
+  "saveChangesAction": "Save changes",
+  "createPlanAction": "Create plan",
+  "fillTitleAndStudentMessage": "Fill in the title and select a student.",
+  "fillAllMealNamesMessage": "Fill in the name of all meals.",
+  "fillValidFoodFieldsMessage": "Fill in all food fields with valid values.",
+  "successTitle": "Success",
+  "mealPlanCreatedMessage": "Meal plan created successfully.",
+  "okAction": "OK",
+  "mealPlanUpdateError": "Could not update the meal plan.",
+  "mealPlanCreateError": "Could not create the meal plan.",
+
+  "evaluationsTitle": "Evaluations",
+  "evaluationsLoadError": "Could not load the sessions.",
+  "selectSessionMessage": "Select a session.",
+  "evaluationSavedMessage": "Evaluation saved successfully.",
+  "evaluationSaveError": "Could not save the evaluation.",
+  "feedbackLoadError": "Could not load the student's feedback.",
+  "noEvaluableSessionsMessage": "There are no sessions to evaluate yet.",
+  "recentSessionsTitle": "Recent sessions",
+  "evaluateStudentPerformanceTitle": "Evaluate student performance",
+  "sessionLabel": "Session",
+  "evaluationNotesLabel": "Evaluation notes",
+  "savingLabel": "Saving...",
+  "saveEvaluationAction": "Save evaluation",
+  "selectSessionForFeedbackMessage": "Select a session to view the student's feedback.",
+  "noFeedbackForSessionMessage": "There is no student feedback for this session yet.",
+  "studentFeedbackTitle": "Student feedback",
+  "ratingOutOf5Label": "Rating {rating}/5",
+  "@ratingOutOf5Label": {
+    "placeholders": { "rating": {} }
+  },
+  "noNotesMessage": "No notes.",
+
+  "nutriPlansLoadError": "Could not load the meal plans.",
+  "deleteMealPlanTitle": "Delete meal plan?",
+  "confirmDeleteMealPlanMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+  "@confirmDeleteMealPlanMessage": {
+    "placeholders": { "title": {} }
+  },
+  "mealPlanDeletedMessage": "Meal plan deleted.",
+  "mealPlanDeleteError": "Could not delete the plan.",
+  "mealPlansTitle": "Meal Plans",
+  "noMealPlansMessage": "There are no meal plans yet.",
+  "mealPlanFallback": "Meal plan",
+  "thisPlanFallback": "this plan",
+  "createdOnLabel": "Created on: {date}",
+  "@createdOnLabel": {
+    "placeholders": { "date": {} }
+  },
+  "recentlyLabel": "recently",
+  "editMealPlanTooltip": "Edit meal plan",
+  "deleteMealPlanTooltip": "Delete meal plan",
+  "mealFallback": "Meal",
+  "foodFallback": "Food",
+  "foodDetailsLabel": "Weight: {weight}g | Calories: {calories} | Protein: {protein}g | Carbs: {carbs}g | Fat: {fats}g",
+  "@foodDetailsLabel": {
+    "placeholders": { "weight": {}, "calories": {}, "protein": {}, "carbs": {}, "fats": {} }
+  },
+
+  "fillExerciseFieldsMessage": "Fill in the name, sets and reps for all exercises.",
+  "workoutPlanCreatedMessage": "Workout plan created successfully.",
+  "workoutPlanUpdateError": "Could not update the workout plan.",
+  "workoutPlanCreateError": "Could not create the workout plan.",
+  "workoutPlanEditTitle": "Edit Workout Plan",
+  "workoutPlanCreateTitle": "Create Workout Plan",
+  "exerciseNumberLabel": "Exercise {number}",
+  "@exerciseNumberLabel": {
+    "placeholders": { "number": {} }
+  },
+  "removeExerciseTooltip": "Remove exercise",
+  "exerciseNameLabel": "Exercise name",
+  "setsLabel": "Sets",
+  "repsLabel": "Reps",
+  "addExerciseAction": "Add exercise",
+
+  "selectStudentDateTimeMessage": "Select the student, date and time.",
+  "sessionPastDateError": "The training session cannot be scheduled for a past date/time.",
+  "sessionTooSoonError": "The training session must be scheduled at least 24 hours in advance.",
+  "schedulingSuccessMessage": "Scheduled successfully.",
+  "sessionScheduleError": "Could not schedule the training session.",
+  "scheduleSessionTitle": "Schedule session",
+  "individualOptionLabel": "Individual",
+  "groupOptionLabel": "Group",
+  "chooseDateAction": "Choose date",
+  "chooseTimeAction": "Choose time",
+  "createGroupClassAction": "Create group class",
+
+  "workoutPlansLoadError": "Could not load the workout plans.",
+  "deletePlanTitle": "Delete plan?",
+  "confirmDeletePlanMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+  "@confirmDeletePlanMessage": {
+    "placeholders": { "title": {} }
+  },
+  "workoutPlanDeletedMessage": "Workout plan deleted.",
+  "myWorkoutsTitle": "My Workouts",
+  "noWorkoutPlansAssignedMessage": "You don't have any workout plans assigned yet.",
+  "workoutPlanFallback": "Workout Plan",
+  "editPlanTooltip": "Edit plan",
+  "deletePlanTooltip": "Delete plan",
+  "setsRepsLabel": "{sets} sets x {reps} reps",
+  "@setsRepsLabel": {
+    "placeholders": { "sets": {}, "reps": {} }
+  },
+
+  "myProgressionTitle": "My Progression",
+  "noProgressionDataMessage": "No progression data yet",
+  "studentProgressTitle": "Student Progress",
+  "historyRecordsTitle": "History Records",
+  "dateLabelValue": "Date: {date}",
+  "@dateLabelValue": {
+    "placeholders": { "date": {} }
+  },
+  "weightKgLabel": "Weight: {weight} kg",
+  "@weightKgLabel": {
+    "placeholders": { "weight": {} }
+  },
+  "bodyFatPercentLabel": "Body Fat: {value}%",
+  "@bodyFatPercentLabel": {
+    "placeholders": { "value": {} }
+  },
+  "muscleMassKgLabel": "Muscle Mass: {value} kg",
+  "@muscleMassKgLabel": {
+    "placeholders": { "value": {} }
+  },
+  "notesValueLabel": "Notes: {notes}",
+  "@notesValueLabel": {
+    "placeholders": { "notes": {} }
+  },
+  "noProgressRecordsFoundMessage": "No progress records found.",
+
+  "profileLoadError": "Could not load the profile.",
+  "profilePictureUpdateError": "Could not update the picture.",
+  "uploadingLabel": "Uploading...",
+  "changePictureAction": "Change picture",
+  "nameLabel": "Name",
+  "accountTypeLabel": "Account type",
+
+  "chatTitle": "FITPRO Chat",
+  "chatErrorMessage": "Error: {detail}",
+  "@chatErrorMessage": {
+    "placeholders": { "detail": {} }
+  },
+  "connectionErrorMessage": "Connection error: {error}",
+  "@connectionErrorMessage": {
+    "placeholders": { "error": {} }
+  },
+  "noContactsYetMessage": "No contacts yet",
+  "selectContactLabel": "Select a contact",
+  "selectContactToChatMessage": "Select a contact to start chatting",
+  "selectContactFirstHint": "Select a contact first",
+  "writeMessageHint": "Write a message...",
+  "connectingLabel": "Connecting...",
+  "conversationsTitle": "Conversations",
+  "searchStudentHint": "Search student",
+  "tapToOpenConversationLabel": "Tap to open the conversation",
+  "selectAStudentLabel": "Select a student",
+  "selectStudentDropdownHint": "Select student",
+  "searchTooltip": "Search",
+  "moreOptionsTooltip": "More options",
+  "onlineLabel": "Online",
+  "chooseStudentToStartChatMessage": "Choose a student to start the conversation",
+  "addAction": "Add",
+  "sendAction": "Send",
+  "todayAtLabel": "Today {time}",
+  "@todayAtLabel": {
+    "placeholders": { "time": {} }
+  },
+  "yesterdayAtLabel": "Yesterday {time}",
+  "@yesterdayAtLabel": {
+    "placeholders": { "time": {} }
+  },
+
+  "progressLoadError": "Could not load this student's progress.",
+  "selectStudentFirstMessage": "Select a student first.",
+  "progressSavedMessage": "Progress recorded successfully.",
+  "progressSaveError": "Could not save the progress.",
+  "selectStudentToViewProgressMessage": "Select a student to view their progress.",
+  "noRecordsYetMessage": "No records yet.",
+  "registerPhysicalEvaluationTitle": "Record physical evaluation",
+  "weightLabel": "Weight",
+  "bodyFatLabel": "Body fat",
+  "muscleMassLabel": "Muscle mass",
+  "saveProgressAction": "Save progress",
+  "progressSummaryLabel": "Weight: {weight} | Body fat: {bodyFat} | Muscle mass: {muscleMass}",
+  "@progressSummaryLabel": {
+    "placeholders": { "weight": {}, "bodyFat": {}, "muscleMass": {} }
+  },
+
+  "generateCodeToInviteClientMessage": "Generate a code to invite a client",
+  "expiresAtLabel": "Expires at: {date}",
+  "@expiresAtLabel": {
+    "placeholders": { "date": {} }
+  },
+  "codeCopiedMessage": "Code copied!",
+  "copyCodeAction": "Copy code",
+  "generateCodeAction": "Generate code",
+  "generateNewCodeAction": "Generate new code",
+
+  "editProfileMenu": "Edit Profile",
+  "workoutsMenu": "Workouts",
+  "myMealPlanMenu": "My Meal Plan",
+  "myProgressMenuShort": "My\nProgress",
+  "mealPlanMenuShort": "Meal\nPlan",
+  "calendarMenu": "Calendar",
+  "sessionsMenu": "Sessions",
+
+  "hydrationTitle": "Hydration",
+  "goalCompletedTodayLabel": "Goal completed today",
+  "drinkNowLabel": "Drink {cups} now",
+  "@drinkNowLabel": {
+    "placeholders": { "cups": {} }
+  },
+  "onTrackLabel": "You're on track",
+  "dailyGoalCompletedLabel": "Daily goal completed",
+  "remainingTodayLabel": "{amount} left today",
+  "@remainingTodayLabel": {
+    "placeholders": { "amount": {} }
+  },
+  "loggedOfGoalLabel": "{current} of {goal} logged",
+  "@loggedOfGoalLabel": {
+    "placeholders": { "current": {}, "goal": {} }
+  },
+  "nextReminderLabel": "Next reminder: {time}",
+  "@nextReminderLabel": {
+    "placeholders": { "time": {} }
+  },
+  "resetAction": "Reset",
+  "ofGoalLitersLabel": "of {value} L",
+  "@ofGoalLitersLabel": {
+    "placeholders": { "value": {} }
+  },
+  "cupSingularLabel": "1 cup",
+  "cupsPluralLabel": "{count} cups",
+  "@cupsPluralLabel": {
+    "placeholders": { "count": {} }
+  },
+  "tomorrowAtLabel": "tomorrow {time}",
+  "@tomorrowAtLabel": {
+    "placeholders": { "time": {} }
+  },
+
+  "goodAfternoonGreeting": "Good afternoon, {name}!",
+  "@goodAfternoonGreeting": {
+    "placeholders": { "name": {} }
+  },
+  "notificationsTitle": "Notifications",
+  "markAllReadAction": "Mark all read",
+  "noNotificationsMessage": "No notifications",
+
+  "viewWorkoutAction": "View workout",
+  "viewCompletedWorkoutAction": "View completed workout",
+
+  "feedScreenTitle": "FITPRO Feed & Challenges",
+  "feedChallengeWeeklyTitle": "Weekly Push Challenge",
+  "feedChallengeWeeklySubtitle": "Complete 4 high-intensity workouts this week.",
+  "feedChallengeWeeklyStatus": "3/4 Workouts",
+  "feedTipTitle": "PT's Nutrition Tip",
+  "feedTipSubtitle": "Post-workout hydration speeds up muscle recovery by up to 20%. Keep your water bottle close!",
+  "feedTipStatus": "Tip of the Day",
+  "feedWaterGoalTitle": "Water Intake Goal",
+  "feedWaterGoalSubtitle": "Hit the daily goal of 3L of water for 5 days in a row.",
+  "feedWaterGoalStatus": "2/5 Days"
+}

@@ -1,8 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app_config.dart';
 import 'home_screen.dart';
+import 'l10n/gen/app_localizations.dart';
+import 'locale_controller.dart';
 import 'register_screen.dart';
 import 'screens/student/student_home_screen.dart';
 
@@ -19,6 +22,24 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.dark;
+  final _localeController = LocaleController();
+
+  @override
+  void initState() {
+    super.initState();
+    _localeController.load();
+    _localeController.addListener(_onLocaleChanged);
+  }
+
+  @override
+  void dispose() {
+    _localeController.removeListener(_onLocaleChanged);
+    super.dispose();
+  }
+
+  void _onLocaleChanged() {
+    setState(() {});
+  }
 
   void toggleTheme() {
     setState(() {
@@ -33,6 +54,15 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'FITPRO App',
       debugShowCheckedModeBanner: false,
+
+      locale: _localeController.locale,
+      supportedLocales: const [Locale('pt'), Locale('en')],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
 
       theme: ThemeData(
         useMaterial3: true,
@@ -64,7 +94,11 @@ class _MyAppState extends State<MyApp> {
       ),
 
       themeMode: _themeMode,
-      home: LoginScreen(onToggleTheme: toggleTheme, themeMode: _themeMode),
+      home: LoginScreen(
+        onToggleTheme: toggleTheme,
+        themeMode: _themeMode,
+        localeController: _localeController,
+      ),
     );
   }
 }
@@ -72,11 +106,13 @@ class _MyAppState extends State<MyApp> {
 class LoginScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final ThemeMode themeMode;
+  final LocaleController? localeController;
 
   const LoginScreen({
     super.key,
     required this.onToggleTheme,
     required this.themeMode,
+    this.localeController,
   });
 
   @override
@@ -101,6 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark
@@ -116,6 +153,15 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          if (widget.localeController != null)
+            IconButton(
+              tooltip: l10n.changeLanguageTooltip,
+              icon: Text(
+                widget.localeController!.locale.languageCode.toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: widget.localeController!.toggleLanguage,
+            ),
           IconButton(
             icon: Icon(
               widget.themeMode == ThemeMode.light
@@ -141,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 14),
 
                 Text(
-                  'FITPRO',
+                  l10n.appTitle,
                   style: TextStyle(
                     color: textColor,
                     fontSize: 40,
@@ -151,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 Text(
-                  'O seu app',
+                  l10n.appSubtitle,
                   style: TextStyle(
                     color: mutedColor,
                     fontSize: 16,
@@ -164,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Entrar como',
+                    l10n.loginAs,
                     style: TextStyle(
                       color: mutedColor,
                       fontSize: 14,
@@ -188,14 +234,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     children: [
                       _AccountOptionButton(
-                        label: 'Aluno',
+                        label: l10n.accountStudent,
                         icon: Icons.school_outlined,
                         isSelected: _selectedAccount == 'client',
                         onTap: () =>
                             setState(() => _selectedAccount = 'client'),
                       ),
                       _AccountOptionButton(
-                        label: 'Personal',
+                        label: l10n.accountTrainer,
                         icon: Icons.fitness_center,
                         isSelected: _selectedAccount == 'trainer',
                         onTap: () =>
@@ -211,9 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                 ),
 
@@ -227,10 +273,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (!isLoading) login();
                   },
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: l10n.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      tooltip: _showPassword ? 'Esconder senha' : 'Ver senha',
+                      tooltip: _showPassword
+                          ? l10n.hidePasswordTooltip
+                          : l10n.showPasswordTooltip,
                       icon: Icon(
                         _showPassword
                             ? Icons.visibility_off_outlined
@@ -269,9 +317,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            'LOGIN',
-                            style: TextStyle(
+                        : Text(
+                            l10n.loginButton,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -297,9 +345,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    child: const Text(
-                      'Criar nova conta',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    child: Text(
+                      l10n.createAccountButton,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -333,7 +381,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Conta criada! Faca login para entrar.')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.accountCreatedMessage)),
     );
   }
 
@@ -362,10 +410,11 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
 
         if (role != _selectedAccount) {
+          final l10n = AppLocalizations.of(context)!;
           setState(() {
             errorMessage = _selectedAccount == 'client'
-                ? 'Esta conta nao e de aluno'
-                : 'Esta conta nao e de personal';
+                ? l10n.notStudentAccountError
+                : l10n.notTrainerAccountError;
           });
           return;
         }
@@ -391,12 +440,12 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         setState(() {
-          errorMessage = 'Invalid email or password';
+          errorMessage = AppLocalizations.of(context)!.invalidCredentialsError;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Could not connect to server';
+        errorMessage = AppLocalizations.of(context)!.connectionError;
       });
     } finally {
       setState(() {

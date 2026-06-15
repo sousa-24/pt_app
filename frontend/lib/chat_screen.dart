@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'app_config.dart';
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   final String token;
@@ -47,6 +48,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final userData = await ApiService.get(context, '/api/v1/profile/me', widget.token);
     if (userData == null || userData['id'] == null) return;
     if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() {
       currentUserId = userData['id'];
@@ -98,7 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
           } else if (data is Map<String, dynamic> && data['detail'] != null) {
             setState(() {
               _messages.add({
-                'text': 'Error: ${data['detail']}',
+                'text': l10n.chatErrorMessage(data['detail'].toString()),
                 'isMe': false,
               });
             });
@@ -113,7 +116,10 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       onError: (error) {
         setState(() {
-          _messages.add({'text': 'Connection error: $error', 'isMe': false});
+          _messages.add({
+            'text': l10n.connectionErrorMessage(error.toString()),
+            'isMe': false,
+          });
         });
       },
       onDone: () {
@@ -183,22 +189,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.role == 'trainer') {
-      return _buildTrainerChat(context);
+      return _buildTrainerChat(context, l10n);
     }
 
-    return _buildClassicChat(context);
+    return _buildClassicChat(context, l10n);
   }
 
-  Widget _buildClassicChat(BuildContext context) {
+  Widget _buildClassicChat(BuildContext context, AppLocalizations l10n) {
     const primaryColor = Color(0xFFD0FD3E);
 
     return Scaffold(
       backgroundColor: const Color(0xFF1C1C1E),
       appBar: AppBar(
-        title: const Text(
-          'FITPRO Chat',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          l10n.chatTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: const Color(0xFF2C2C2E),
         elevation: 0,
@@ -210,17 +217,17 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: const Color(0xFF2C2C2E),
             child: _contacts.isEmpty
-                ? const Text(
-                    'No contacts yet',
-                    style: TextStyle(color: Colors.white54),
+                ? Text(
+                    l10n.noContactsYetMessage,
+                    style: const TextStyle(color: Colors.white54),
                   )
                 : DropdownButtonHideUnderline(
                     child: DropdownButton<Map<String, dynamic>>(
                       value: _selectedContact,
                       dropdownColor: const Color(0xFF2C2C2E),
-                      hint: const Text(
-                        'Select a contact',
-                        style: TextStyle(color: Colors.white54),
+                      hint: Text(
+                        l10n.selectContactLabel,
+                        style: const TextStyle(color: Colors.white54),
                       ),
                       isExpanded: true,
                       items: _contacts.map((contact) {
@@ -244,10 +251,10 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Expanded(
             child: _selectedContact == null
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Select a contact to start chatting',
-                      style: TextStyle(color: Colors.white54),
+                      l10n.selectContactToChatMessage,
+                      style: const TextStyle(color: Colors.white54),
                     ),
                   )
                 : ListView.builder(
@@ -304,10 +311,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     onSubmitted: (_) => _sendMessage(),
                     decoration: InputDecoration(
                       hintText: _selectedContact == null
-                          ? 'Select a contact first'
+                          ? l10n.selectContactFirstHint
                           : _connected
-                          ? 'Write a message...'
-                          : 'Connecting...',
+                          ? l10n.writeMessageHint
+                          : l10n.connectingLabel,
                       hintStyle: const TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: const Color(0xFF2C2C2E),
@@ -340,16 +347,16 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerChat(BuildContext context) {
+  Widget _buildTrainerChat(BuildContext context, AppLocalizations l10n) {
     final width = MediaQuery.of(context).size.width;
     final showContactPanel = width >= 760;
 
     return Scaffold(
       backgroundColor: const Color(0xFF171719),
       appBar: AppBar(
-        title: const Text(
-          'FITPRO Chat',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          l10n.chatTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: const Color(0xFF2C2C2E),
         elevation: 0,
@@ -357,19 +364,20 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Row(
         children: [
-          if (showContactPanel) _buildTrainerContactPanel(),
+          if (showContactPanel) _buildTrainerContactPanel(l10n),
           Expanded(
             child: Column(
               children: [
                 _buildTrainerConversationHeader(
                   showDropdown: !showContactPanel,
+                  l10n: l10n,
                 ),
                 Expanded(
                   child: _selectedContact == null
-                      ? _buildTrainerEmptyState()
-                      : _buildTrainerMessages(),
+                      ? _buildTrainerEmptyState(l10n)
+                      : _buildTrainerMessages(l10n),
                 ),
-                _buildTrainerComposer(),
+                _buildTrainerComposer(l10n),
               ],
             ),
           ),
@@ -378,7 +386,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerContactPanel() {
+  Widget _buildTrainerContactPanel(AppLocalizations l10n) {
     return Container(
       width: 340,
       decoration: const BoxDecoration(
@@ -391,18 +399,18 @@ class _ChatScreenState extends State<ChatScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
             child: Row(
-              children: const [
+              children: [
                 Expanded(
                   child: Text(
-                    'Conversas',
-                    style: TextStyle(
+                    l10n.conversationsTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                Icon(Icons.more_vert, color: Colors.white70),
+                const Icon(Icons.more_vert, color: Colors.white70),
               ],
             ),
           ),
@@ -416,13 +424,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
-                children: const [
-                  Icon(Icons.search, color: Colors.white54),
-                  SizedBox(width: 10),
+                children: [
+                  const Icon(Icons.search, color: Colors.white54),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Procurar aluno',
-                      style: TextStyle(color: Colors.white54, fontSize: 15),
+                      l10n.searchStudentHint,
+                      style: const TextStyle(color: Colors.white54, fontSize: 15),
                     ),
                   ),
                 ],
@@ -432,10 +440,10 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 12),
           Expanded(
             child: _contacts.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Sem contactos ainda',
-                      style: TextStyle(color: Colors.white54),
+                      l10n.noContactsYetMessage,
+                      style: const TextStyle(color: Colors.white54),
                     ),
                   )
                 : ListView.builder(
@@ -444,7 +452,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final contact = _contacts[index];
                       final selected = _selectedContact?['id'] == contact['id'];
-                      return _buildTrainerContactTile(contact, selected);
+                      return _buildTrainerContactTile(contact, selected, l10n);
                     },
                   ),
           ),
@@ -453,8 +461,12 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerContactTile(Map<String, dynamic> contact, bool selected) {
-    final name = (contact['name'] ?? 'Aluno').toString();
+  Widget _buildTrainerContactTile(
+    Map<String, dynamic> contact,
+    bool selected,
+    AppLocalizations l10n,
+  ) {
+    final name = (contact['name'] ?? l10n.accountStudent).toString();
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -501,11 +513,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Toque para abrir a conversa',
+                  Text(
+                    l10n.tapToOpenConversationLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                 ],
               ),
@@ -516,8 +528,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerConversationHeader({required bool showDropdown}) {
-    final name = (_selectedContact?['name'] ?? 'Selecione um aluno').toString();
+  Widget _buildTrainerConversationHeader({
+    required bool showDropdown,
+    required AppLocalizations l10n,
+  }) {
+    final name = (_selectedContact?['name'] ?? l10n.selectAStudentLabel).toString();
 
     return Container(
       height: 72,
@@ -544,18 +559,18 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: showDropdown
-                ? _buildTrainerContactDropdown()
-                : _buildHeaderName(name),
+                ? _buildTrainerContactDropdown(l10n)
+                : _buildHeaderName(name, l10n),
           ),
           IconButton(
-            tooltip: 'Pesquisar',
+            tooltip: l10n.searchTooltip,
             onPressed: null,
             icon: const Icon(Icons.search),
             color: Colors.white54,
             disabledColor: Colors.white38,
           ),
           IconButton(
-            tooltip: 'Mais opcoes',
+            tooltip: l10n.moreOptionsTooltip,
             onPressed: null,
             icon: const Icon(Icons.more_vert),
             color: Colors.white54,
@@ -566,7 +581,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildHeaderName(String name) {
+  Widget _buildHeaderName(String name, AppLocalizations l10n) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,18 +598,18 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         const SizedBox(height: 3),
         Text(
-          _connected ? 'Online' : 'A ligar...',
+          _connected ? l10n.onlineLabel : l10n.connectingLabel,
           style: const TextStyle(color: Colors.white54, fontSize: 13),
         ),
       ],
     );
   }
 
-  Widget _buildTrainerContactDropdown() {
+  Widget _buildTrainerContactDropdown(AppLocalizations l10n) {
     if (_contacts.isEmpty) {
-      return const Text(
-        'Sem contactos ainda',
-        style: TextStyle(color: Colors.white54),
+      return Text(
+        l10n.noContactsYetMessage,
+        style: const TextStyle(color: Colors.white54),
       );
     }
 
@@ -602,9 +617,9 @@ class _ChatScreenState extends State<ChatScreen> {
       child: DropdownButton<Map<String, dynamic>>(
         value: _selectedContact,
         dropdownColor: const Color(0xFF2C2C2E),
-        hint: const Text(
-          'Selecionar aluno',
-          style: TextStyle(color: Colors.white54),
+        hint: Text(
+          l10n.selectStudentDropdownHint,
+          style: const TextStyle(color: Colors.white54),
         ),
         isExpanded: true,
         items: _contacts.map((contact) {
@@ -628,16 +643,16 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerEmptyState() {
-    return const Center(
+  Widget _buildTrainerEmptyState(AppLocalizations l10n) {
+    return Center(
       child: Text(
-        'Escolha um aluno para iniciar a conversa',
-        style: TextStyle(color: Colors.white54, fontSize: 16),
+        l10n.chooseStudentToStartChatMessage,
+        style: const TextStyle(color: Colors.white54, fontSize: 16),
       ),
     );
   }
 
-  Widget _buildTrainerMessages() {
+  Widget _buildTrainerMessages(AppLocalizations l10n) {
     return Container(
       decoration: const BoxDecoration(color: Color(0xFF171719)),
       child: ListView.builder(
@@ -646,13 +661,13 @@ class _ChatScreenState extends State<ChatScreen> {
         itemCount: _messages.length,
         itemBuilder: (context, index) {
           final msg = _messages[index];
-          return _buildTrainerMessageBubble(msg);
+          return _buildTrainerMessageBubble(msg, l10n);
         },
       ),
     );
   }
 
-  Widget _buildTrainerMessageBubble(Map<String, dynamic> msg) {
+  Widget _buildTrainerMessageBubble(Map<String, dynamic> msg, AppLocalizations l10n) {
     final isMe = msg['isMe'] == true;
     final maxWidth = MediaQuery.of(context).size.width * 0.54;
 
@@ -696,7 +711,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _messageDateTime(msg['createdAt']),
+                    _messageDateTime(msg['createdAt'], l10n),
                     style: TextStyle(
                       color: isMe ? Colors.black54 : Colors.white54,
                       fontSize: 11,
@@ -715,7 +730,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildTrainerComposer() {
+  Widget _buildTrainerComposer(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
       color: const Color(0xFF202023),
@@ -724,7 +739,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Row(
           children: [
             IconButton(
-              tooltip: 'Adicionar',
+              tooltip: l10n.addAction,
               onPressed: null,
               icon: const Icon(Icons.add),
               color: Colors.white54,
@@ -740,10 +755,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 onSubmitted: (_) => _sendMessage(),
                 decoration: InputDecoration(
                   hintText: _selectedContact == null
-                      ? 'Selecione um aluno'
+                      ? l10n.selectAStudentLabel
                       : _connected
-                      ? 'Escrever mensagem'
-                      : 'A ligar...',
+                      ? l10n.writeMessageHint
+                      : l10n.connectingLabel,
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: const Color(0xFF2C2C2E),
@@ -763,7 +778,7 @@ class _ChatScreenState extends State<ChatScreen> {
               radius: 25,
               backgroundColor: const Color(0xFFD0FD3E),
               child: IconButton(
-                tooltip: 'Enviar',
+                tooltip: l10n.sendAction,
                 icon: const Icon(Icons.send, color: Colors.black),
                 onPressed: _connected && _selectedContact != null
                     ? _sendMessage
@@ -788,7 +803,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return (first + second).toUpperCase();
   }
 
-  String _messageDateTime(dynamic rawDate) {
+  String _messageDateTime(dynamic rawDate, AppLocalizations l10n) {
     if (rawDate is! String || rawDate.isEmpty) return '';
     final parsed = DateTime.tryParse(rawDate);
     if (parsed == null) return '';
@@ -800,8 +815,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final messageDay = DateTime(local.year, local.month, local.day);
     final difference = todayOnly.difference(messageDay).inDays;
 
-    if (difference == 0) return 'Hoje $hour:$minute';
-    if (difference == 1) return 'Ontem $hour:$minute';
+    if (difference == 0) return l10n.todayAtLabel('$hour:$minute');
+    if (difference == 1) return l10n.yesterdayAtLabel('$hour:$minute');
 
     final day = local.day.toString().padLeft(2, '0');
     final month = local.month.toString().padLeft(2, '0');

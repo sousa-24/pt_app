@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n/gen/app_localizations.dart';
+
 class FeedScreen extends StatelessWidget {
   final String token;
 
@@ -7,6 +9,7 @@ class FeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Cores alinhadas com o estilo escuro/neon da app
     const backgroundColor = Color(0xFF1C1C1E);
     const cardColor = Color(0xFF2C2C2E);
@@ -16,33 +19,33 @@ class FeedScreen extends StatelessWidget {
     final List<Map<String, dynamic>> feedItems = [
       {
         'type': 'challenge',
-        'title': 'Desafio Superação Semanal',
-        'subtitle': 'Concluir 4 treinos de alta intensidade esta semana.',
+        'title': l10n.feedChallengeWeeklyTitle,
+        'subtitle': l10n.feedChallengeWeeklySubtitle,
         'progress': 0.75,
-        'status': '3/4 Treinos',
+        'status': l10n.feedChallengeWeeklyStatus,
       },
       {
         'type': 'tip',
-        'title': 'Dica de Nutrição do PT',
-        'subtitle': 'A hidratação pós-treino acelera a recuperação muscular em até 20%. Mantém a garrafa de água por perto!',
+        'title': l10n.feedTipTitle,
+        'subtitle': l10n.feedTipSubtitle,
         'progress': 1.0,
-        'status': 'Dica do Dia',
+        'status': l10n.feedTipStatus,
       },
       {
         'type': 'challenge',
-        'title': 'Meta Absorção de Água',
-        'subtitle': 'Bater a meta diária de 3L de água por 5 dias seguidos.',
+        'title': l10n.feedWaterGoalTitle,
+        'subtitle': l10n.feedWaterGoalSubtitle,
         'progress': 0.40,
-        'status': '2/5 Dias',
+        'status': l10n.feedWaterGoalStatus,
       },
     ];
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'FITPRO Feed & Desafios',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          l10n.feedScreenTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: cardColor,
         elevation: 0,

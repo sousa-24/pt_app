@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'api_service.dart';
 import 'client_selector.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class TrainerPaymentsScreen extends StatefulWidget {
   final String token;
@@ -56,6 +57,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
       ]).timeout(const Duration(seconds: 8));
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       final data = results[0];
       final contacts = results[1];
       setState(() {
@@ -66,28 +68,28 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
               .toList();
         } else {
           _payments = [];
-          _loadError =
-              _apiError(data) ?? 'Nao foi possivel carregar as faturas.';
+          _loadError = _apiError(data) ?? l10n.invoicesLoadError;
         }
-        _clientNames = _clientNameMap(contacts);
+        _clientNames = _clientNameMap(contacts, l10n);
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _loadError = 'Nao foi possivel carregar as faturas.';
+        _loadError = AppLocalizations.of(context)!.invoicesLoadError;
         _isLoading = false;
       });
     }
   }
 
   Future<void> _createPayment() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedClientId == null) {
-      setState(() => _message = 'Seleciona um aluno.');
+      setState(() => _message = l10n.selectStudentMessage);
       return;
     }
     if (_dueDate == null) {
-      setState(() => _message = 'Escolhe a data de vencimento.');
+      setState(() => _message = l10n.selectDueDateMessage);
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -118,13 +120,13 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
       _methodController.clear();
       _notesController.clear();
       setState(() {
-        _message = 'Fatura criada com sucesso.';
+        _message = l10n.invoiceCreatedMessage;
         _isSaving = false;
       });
       _loadPayments();
     } else {
       setState(() {
-        _message = _apiError(data) ?? 'Nao foi possivel criar a fatura.';
+        _message = _apiError(data) ?? l10n.invoiceCreateError;
         _isSaving = false;
       });
     }
@@ -164,37 +166,40 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
       _loadPayments();
     } else {
       setState(() {
-        _message = _apiError(data) ?? 'Nao foi possivel atualizar a fatura.';
+        _message = _apiError(data) ?? AppLocalizations.of(context)!.invoiceUpdateError;
       });
     }
   }
 
   Future<void> _markAsPaid(Map<String, dynamic> payment) async {
+    final l10n = AppLocalizations.of(context)!;
     await _updatePayment(payment, {
       'status': 'paid',
       'paid_at': DateTime.now().toIso8601String(),
-    }, 'Fatura marcada como paga.');
+    }, l10n.invoiceMarkedPaidMessage);
   }
 
   Future<void> _cancelPayment(Map<String, dynamic> payment) async {
-    await _updatePayment(payment, {'status': 'cancelled'}, 'Fatura cancelada.');
+    final l10n = AppLocalizations.of(context)!;
+    await _updatePayment(payment, {'status': 'cancelled'}, l10n.invoiceCancelledMessage);
   }
 
   Future<void> _deletePayment(Map<String, dynamic> payment) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar fatura?'),
-        content: const Text('Esta acao nao pode ser desfeita.'),
+        title: Text(l10n.deleteInvoiceTitle),
+        content: Text(l10n.actionCannotBeUndone),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, true),
             icon: const Icon(Icons.delete_outline),
-            label: const Text('Apagar'),
+            label: Text(l10n.delete),
           ),
         ],
       ),
@@ -213,16 +218,17 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     if (!mounted) return;
 
     if (data is Map && data['message'] != null) {
-      setState(() => _message = 'Fatura apagada.');
+      setState(() => _message = l10n.invoiceDeletedMessage);
       _loadPayments();
     } else {
       setState(() {
-        _message = _apiError(data) ?? 'Nao foi possivel apagar a fatura.';
+        _message = _apiError(data) ?? l10n.invoiceDeleteError;
       });
     }
   }
 
   Future<void> _editPayment(Map<String, dynamic> payment) async {
+    final l10n = AppLocalizations.of(context)!;
     final serviceController = TextEditingController(
       text: _text(payment['type_of_service']),
     );
@@ -244,16 +250,16 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Editar fatura'),
+          title: Text(l10n.editInvoiceTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: serviceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Servico',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.serviceLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -262,26 +268,26 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Valor',
+                  decoration: InputDecoration(
+                    labelText: l10n.amountLabel,
                     prefixText: 'EUR ',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: status,
-                  decoration: const InputDecoration(
-                    labelText: 'Estado',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.statusLabel,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'pending', child: Text('Pendente')),
-                    DropdownMenuItem(value: 'paid', child: Text('Pago')),
-                    DropdownMenuItem(value: 'overdue', child: Text('Atrasado')),
+                  items: [
+                    DropdownMenuItem(value: 'pending', child: Text(l10n.statusPending)),
+                    DropdownMenuItem(value: 'paid', child: Text(l10n.statusPaid)),
+                    DropdownMenuItem(value: 'overdue', child: Text(l10n.statusOverdue)),
                     DropdownMenuItem(
                       value: 'cancelled',
-                      child: Text('Cancelado'),
+                      child: Text(l10n.statusCancelled),
                     ),
                   ],
                   onChanged: (value) {
@@ -305,25 +311,25 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                   icon: const Icon(Icons.event),
                   label: Text(
                     dueDate == null
-                        ? 'Data de vencimento'
-                        : _formatDate(dueDate!.toIso8601String()),
+                        ? l10n.dueDateLabel
+                        : _formatDate(dueDate!.toIso8601String(), l10n),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: methodController,
-                  decoration: const InputDecoration(
-                    labelText: 'Metodo de pagamento',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.paymentMethodLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: notesController,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Notas',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.notesLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ],
@@ -332,12 +338,12 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
             ),
             FilledButton.icon(
               onPressed: () => Navigator.pop(dialogContext, true),
               icon: const Icon(Icons.save_outlined),
-              label: const Text('Guardar'),
+              label: Text(l10n.save),
             ),
           ],
         ),
@@ -355,7 +361,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     final cost = double.tryParse(costController.text.replaceAll(',', '.'));
     if (serviceController.text.trim().isEmpty || cost == null || cost <= 0) {
       if (mounted) {
-        setState(() => _message = 'Preenche servico e valor validos.');
+        setState(() => _message = l10n.fillValidServiceAndValue);
       }
       serviceController.dispose();
       costController.dispose();
@@ -378,7 +384,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           : notesController.text.trim(),
       if (status == 'paid' && payment['paid_at'] == null)
         'paid_at': DateTime.now().toIso8601String(),
-    }, 'Fatura atualizada.');
+    }, l10n.invoiceUpdatedMessage);
 
     serviceController.dispose();
     costController.dispose();
@@ -405,12 +411,13 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Faturas'),
+        title: Text(l10n.invoicesTitle),
         actions: [
           IconButton(
-            tooltip: 'Atualizar',
+            tooltip: l10n.refreshTooltip,
             onPressed: _isLoading ? null : _loadPayments,
             icon: const Icon(Icons.refresh),
           ),
@@ -419,7 +426,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _paymentForm(),
+          _paymentForm(l10n),
           const SizedBox(height: 16),
           if (_message != null)
             Padding(
@@ -431,21 +438,22 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           else if (_loadError != null)
             _StatusCard(message: _loadError!)
           else if (_payments.isEmpty)
-            const _StatusCard(message: 'Ainda nao existem faturas.')
+            _StatusCard(message: l10n.noInvoicesYet)
           else ...[
             _PaymentSummaryCard(
               payment: _nextPayment,
-              clientLabel: _clientLabel(_nextPayment?['client_id']),
+              clientLabel: _clientLabel(_nextPayment?['client_id'], l10n),
+              l10n: l10n,
             ),
             const SizedBox(height: 12),
-            ..._payments.map(_paymentCard),
+            ..._payments.map((p) => _paymentCard(p, l10n)),
           ],
         ],
       ),
     );
   }
 
-  Widget _paymentForm() {
+  Widget _paymentForm(AppLocalizations l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -454,9 +462,9 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Nova fatura',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.newInvoiceTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               ClientSelector(
@@ -469,12 +477,12 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _serviceController,
-                decoration: const InputDecoration(
-                  labelText: 'Servico',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.serviceLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Obrigatorio'
+                    ? l10n.requiredField
                     : null,
               ),
               const SizedBox(height: 12),
@@ -483,16 +491,16 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Valor',
+                decoration: InputDecoration(
+                  labelText: l10n.amountLabel,
                   prefixText: 'EUR ',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   final amount = double.tryParse(
                     (value ?? '').replaceAll(',', '.'),
                   );
-                  if (amount == null || amount <= 0) return 'Valor invalido';
+                  if (amount == null || amount <= 0) return l10n.invalidAmount;
                   return null;
                 },
               ),
@@ -502,25 +510,25 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                 icon: const Icon(Icons.event),
                 label: Text(
                   _dueDate == null
-                      ? 'Data de vencimento'
-                      : _formatDate(_dueDate!.toIso8601String()),
+                      ? l10n.dueDateLabel
+                      : _formatDate(_dueDate!.toIso8601String(), l10n),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _methodController,
-                decoration: const InputDecoration(
-                  labelText: 'Metodo de pagamento (opcional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.paymentMethodOptionalLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _notesController,
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Notas (opcional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.notesOptionalLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 14),
@@ -529,7 +537,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isSaving ? null : _createPayment,
                   icon: const Icon(Icons.receipt_long),
-                  label: Text(_isSaving ? 'A criar...' : 'Criar fatura'),
+                  label: Text(_isSaving ? l10n.creatingLabel : l10n.createInvoiceLabel),
                 ),
               ),
             ],
@@ -539,14 +547,14 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     );
   }
 
-  Widget _paymentCard(Map<String, dynamic> payment) {
-    final clientLabel = _clientLabel(payment['client_id']);
+  Widget _paymentCard(Map<String, dynamic> payment, AppLocalizations l10n) {
+    final clientLabel = _clientLabel(payment['client_id'], l10n);
     return Card(
       child: ListTile(
-        onTap: () => _showPaymentDetails(payment),
+        onTap: () => _showPaymentDetails(payment, l10n),
         leading: const Icon(Icons.receipt_long_outlined),
-        title: Text(payment['type_of_service']?.toString() ?? 'Fatura'),
-        subtitle: Text('$clientLabel | ${_paymentDateLabel(payment)}'),
+        title: Text(payment['type_of_service']?.toString() ?? l10n.invoiceFallback),
+        subtitle: Text('$clientLabel | ${_paymentDateLabel(payment, l10n)}'),
         trailing: Wrap(
           spacing: 2,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -557,7 +565,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
               children: [
                 Text('EUR ${payment['cost']}'),
                 Text(
-                  _statusLabel(payment['status']),
+                  _statusLabel(payment['status'], l10n),
                   style: TextStyle(
                     color: _statusColor(payment['status']),
                     fontWeight: FontWeight.w700,
@@ -566,7 +574,7 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
               ],
             ),
             PopupMenuButton<String>(
-              tooltip: 'Acoes da fatura',
+              tooltip: l10n.invoiceActionsTooltip,
               onSelected: (value) {
                 switch (value) {
                   case 'paid':
@@ -583,11 +591,11 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
                     break;
                 }
               },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'paid', child: Text('Marcar como paga')),
-                PopupMenuItem(value: 'edit', child: Text('Editar')),
-                PopupMenuItem(value: 'cancel', child: Text('Cancelar')),
-                PopupMenuItem(value: 'delete', child: Text('Apagar')),
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'paid', child: Text(l10n.markAsPaidAction)),
+                PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                PopupMenuItem(value: 'cancel', child: Text(l10n.cancel)),
+                PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
               ],
               icon: const Icon(Icons.more_vert),
             ),
@@ -597,30 +605,30 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
     );
   }
 
-  String _clientLabel(dynamic clientId) {
+  String _clientLabel(dynamic clientId, AppLocalizations l10n) {
     final id = clientId is int ? clientId : int.tryParse(clientId.toString());
-    if (id == null) return 'Aluno';
-    return _clientNames[id] ?? 'Aluno #$id';
+    if (id == null) return l10n.accountStudent;
+    return _clientNames[id] ?? l10n.studentNumberLabel(id);
   }
 
-  void _showPaymentDetails(Map<String, dynamic> payment) {
-    final clientLabel = _clientLabel(payment['client_id']);
+  void _showPaymentDetails(Map<String, dynamic> payment, AppLocalizations l10n) {
+    final clientLabel = _clientLabel(payment['client_id'], l10n);
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(payment['type_of_service']?.toString() ?? 'Fatura'),
+        title: Text(payment['type_of_service']?.toString() ?? l10n.invoiceFallback),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Aluno: $clientLabel'),
-            Text('Valor: ${_formatMoney(payment['cost'])}'),
-            Text('Estado: ${_statusLabel(payment['status'])}'),
-            Text('Vencimento: ${_formatDate(payment['due_date'])}'),
+            Text(l10n.studentDetailLabel(clientLabel)),
+            Text(l10n.amountDetailLabel(_formatMoney(payment['cost']))),
+            Text(l10n.statusDetailLabel(_statusLabel(payment['status'], l10n))),
+            Text(l10n.dueDateDetailLabel(_formatDate(payment['due_date'], l10n))),
             if (payment['paid_at'] != null)
-              Text('Pago em: ${_formatDate(payment['paid_at'])}'),
+              Text(l10n.paidOnDetailLabel(_formatDate(payment['paid_at'], l10n))),
             if (_text(payment['payment_method']).isNotEmpty)
-              Text('Metodo: ${_text(payment['payment_method'])}'),
+              Text(l10n.methodDetailLabel(_text(payment['payment_method']))),
             if (_text(payment['notes']).isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(_text(payment['notes'])),
@@ -634,11 +642,11 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
               _editPayment(payment);
             },
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Editar'),
+            label: Text(l10n.edit),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -649,8 +657,13 @@ class _TrainerPaymentsScreenState extends State<TrainerPaymentsScreen> {
 class _PaymentSummaryCard extends StatelessWidget {
   final Map<String, dynamic>? payment;
   final String clientLabel;
+  final AppLocalizations l10n;
 
-  const _PaymentSummaryCard({required this.payment, required this.clientLabel});
+  const _PaymentSummaryCard({
+    required this.payment,
+    required this.clientLabel,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -659,19 +672,19 @@ class _PaymentSummaryCard extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.receipt_long_outlined),
-        title: const Text('Proxima fatura'),
+        title: Text(l10n.nextInvoiceTitle),
         subtitle: Text(
           hasPayment
-              ? '$clientLabel | ${_formatDate(payment!['due_date'])}'
-              : 'Sem faturas pendentes',
+              ? '$clientLabel | ${_formatDate(payment!['due_date'], l10n)}'
+              : l10n.noPendingInvoices,
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(hasPayment ? _formatMoney(payment!['cost']) : 'Em dia'),
+            Text(hasPayment ? _formatMoney(payment!['cost']) : l10n.upToDate),
             Text(
-              hasPayment ? _statusLabel(payment!['status']) : 'Sem pendentes',
+              hasPayment ? _statusLabel(payment!['status'], l10n) : l10n.noPendingShort,
               style: TextStyle(
                 color: hasPayment
                     ? _statusColor(payment!['status'])
@@ -699,16 +712,16 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-String _statusLabel(dynamic status) {
+String _statusLabel(dynamic status, AppLocalizations l10n) {
   switch (status?.toString()) {
     case 'paid':
-      return 'Pago';
+      return l10n.statusPaid;
     case 'overdue':
-      return 'Atrasado';
+      return l10n.statusOverdue;
     case 'cancelled':
-      return 'Cancelado';
+      return l10n.statusCancelled;
     default:
-      return 'Pendente';
+      return l10n.statusPending;
   }
 }
 
@@ -725,12 +738,12 @@ Color _statusColor(dynamic status) {
   }
 }
 
-String _paymentDateLabel(Map<String, dynamic> payment) {
+String _paymentDateLabel(Map<String, dynamic> payment, AppLocalizations l10n) {
   final status = payment['status']?.toString();
   if (status == 'paid' && payment['paid_at'] != null) {
-    return 'Pago em ${_formatDate(payment['paid_at'])}';
+    return l10n.paidOnDate(_formatDate(payment['paid_at'], l10n));
   }
-  return 'Vence em ${_formatDate(payment['due_date'])}';
+  return l10n.dueOnDate(_formatDate(payment['due_date'], l10n));
 }
 
 String _formatMoney(dynamic value) {
@@ -739,9 +752,9 @@ String _formatMoney(dynamic value) {
   return 'EUR ${number.toStringAsFixed(2).replaceAll('.', ',')}';
 }
 
-String _formatDate(dynamic value) {
+String _formatDate(dynamic value, AppLocalizations l10n) {
   final parsed = DateTime.tryParse(value?.toString() ?? '');
-  if (parsed == null) return value?.toString() ?? 'Sem data';
+  if (parsed == null) return value?.toString() ?? l10n.noDate;
   final day = parsed.day.toString().padLeft(2, '0');
   final month = parsed.month.toString().padLeft(2, '0');
   return '$day/$month/${parsed.year}';
@@ -754,7 +767,7 @@ String? _apiError(dynamic data) {
   return null;
 }
 
-Map<int, String> _clientNameMap(dynamic contacts) {
+Map<int, String> _clientNameMap(dynamic contacts, AppLocalizations l10n) {
   if (contacts is! List) return {};
 
   final result = <int, String>{};
@@ -770,7 +783,7 @@ Map<int, String> _clientNameMap(dynamic contacts) {
         ? name
         : email != null && email.isNotEmpty
         ? email
-        : 'Aluno #$id';
+        : l10n.studentNumberLabel(id);
   }
   return result;
 }

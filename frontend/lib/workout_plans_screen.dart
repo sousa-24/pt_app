@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'create_workout_plan_screen.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class WorkoutPlansScreen extends StatefulWidget {
   final String token;
@@ -57,14 +58,14 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
           }).toList();
           errorMessage = '';
         } else {
-          errorMessage = 'Nao foi possivel carregar os planos de treino.';
+          errorMessage = AppLocalizations.of(context)!.workoutPlansLoadError;
         }
         isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        errorMessage = 'Nao foi possivel contactar o servidor.';
+        errorMessage = AppLocalizations.of(context)!.serverContactError;
         isLoading = false;
       });
     }
@@ -85,22 +86,23 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
   }
 
   Future<void> deletePlan(Map<String, dynamic> plan) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar plano?'),
+        title: Text(l10n.deletePlanTitle),
         content: Text(
-          'Queres apagar "${plan['title'] ?? 'este plano'}"? Esta acao nao pode ser desfeita.',
+          l10n.confirmDeletePlanMessage(plan['title'] ?? l10n.thisPlanFallback),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, true),
             icon: const Icon(Icons.delete_outline),
-            label: const Text('Apagar'),
+            label: Text(l10n.delete),
           ),
         ],
       ),
@@ -117,11 +119,11 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
 
     if (data is Map && data['message'] != null) {
       fetchPlans();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Plano de treino apagado.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.workoutPlanDeletedMessage)),
+      );
     } else {
-      setState(() => errorMessage = 'Nao foi possivel apagar o plano.');
+      setState(() => errorMessage = l10n.mealPlanDeleteError);
     }
   }
 
@@ -137,12 +139,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Os Meus Treinos',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          l10n.myWorkoutsTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: cardColor,
         elevation: 0,
@@ -162,10 +165,10 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
               ),
             )
           : plans.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'Ainda nao tens planos de treino atribuidos.',
-                style: TextStyle(color: Colors.white70),
+                l10n.noWorkoutPlansAssignedMessage,
+                style: const TextStyle(color: Colors.white70),
               ),
             )
           : ListView.builder(
@@ -194,7 +197,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                       iconColor: accentColor,
                       collapsedIconColor: Colors.white,
                       title: Text(
-                        planMap['title'] ?? 'Plano de Treino',
+                        planMap['title'] ?? l10n.workoutPlanFallback,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -202,7 +205,9 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        'Criado em: ${planMap['created_at'] ?? 'recentemente'}',
+                        l10n.createdOnLabel(
+                          planMap['created_at'] ?? l10n.recentlyLabel,
+                        ),
                         style: const TextStyle(
                           color: Colors.white54,
                           fontSize: 13,
@@ -213,13 +218,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  tooltip: 'Editar plano',
+                                  tooltip: l10n.editPlanTooltip,
                                   icon: const Icon(Icons.edit_outlined),
                                   color: accentColor,
                                   onPressed: () => editPlan(planMap),
                                 ),
                                 IconButton(
-                                  tooltip: 'Apagar plano',
+                                  tooltip: l10n.deletePlanTooltip,
                                   icon: const Icon(Icons.delete_outline),
                                   color: Colors.redAccent,
                                   onPressed: () => deletePlan(planMap),
@@ -254,7 +259,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                                     : Colors.white60,
                               ),
                               title: Text(
-                                exerciseMap['name'] ?? 'Exercicio',
+                                exerciseMap['name'] ?? l10n.exerciseFallback,
                                 style: TextStyle(
                                   color: isCompleted
                                       ? Colors.white54
@@ -266,7 +271,10 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                                 ),
                               ),
                               subtitle: Text(
-                                '${exerciseMap['sets']} series x ${exerciseMap['reps']} repeticoes',
+                                l10n.setsRepsLabel(
+                                  exerciseMap['sets'].toString(),
+                                  exerciseMap['reps'].toString(),
+                                ),
                                 style: TextStyle(
                                   color: isCompleted
                                       ? Colors.white38

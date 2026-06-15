@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../student_theme.dart';
 
 class StudentMenuGrid extends StatelessWidget {
@@ -9,40 +10,41 @@ class StudentMenuGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final items = [
       _MenuItem(
         icon: Icons.fitness_center,
-        label: 'Treinos',
+        label: l10n.workoutsMenu,
         onTap: () => onOpenSection(1),
       ),
       _MenuItem(
         icon: Icons.assignment_outlined,
-        label: 'Avaliações',
+        label: l10n.evaluationsMenu,
         onTap: () {},
       ),
       _MenuItem(
         icon: Icons.fact_check_outlined,
-        label: 'O Meu\nProgresso',
+        label: l10n.myProgressMenuShort,
         onTap: () => onOpenSection(5),
       ),
       _MenuItem(
         icon: Icons.restaurant_menu,
-        label: 'Plano\nAlimentar',
+        label: l10n.mealPlanMenuShort,
         onTap: () => onOpenSection(7),
       ),
       _MenuItem(
         icon: Icons.calendar_month,
-        label: 'Calendario',
+        label: l10n.calendarMenu,
         onTap: () => onOpenSection(2),
       ),
       _MenuItem(
         icon: Icons.event_available_outlined,
-        label: 'Sessões',
+        label: l10n.sessionsMenu,
         onTap: () => onOpenSection(8),
       ),
       _MenuItem(
         icon: Icons.attach_money,
-        label: 'Faturas',
+        label: l10n.invoicesTitle,
         onTap: () => onOpenSection(4),
       ),
     ];

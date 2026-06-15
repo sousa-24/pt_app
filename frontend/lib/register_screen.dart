@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'app_config.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
@@ -40,15 +41,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> register() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (nameController.text.isEmpty ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
-      setState(() => errorMessage = 'Preencha todos os campos');
+      setState(() => errorMessage = l10n.fillAllFieldsMessage);
       return;
     }
 
     if (selectedRole == 'client' && inviteCodeController.text.isEmpty) {
-      setState(() => errorMessage = 'Aluno precisa de codigo de convite');
+      setState(() => errorMessage = l10n.inviteCodeRequiredError);
       return;
     }
 
@@ -78,10 +81,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pop(context, selectedRole);
       } else {
         final data = jsonDecode(response.body);
-        setState(() => errorMessage = data['detail'] ?? 'Falha no cadastro');
+        setState(
+          () => errorMessage = data['detail'] ?? l10n.registrationFailedError,
+        );
       }
     } catch (e) {
-      setState(() => errorMessage = 'Nao foi possivel conectar ao servidor');
+      setState(() => errorMessage = l10n.serverContactError);
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -91,6 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark
@@ -106,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Voltar',
+          tooltip: l10n.backAction,
           icon: const Icon(Icons.chevron_left),
           onPressed: () => Navigator.pop(context),
         ),
@@ -131,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Icon(Icons.fitness_center, size: 66, color: primaryColor),
                 const SizedBox(height: 8),
                 Text(
-                  'FITPRO',
+                  l10n.appTitle,
                   style: TextStyle(
                     color: textColor,
                     fontSize: 36,
@@ -140,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 Text(
-                  'Criar nova conta',
+                  l10n.createAccountButton,
                   style: TextStyle(
                     color: mutedColor,
                     fontSize: 16,
@@ -151,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Tipo de conta',
+                    l10n.accountTypeLabel,
                     style: TextStyle(
                       color: mutedColor,
                       fontSize: 14,
@@ -173,13 +179,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Row(
                     children: [
                       _RegisterRoleButton(
-                        label: 'Aluno',
+                        label: l10n.accountStudent,
                         icon: Icons.school_outlined,
                         isSelected: selectedRole == 'client',
                         onTap: () => setState(() => selectedRole = 'client'),
                       ),
                       _RegisterRoleButton(
-                        label: 'Personal',
+                        label: l10n.accountTrainer,
                         icon: Icons.fitness_center,
                         isSelected: selectedRole == 'trainer',
                         onTap: () => setState(() => selectedRole = 'trainer'),
@@ -191,9 +197,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextField(
                   controller: nameController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome completo',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.fullNameLabel,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -201,9 +207,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -211,10 +217,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: passwordController,
                   obscureText: !_showPassword,
                   decoration: InputDecoration(
-                    labelText: 'Senha',
+                    labelText: l10n.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      tooltip: _showPassword ? 'Esconder senha' : 'Ver senha',
+                      tooltip: _showPassword
+                          ? l10n.hidePasswordTooltip
+                          : l10n.showPasswordTooltip,
                       icon: Icon(
                         _showPassword
                             ? Icons.visibility_off_outlined
@@ -231,9 +239,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: inviteCodeController,
                     textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: 'Codigo de convite',
-                      prefixIcon: Icon(Icons.confirmation_number_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.inviteCodeLabel,
+                      prefixIcon: const Icon(Icons.confirmation_number_outlined),
                     ),
                   ),
                 ],
@@ -258,9 +266,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            'CRIAR CONTA',
-                            style: TextStyle(
+                        : Text(
+                            l10n.createAccountAction,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -280,9 +288,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    child: const Text(
-                      'Ja tenho conta',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    child: Text(
+                      l10n.alreadyHaveAccountAction,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),

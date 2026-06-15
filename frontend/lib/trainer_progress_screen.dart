@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'api_service.dart';
 import 'client_selector.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class TrainerProgressScreen extends StatefulWidget {
   final String token;
@@ -65,15 +66,17 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _message = 'Nao foi possivel carregar o progresso deste aluno.';
+        _message = AppLocalizations.of(context)!.progressLoadError;
         _isLoading = false;
       });
     }
   }
 
   Future<void> _saveProgress() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_selectedClientId == null) {
-      setState(() => _message = 'Seleciona um aluno primeiro.');
+      setState(() => _message = l10n.selectStudentFirstMessage);
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -102,13 +105,13 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
       _muscleMassController.clear();
       _notesController.clear();
       setState(() {
-        _message = 'Progresso registado com sucesso.';
+        _message = l10n.progressSavedMessage;
         _isSaving = false;
       });
       _loadProgress();
     } else {
       setState(() {
-        _message = _apiError(data) ?? 'Nao foi possivel guardar o progresso.';
+        _message = _apiError(data) ?? l10n.progressSaveError;
         _isSaving = false;
       });
     }
@@ -128,8 +131,9 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Progresso dos Alunos')),
+      appBar: AppBar(title: Text(l10n.studentsProgressMenu)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -145,7 +149,7 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
             },
           ),
           const SizedBox(height: 16),
-          _progressForm(),
+          _progressForm(l10n),
           const SizedBox(height: 18),
           if (_message != null)
             Padding(
@@ -155,22 +159,22 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else if (_selectedClientId == null)
-            const Center(
-              child: Text('Seleciona um aluno para ver o progresso.'),
+            Center(
+              child: Text(l10n.selectStudentToViewProgressMessage),
             )
           else if (_progress.isEmpty)
-            const Center(child: Text('Ainda nao existem registos.'))
+            Center(child: Text(l10n.noRecordsYetMessage))
           else ...[
             SizedBox(height: 280, child: _ProgressChart(data: _progress)),
             const SizedBox(height: 16),
-            ..._progress.reversed.map(_progressCard),
+            ..._progress.reversed.map((entry) => _progressCard(entry, l10n)),
           ],
         ],
       ),
     );
   }
 
-  Widget _progressForm() {
+  Widget _progressForm(AppLocalizations l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -179,29 +183,36 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Registar avaliação física',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.registerPhysicalEvaluationTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _pickDate,
                 icon: const Icon(Icons.calendar_today),
-                label: Text(_formatDate(_selectedDate.toIso8601String())),
+                label: Text(_formatDate(_selectedDate.toIso8601String(), l10n)),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: _numberField(_weightController, 'Peso', 'kg', true),
+                    child: _numberField(
+                      _weightController,
+                      l10n.weightLabel,
+                      'kg',
+                      true,
+                      l10n,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _numberField(
                       _bodyFatController,
-                      'Massa gorda',
+                      l10n.bodyFatLabel,
                       '%',
                       false,
+                      l10n,
                     ),
                   ),
                 ],
@@ -209,17 +220,18 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
               const SizedBox(height: 12),
               _numberField(
                 _muscleMassController,
-                'Massa muscular',
+                l10n.muscleMassLabel,
                 'kg',
                 false,
+                l10n,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Notas',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.notesLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 14),
@@ -228,7 +240,7 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isSaving ? null : _saveProgress,
                   icon: const Icon(Icons.add_chart),
-                  label: Text(_isSaving ? 'A guardar...' : 'Guardar progresso'),
+                  label: Text(_isSaving ? l10n.savingLabel : l10n.saveProgressAction),
                 ),
               ),
             ],
@@ -243,6 +255,7 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
     String label,
     String suffix,
     bool requiredField,
+    AppLocalizations l10n,
   ) {
     return TextFormField(
       controller: controller,
@@ -254,22 +267,26 @@ class _TrainerProgressScreenState extends State<TrainerProgressScreen> {
       ),
       validator: (value) {
         final text = value?.trim() ?? '';
-        if (requiredField && text.isEmpty) return 'Obrigatorio';
+        if (requiredField && text.isEmpty) return l10n.requiredField;
         if (text.isNotEmpty && _parseNumber(text) == null) {
-          return 'Valor invalido';
+          return l10n.invalidAmount;
         }
         return null;
       },
     );
   }
 
-  Widget _progressCard(Map<String, dynamic> entry) {
+  Widget _progressCard(Map<String, dynamic> entry, AppLocalizations l10n) {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.monitor_weight_outlined),
-        title: Text(_formatDate(entry['date'])),
+        title: Text(_formatDate(entry['date'], l10n)),
         subtitle: Text(
-          'Peso: ${_formatNumber(entry['weight'], 'kg')} | Massa gorda: ${_formatNumber(entry['body_fat_percentage'], '%')} | Massa muscular: ${_formatNumber(entry['muscle_mass'], 'kg')}',
+          l10n.progressSummaryLabel(
+            _formatNumber(entry['weight'], 'kg'),
+            _formatNumber(entry['body_fat_percentage'], '%'),
+            _formatNumber(entry['muscle_mass'], 'kg'),
+          ),
         ),
       ),
     );
@@ -329,9 +346,9 @@ String _formatNumber(dynamic value, String suffix) {
   return '${number.toStringAsFixed(1)} $suffix';
 }
 
-String _formatDate(dynamic value) {
+String _formatDate(dynamic value, AppLocalizations l10n) {
   final parsed = DateTime.tryParse(value?.toString() ?? '');
-  if (parsed == null) return value?.toString() ?? 'Sem data';
+  if (parsed == null) return value?.toString() ?? l10n.noDate;
   final day = parsed.day.toString().padLeft(2, '0');
   final month = parsed.month.toString().padLeft(2, '0');
   return '$day/$month/${parsed.year}';

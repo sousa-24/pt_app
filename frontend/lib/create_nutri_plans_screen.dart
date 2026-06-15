@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'client_selector.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class CreateNutriPlanScreen extends StatefulWidget {
   final String token;
@@ -150,9 +151,10 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
   }
 
   Future<void> submitPlan() async {
+    final l10n = AppLocalizations.of(context)!;
     final title = titleController.text.trim();
     if (title.isEmpty || selectedClientId == null) {
-      setState(() => errorMessage = 'Preenche o titulo e seleciona um aluno.');
+      setState(() => errorMessage = l10n.fillTitleAndStudentMessage);
       return;
     }
 
@@ -162,7 +164,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
       final foodItems = <Map<String, dynamic>>[];
 
       if (mealName.isEmpty) {
-        setState(() => errorMessage = 'Preenche o nome de todas as refeicoes.');
+        setState(() => errorMessage = l10n.fillAllMealNamesMessage);
         return;
       }
 
@@ -191,8 +193,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
             carbs == null ||
             fats == null) {
           setState(() {
-            errorMessage =
-                'Preenche todos os campos dos alimentos com valores validos.';
+            errorMessage = l10n.fillValidFoodFieldsMessage;
           });
           return;
         }
@@ -241,12 +242,12 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Sucesso'),
-            content: const Text('Plano alimentar criado com sucesso.'),
+            title: Text(l10n.successTitle),
+            content: Text(l10n.mealPlanCreatedMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(l10n.okAction),
               ),
             ],
           ),
@@ -258,13 +259,13 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
           errorMessage =
               getApiErrorMessage(data) ??
               (isEditing
-                  ? 'Nao foi possivel atualizar o plano alimentar.'
-                  : 'Nao foi possivel criar o plano alimentar.');
+                  ? l10n.mealPlanUpdateError
+                  : l10n.mealPlanCreateError);
         });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorMessage = 'Nao foi possivel contactar o servidor.');
+      setState(() => errorMessage = l10n.serverContactError);
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -274,10 +275,11 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isEditing ? 'Editar Plano Alimentar' : 'Criar Plano Alimentar',
+          isEditing ? l10n.nutriPlanEditTitle : l10n.nutriPlanCreateTitle,
         ),
       ),
       body: SingleChildScrollView(
@@ -287,9 +289,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Titulo do plano',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.planTitleLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -301,9 +303,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
               },
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Refeicoes',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.mealsLabel,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             ListView.builder(
@@ -325,7 +327,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Refeicao ${mealIndex + 1}',
+                              l10n.mealNumberLabel((mealIndex + 1).toString()),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -333,7 +335,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                             ),
                             if (meals.length > 1)
                               IconButton(
-                                tooltip: 'Remover refeicao',
+                                tooltip: l10n.removeMealTooltip,
                                 icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
@@ -345,15 +347,15 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                         const SizedBox(height: 8),
                         TextField(
                           controller: meal['name'],
-                          decoration: const InputDecoration(
-                            labelText: 'Nome da refeicao',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: l10n.mealNameLabel,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Alimentos',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        Text(
+                          l10n.foodsLabel,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         ListView.builder(
@@ -375,9 +377,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Item ${foodIndex + 1}'),
+                                        Text(l10n.itemNumberLabel((foodIndex + 1).toString())),
                                         IconButton(
-                                          tooltip: 'Remover alimento',
+                                          tooltip: l10n.removeFoodTooltip,
                                           icon: const Icon(
                                             Icons.close,
                                             color: Colors.red,
@@ -392,9 +394,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                     ),
                                     TextField(
                                       controller: food['name'],
-                                      decoration: const InputDecoration(
-                                        labelText: 'Nome do alimento',
-                                        border: OutlineInputBorder(),
+                                      decoration: InputDecoration(
+                                        labelText: l10n.foodNameLabel,
+                                        border: const OutlineInputBorder(),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -404,9 +406,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                           child: TextField(
                                             controller: food['weight'],
                                             keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Peso (g)',
-                                              border: OutlineInputBorder(),
+                                            decoration: InputDecoration(
+                                              labelText: l10n.weightGramsLabel,
+                                              border: const OutlineInputBorder(),
                                             ),
                                           ),
                                         ),
@@ -415,9 +417,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                           child: TextField(
                                             controller: food['calories'],
                                             keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Calorias',
-                                              border: OutlineInputBorder(),
+                                            decoration: InputDecoration(
+                                              labelText: l10n.caloriesLabel,
+                                              border: const OutlineInputBorder(),
                                             ),
                                           ),
                                         ),
@@ -426,9 +428,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                           child: TextField(
                                             controller: food['protein'],
                                             keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Proteina',
-                                              border: OutlineInputBorder(),
+                                            decoration: InputDecoration(
+                                              labelText: l10n.proteinLabel,
+                                              border: const OutlineInputBorder(),
                                             ),
                                           ),
                                         ),
@@ -441,9 +443,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                           child: TextField(
                                             controller: food['carbs'],
                                             keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Hidratos',
-                                              border: OutlineInputBorder(),
+                                            decoration: InputDecoration(
+                                              labelText: l10n.carbsLabel,
+                                              border: const OutlineInputBorder(),
                                             ),
                                           ),
                                         ),
@@ -452,9 +454,9 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                                           child: TextField(
                                             controller: food['fats'],
                                             keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Gorduras',
-                                              border: OutlineInputBorder(),
+                                            decoration: InputDecoration(
+                                              labelText: l10n.fatsLabel,
+                                              border: const OutlineInputBorder(),
                                             ),
                                           ),
                                         ),
@@ -469,7 +471,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                         OutlinedButton.icon(
                           onPressed: () => addFoodItem(mealIndex),
                           icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Adicionar alimento'),
+                          label: Text(l10n.addFoodAction),
                         ),
                       ],
                     ),
@@ -480,7 +482,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
             OutlinedButton.icon(
               onPressed: addMeal,
               icon: const Icon(Icons.add),
-              label: const Text('Adicionar refeicao'),
+              label: Text(l10n.addMealAction),
             ),
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
@@ -492,7 +494,7 @@ class _CreateNutriPlanScreenState extends State<CreateNutriPlanScreen> {
                 onPressed: isLoading ? null : submitPlan,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : Text(isEditing ? 'Guardar alteracoes' : 'Criar plano'),
+                    : Text(isEditing ? l10n.saveChangesAction : l10n.createPlanAction),
               ),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class SessionsScreen extends StatefulWidget {
   final String token;
@@ -35,14 +36,13 @@ class _SessionsScreenState extends State<SessionsScreen> {
       ).timeout(const Duration(seconds: 8));
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         if (data is List) {
           sessions = data;
           errorMessage = null;
         } else {
-          errorMessage =
-              getApiErrorMessage(data) ??
-              'Nao foi possivel carregar as sessoes agendadas.';
+          errorMessage = getApiErrorMessage(data) ?? l10n.sessionsLoadError;
         }
         isLoading = false;
       });
@@ -55,7 +55,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Nao foi possivel contactar o servidor.';
+        errorMessage = AppLocalizations.of(context)!.serverContactError;
         isLoading = false;
       });
     }
@@ -99,17 +99,16 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
     if (data is Map && data['id'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscricao realizada com sucesso.')),
+        SnackBar(content: Text(l10n.enrollmentSuccessMessage)),
       );
       fetchSessions();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            getApiErrorMessage(data) ?? 'Nao foi possivel fazer a inscricao.',
-          ),
+          content: Text(getApiErrorMessage(data) ?? l10n.enrollmentError),
         ),
       );
     }
@@ -132,11 +131,12 @@ class _SessionsScreenState extends State<SessionsScreen> {
       text: sessionMap['max_students']?.toString() ?? '',
     );
 
+    final l10n = AppLocalizations.of(context)!;
     final shouldSave = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isGroup ? 'Editar aula em grupo' : 'Editar sessao'),
+          title: Text(isGroup ? l10n.editGroupClassTitle : l10n.editSessionTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -162,7 +162,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                         icon: const Icon(Icons.calendar_today),
                         label: Text(
                           selectedDate == null
-                              ? 'Data'
+                              ? l10n.dateLabel
                               : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                         ),
                       ),
@@ -180,7 +180,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                           }
                         },
                         icon: const Icon(Icons.access_time),
-                        label: Text(selectedTime?.format(context) ?? 'Hora'),
+                        label: Text(selectedTime?.format(context) ?? l10n.timeLabel),
                       ),
                     ),
                   ],
@@ -188,22 +188,22 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: status,
-                  decoration: const InputDecoration(
-                    labelText: 'Estado',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.statusLabel,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: 'scheduled',
-                      child: Text('Agendada'),
+                      child: Text(l10n.sessionStatusScheduled),
                     ),
                     DropdownMenuItem(
                       value: 'completed',
-                      child: Text('Concluida'),
+                      child: Text(l10n.sessionStatusCompleted),
                     ),
                     DropdownMenuItem(
                       value: 'cancelled',
-                      child: Text('Cancelada'),
+                      child: Text(l10n.sessionStatusCancelled),
                     ),
                   ],
                   onChanged: (value) {
@@ -215,9 +215,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   TextField(
                     controller: maxStudentsController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Limite de alunos',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.maxStudentsLabel,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -225,9 +225,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 TextField(
                   controller: notesController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Notas',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.notesLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ],
@@ -236,12 +236,12 @@ class _SessionsScreenState extends State<SessionsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
             ),
             FilledButton.icon(
               onPressed: () => Navigator.pop(dialogContext, true),
               icon: const Icon(Icons.save_outlined),
-              label: const Text('Guardar'),
+              label: Text(l10n.save),
             ),
           ],
         ),
@@ -254,7 +254,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Escolhe a data e a hora.')));
+      ).showSnackBar(SnackBar(content: Text(l10n.chooseDateAndTimeMessage)));
       return;
     }
 
@@ -291,7 +291,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       if (maxStudents == null || maxStudents < 1) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Indica um limite de alunos valido.')),
+          SnackBar(content: Text(l10n.validMaxStudentsMessage)),
         );
         return;
       }
@@ -305,12 +305,12 @@ class _SessionsScreenState extends State<SessionsScreen> {
       fetchSessions();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Sessao atualizada.')));
+      ).showSnackBar(SnackBar(content: Text(l10n.sessionUpdatedMessage)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            getApiErrorMessage(data) ?? 'Nao foi possivel atualizar a sessao.',
+            getApiErrorMessage(data) ?? l10n.sessionUpdateError,
           ),
         ),
       );
@@ -321,20 +321,21 @@ class _SessionsScreenState extends State<SessionsScreen> {
     final sessionMap = session is Map<String, dynamic>
         ? session
         : <String, dynamic>{};
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isGroup ? 'Apagar aula?' : 'Apagar sessao?'),
-        content: const Text('Esta acao nao pode ser desfeita.'),
+        title: Text(isGroup ? l10n.deleteClassTitle : l10n.deleteSessionTitle),
+        content: Text(l10n.actionCannotBeUndone),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton.icon(
             onPressed: () => Navigator.pop(context, true),
             icon: const Icon(Icons.delete_outline),
-            label: const Text('Apagar'),
+            label: Text(l10n.delete),
           ),
         ],
       ),
@@ -351,13 +352,17 @@ class _SessionsScreenState extends State<SessionsScreen> {
     if (data is Map && data['message'] != null) {
       fetchSessions();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isGroup ? 'Aula apagada.' : 'Sessao apagada.')),
+        SnackBar(
+          content: Text(
+            isGroup ? l10n.classDeletedMessage : l10n.sessionDeletedMessage,
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            getApiErrorMessage(data) ?? 'Nao foi possivel apagar a sessao.',
+            getApiErrorMessage(data) ?? l10n.sessionDeleteError,
           ),
         ),
       );
@@ -384,21 +389,21 @@ class _SessionsScreenState extends State<SessionsScreen> {
     }
   }
 
-  String getStatusLabel(String status) {
+  String getStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
       case 'scheduled':
-        return 'Agendada';
+        return l10n.sessionStatusScheduled;
       case 'completed':
-        return 'Concluida';
+        return l10n.sessionStatusCompleted;
       case 'cancelled':
-        return 'Cancelada';
+        return l10n.sessionStatusCancelled;
       default:
         return status;
     }
   }
 
-  String formatSessionDate(String? rawDate) {
-    if (rawDate == null) return 'data por definir';
+  String formatSessionDate(String? rawDate, AppLocalizations l10n) {
+    if (rawDate == null) return l10n.dateToBeDefinedLabel;
 
     final date = DateTime.tryParse(rawDate);
     if (date == null) return rawDate;
@@ -409,19 +414,20 @@ class _SessionsScreenState extends State<SessionsScreen> {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
 
-    return '$day/$month/$year as $hour:$minute';
+    return l10n.dateTimeAt('$day/$month/$year', '$hour:$minute');
   }
 
-  String groupSessionLabel(dynamic session) {
+  String groupSessionLabel(dynamic session, AppLocalizations l10n) {
     final registered = session is Map ? session['registered_students'] ?? 0 : 0;
     final maxStudents = session is Map ? session['max_students'] ?? '-' : '-';
-    return 'Aula em grupo - $registered/$maxStudents inscritos';
+    return l10n.groupClassLabel(registered.toString(), maxStudents.toString());
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('As minhas sessoes')),
+      appBar: AppBar(title: Text(l10n.mySessionsTitle)),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
@@ -429,34 +435,34 @@ class _SessionsScreenState extends State<SessionsScreen> {
           : ListView(
               children: [
                 if (sessions.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
                     child: Center(
-                      child: Text('Nao existem sessoes individuais agendadas'),
+                      child: Text(l10n.noIndividualSessionsMessage),
                     ),
                   )
                 else
-                  ...sessions.map((s) => _sessionCard(s)),
+                  ...sessions.map((s) => _sessionCard(s, l10n)),
                 if (groupSessions.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Text(
-                      'Aulas em grupo',
-                      style: TextStyle(
+                      l10n.groupClassesTitle,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  ...groupSessions.map((s) => _groupSessionCard(s)),
+                  ...groupSessions.map((s) => _groupSessionCard(s, l10n)),
                 ],
                 if (widget.role == 'client' &&
                     availableGroupSessions.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Text(
-                      'Aulas em grupo disponiveis',
-                      style: TextStyle(
+                      l10n.availableGroupClassesTitle,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -465,10 +471,11 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   ...availableGroupSessions.map(
                     (session) => _groupSessionCard(
                       session,
+                      l10n,
                       action: TextButton.icon(
                         onPressed: () => enrollGroupSession(session),
                         icon: const Icon(Icons.how_to_reg),
-                        label: const Text('Inscrever-me'),
+                        label: Text(l10n.enrollMeAction),
                       ),
                     ),
                   ),
@@ -478,19 +485,19 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
-  Widget _trainerActions(dynamic session, {required bool isGroup}) {
+  Widget _trainerActions(dynamic session, AppLocalizations l10n, {required bool isGroup}) {
     if (!isTrainer) return const SizedBox.shrink();
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          tooltip: 'Editar',
+          tooltip: l10n.edit,
           icon: const Icon(Icons.edit_outlined),
           onPressed: () => editSession(session, isGroup: isGroup),
         ),
         IconButton(
-          tooltip: 'Apagar',
+          tooltip: l10n.delete,
           icon: const Icon(Icons.delete_outline),
           color: Colors.redAccent,
           onPressed: () => deleteSession(session, isGroup: isGroup),
@@ -499,53 +506,53 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
-  Widget _sessionCard(dynamic session) {
+  Widget _sessionCard(dynamic session, AppLocalizations l10n) {
     final status = session is Map ? session['status']?.toString() ?? '' : '';
 
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
         leading: const Icon(Icons.fitness_center),
-        title: Text('Sessao em ${formatSessionDate(session['date'])}'),
+        title: Text(l10n.sessionOnDate(formatSessionDate(session['date'], l10n))),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Sessao individual'),
+            Text(l10n.individualSessionLabel),
             if (session['notes'] != null) Text(session['notes']),
           ],
         ),
         trailing: isTrainer
-            ? _trainerActions(session, isGroup: false)
-            : _statusBadge(status),
+            ? _trainerActions(session, l10n, isGroup: false)
+            : _statusBadge(status, l10n),
       ),
     );
   }
 
-  Widget _groupSessionCard(dynamic session, {Widget? action}) {
+  Widget _groupSessionCard(dynamic session, AppLocalizations l10n, {Widget? action}) {
     final status = session is Map ? session['status']?.toString() ?? '' : '';
 
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: ListTile(
         leading: const Icon(Icons.groups_outlined),
-        title: Text('Aula em ${formatSessionDate(session['date'])}'),
+        title: Text(l10n.classOnDate(formatSessionDate(session['date'], l10n))),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(groupSessionLabel(session)),
+            Text(groupSessionLabel(session, l10n)),
             if (session['notes'] != null) Text(session['notes']),
           ],
         ),
         trailing:
             action ??
             (isTrainer
-                ? _trainerActions(session, isGroup: true)
-                : _statusBadge(status)),
+                ? _trainerActions(session, l10n, isGroup: true)
+                : _statusBadge(status, l10n)),
       ),
     );
   }
 
-  Widget _statusBadge(String status) {
+  Widget _statusBadge(String status, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -553,7 +560,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        getStatusLabel(status),
+        getStatusLabel(status, l10n),
         style: const TextStyle(color: Colors.white),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'client_selector.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class CreateWorkoutPlanScreen extends StatefulWidget {
   final String token;
@@ -107,10 +108,11 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   }
 
   Future<void> submitPlan() async {
+    final l10n = AppLocalizations.of(context)!;
     final title = titleController.text.trim();
 
     if (title.isEmpty || selectedClientId == null) {
-      setState(() => errorMessage = 'Preenche o titulo e seleciona um aluno.');
+      setState(() => errorMessage = l10n.fillTitleAndStudentMessage);
       return;
     }
 
@@ -126,8 +128,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           sets <= 0 ||
           reps <= 0) {
         setState(() {
-          errorMessage =
-              'Preenche o nome, as series e as repeticoes de todos os exercicios.';
+          errorMessage = l10n.fillExerciseFieldsMessage;
         });
         return;
       }
@@ -168,12 +169,12 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Sucesso'),
-            content: const Text('Plano de treino criado com sucesso.'),
+            title: Text(l10n.successTitle),
+            content: Text(l10n.workoutPlanCreatedMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(l10n.okAction),
               ),
             ],
           ),
@@ -185,13 +186,13 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           errorMessage =
               getApiErrorMessage(data) ??
               (isEditing
-                  ? 'Nao foi possivel atualizar o plano de treino.'
-                  : 'Nao foi possivel criar o plano de treino.');
+                  ? l10n.workoutPlanUpdateError
+                  : l10n.workoutPlanCreateError);
         });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorMessage = 'Nao foi possivel contactar o servidor.');
+      setState(() => errorMessage = l10n.serverContactError);
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -201,10 +202,11 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isEditing ? 'Editar Plano de Treino' : 'Criar Plano de Treino',
+          isEditing ? l10n.workoutPlanEditTitle : l10n.workoutPlanCreateTitle,
         ),
       ),
       body: SingleChildScrollView(
@@ -214,9 +216,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Titulo do plano',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.planTitleLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -228,9 +230,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
               },
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Exercicios',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.exercisesLabel,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             ListView.builder(
@@ -248,14 +250,14 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Exercicio ${index + 1}',
+                              l10n.exerciseNumberLabel((index + 1).toString()),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             if (nameControllers.length > 1)
                               IconButton(
-                                tooltip: 'Remover exercicio',
+                                tooltip: l10n.removeExerciseTooltip,
                                 icon: const Icon(
                                   Icons.delete,
                                   color: Colors.red,
@@ -267,9 +269,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                         const SizedBox(height: 8),
                         TextField(
                           controller: nameControllers[index],
-                          decoration: const InputDecoration(
-                            labelText: 'Nome do exercicio',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: l10n.exerciseNameLabel,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -279,9 +281,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                               child: TextField(
                                 controller: setsControllers[index],
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Series',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.setsLabel,
+                                  border: const OutlineInputBorder(),
                                 ),
                               ),
                             ),
@@ -290,9 +292,9 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                               child: TextField(
                                 controller: repsControllers[index],
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Repeticoes',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.repsLabel,
+                                  border: const OutlineInputBorder(),
                                 ),
                               ),
                             ),
@@ -308,7 +310,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
             OutlinedButton.icon(
               onPressed: addExercise,
               icon: const Icon(Icons.add),
-              label: const Text('Adicionar exercicio'),
+              label: Text(l10n.addExerciseAction),
             ),
             const SizedBox(height: 24),
             if (errorMessage.isNotEmpty)
@@ -320,7 +322,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                 onPressed: isLoading ? null : submitPlan,
                 child: isLoading
                     ? const CircularProgressIndicator()
-                    : Text(isEditing ? 'Guardar alteracoes' : 'Criar plano'),
+                    : Text(isEditing ? l10n.saveChangesAction : l10n.createPlanAction),
               ),
             ),
           ],

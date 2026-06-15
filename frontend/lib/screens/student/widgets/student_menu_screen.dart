@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../student_theme.dart';
 
 class StudentMenuScreen extends StatelessWidget {
   final String studentName;
+  final String? profilePictureUrl;
   final ValueChanged<int> onOpenSection;
   final VoidCallback onBack;
   final VoidCallback onLogout;
@@ -12,6 +14,7 @@ class StudentMenuScreen extends StatelessWidget {
   const StudentMenuScreen({
     super.key,
     required this.studentName,
+    this.profilePictureUrl,
     required this.onOpenSection,
     required this.onBack,
     required this.onLogout,
@@ -20,45 +23,46 @@ class StudentMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final items = [
       _MenuRowItem(
         icon: Icons.edit_outlined,
-        label: 'Editar Perfil',
+        label: l10n.editProfileMenu,
         onTap: () => onOpenSection(6),
       ),
       _MenuRowItem(
         icon: Icons.fitness_center,
-        label: 'Treinos',
+        label: l10n.workoutsMenu,
         onTap: () => onOpenSection(1),
       ),
       _MenuRowItem(
         icon: Icons.assignment_outlined,
-        label: 'Avaliações',
+        label: l10n.evaluationsMenu,
         onTap: () {},
       ),
       _MenuRowItem(
         icon: Icons.fact_check_outlined,
-        label: 'O Meu Progresso',
+        label: l10n.myProgressionTitle,
         onTap: () => onOpenSection(5),
       ),
       _MenuRowItem(
         icon: Icons.restaurant_menu,
-        label: 'Meu Plano Alimentar',
+        label: l10n.myMealPlanMenu,
         onTap: () => onOpenSection(7),
       ),
       _MenuRowItem(
         icon: Icons.event_available_outlined,
-        label: 'As Minhas Sessões',
+        label: l10n.mySessionsTitle,
         onTap: () => onOpenSection(8),
       ),
       _MenuRowItem(
         icon: Icons.attach_money,
-        label: 'Faturas',
+        label: l10n.invoicesTitle,
         onTap: () => onOpenSection(4),
       ),
       _MenuRowItem(
         icon: Icons.chat,
-        label: 'Chat com Personal',
+        label: l10n.chatWithTrainerMenu,
         onTap: onOpenChat,
       ),
     ];
@@ -74,7 +78,7 @@ class StudentMenuScreen extends StatelessWidget {
             TextButton.icon(
               onPressed: onBack,
               icon: const Icon(Icons.chevron_left),
-              label: const Text('Voltar'),
+              label: Text(l10n.backAction),
               style: TextButton.styleFrom(
                 foregroundColor: StudentTheme.darkText,
                 padding: EdgeInsets.zero,
@@ -89,10 +93,10 @@ class StudentMenuScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Center(
+            Center(
               child: Text(
-                'FITPRO',
-                style: TextStyle(
+                l10n.appTitle,
+                style: const TextStyle(
                   color: StudentTheme.darkText,
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
@@ -104,13 +108,7 @@ class StudentMenuScreen extends StatelessWidget {
             Center(
               child: InkWell(
                 borderRadius: BorderRadius.circular(58),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Opcao para inserir foto do aluno.'),
-                    ),
-                  );
-                },
+                onTap: () => onOpenSection(6),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -121,12 +119,20 @@ class StudentMenuScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: StudentTheme.blue, width: 4),
                         color: const Color(0xFF2C2C2E),
+                        image: profilePictureUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(profilePictureUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        color: StudentTheme.mutedText,
-                        size: 62,
-                      ),
+                      child: profilePictureUrl == null
+                          ? const Icon(
+                              Icons.person,
+                              color: StudentTheme.mutedText,
+                              size: 62,
+                            )
+                          : null,
                     ),
                     Positioned(
                       right: 0,
@@ -180,9 +186,9 @@ class StudentMenuScreen extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onLogout,
                 icon: const Icon(Icons.logout),
-                label: const Text(
-                  'Sair',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                label: Text(
+                  l10n.logoutMenu,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: StudentTheme.blue,

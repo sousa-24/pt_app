@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../student_models.dart';
 import '../student_theme.dart';
 
@@ -17,6 +18,7 @@ class StudentWorkoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -90,7 +92,7 @@ class StudentWorkoutCard extends StatelessWidget {
               onPressed: onOpen,
               icon: const Icon(Icons.visibility_outlined),
               label: Text(
-                isCompleted ? 'Ver treino concluído' : 'Ver treino',
+                isCompleted ? l10n.viewCompletedWorkoutAction : l10n.viewWorkoutAction,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
@@ -118,6 +120,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
@@ -128,7 +131,7 @@ class _StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        isCompleted ? 'Feito' : 'Pendente',
+        isCompleted ? l10n.completedStatusLabel : l10n.pendingStatusLabel,
         style: TextStyle(
           color:
               isCompleted ? StudentTheme.blue : const Color(0xFFFFD36A),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart'; // Garante que este import está aqui
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 
 class ProgressionScreen extends StatefulWidget {
   final String token;
@@ -39,35 +40,36 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFF121212), // Fundo escuro padrão FITPRO
       appBar: AppBar(
-        title: const Text('My Progression', style: TextStyle(color: Colors.white)),
+        title: Text(l10n.myProgressionTitle, style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1C1C1E),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)))
           : progression.isEmpty
-              ? const Center(child: Text('No progression data yet', style: TextStyle(color: Colors.white54)))
+              ? Center(child: Text(l10n.noProgressionDataMessage, style: const TextStyle(color: Colors.white54)))
               : ListView( // Mudámos para ListView para poderes fazer scroll entre o gráfico e a lista
                   padding: const EdgeInsets.all(16.0),
                   children: [
                     // =========================================================
                     // O GRÁFICO ENTRA AQUI (NO TOPO DO ECRÃ)
                     // =========================================================
-                    const Text(
-                      "Student Progress",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    Text(
+                      l10n.studentProgressTitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     StudentProgressChart(progressionData: progression),
-                    
+
                     const SizedBox(height: 24),
-                    
-                    const Text(
-                      "History Records",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+
+                    Text(
+                      l10n.historyRecordsTitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
 
@@ -80,7 +82,7 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
                         margin: const EdgeInsets.only(bottom: 12.0),
                         child: ListTile(
                           title: Text(
-                            'Date: ${entry['date']}',
+                            l10n.dateLabelValue(entry['date'].toString()),
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
@@ -88,13 +90,13 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
                             children: [
                               const SizedBox(height: 6),
                               if (entry['weight'] != null)
-                                Text('Weight: ${entry['weight']} kg', style: const TextStyle(color: Colors.white70)),
+                                Text(l10n.weightKgLabel(entry['weight'].toString()), style: const TextStyle(color: Colors.white70)),
                               if (entry['body_fat_percentage'] != null)
-                                Text('Body Fat: ${entry['body_fat_percentage']}%', style: const TextStyle(color: Colors.white70)),
+                                Text(l10n.bodyFatPercentLabel(entry['body_fat_percentage'].toString()), style: const TextStyle(color: Colors.white70)),
                               if (entry['muscle_mass'] != null)
-                                Text('Muscle Mass: ${entry['muscle_mass']} kg', style: const TextStyle(color: Colors.white70)),
+                                Text(l10n.muscleMassKgLabel(entry['muscle_mass'].toString()), style: const TextStyle(color: Colors.white70)),
                               if (entry['notes'] != null)
-                                Text('Notes: ${entry['notes']}', style: const TextStyle(color: Colors.white54)),
+                                Text(l10n.notesValueLabel(entry['notes'].toString()), style: const TextStyle(color: Colors.white54)),
                             ],
                           ),
                         ),
@@ -117,8 +119,8 @@ class StudentProgressChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (progressionData.isEmpty) {
-      return const Center(
-        child: Text("Nenhum registo de progresso encontrado.", style: TextStyle(color: Colors.white54)),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.noProgressRecordsFoundMessage, style: const TextStyle(color: Colors.white54)),
       );
     }
 

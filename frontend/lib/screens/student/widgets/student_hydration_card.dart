@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../student_theme.dart';
 
 class StudentHydrationCard extends StatelessWidget {
@@ -24,6 +25,7 @@ class StudentHydrationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final safeGoal = goalMl <= 0 ? 1 : goalMl;
     final progress = math.min(currentMl / safeGoal, 1.0);
     final percentage = (progress * 100).round();
@@ -32,12 +34,12 @@ class StudentHydrationCard extends StatelessWidget {
     final remainingMl = math.max(safeGoal - currentMl, 0);
     final targetNowMl = _targetMlForCurrentTime(safeGoal);
     final behindMl = math.max(targetNowMl - currentMl, 0);
-    final nextReminder = _nextReminderLabel();
+    final nextReminder = _nextReminderLabel(l10n);
     final statusText = remainingMl == 0
-        ? 'Meta concluida hoje'
+        ? l10n.goalCompletedTodayLabel
         : behindMl > 0
-            ? 'Beba ${_formatCups(behindMl)} agora'
-            : 'Voce esta em dia';
+            ? l10n.drinkNowLabel(_formatCups(behindMl, l10n))
+            : l10n.onTrackLabel;
     final statusColor =
         remainingMl == 0 || behindMl == 0 ? StudentTheme.blue : Colors.amber;
 
@@ -50,10 +52,10 @@ class StudentHydrationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Hidratação',
-                  style: TextStyle(
+                  l10n.hydrationTitle,
+                  style: const TextStyle(
                     color: StudentTheme.darkText,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -107,7 +109,7 @@ class StudentHydrationCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'de ${goalLiters.toStringAsFixed(1)} L',
+                          l10n.ofGoalLitersLabel(goalLiters.toStringAsFixed(1)),
                           style: const TextStyle(
                             color: StudentTheme.mutedText,
                             fontSize: 10,
@@ -125,8 +127,8 @@ class StudentHydrationCard extends StatelessWidget {
                 children: [
                   Text(
                     remainingMl == 0
-                        ? 'Meta diaria concluida'
-                        : 'Faltam ${_formatMl(remainingMl)} hoje',
+                        ? l10n.dailyGoalCompletedLabel
+                        : l10n.remainingTodayLabel(_formatMl(remainingMl)),
                     style: const TextStyle(
                       color: StudentTheme.darkText,
                       fontSize: 15,
@@ -135,7 +137,7 @@ class StudentHydrationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_formatMl(currentMl)} de ${_formatMl(safeGoal)} registrados',
+                    l10n.loggedOfGoalLabel(_formatMl(currentMl), _formatMl(safeGoal)),
                     style: const TextStyle(
                       color: StudentTheme.mutedText,
                       fontSize: 12,
@@ -179,7 +181,7 @@ class StudentHydrationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Proximo lembrete: $nextReminder',
+                    l10n.nextReminderLabel(nextReminder),
                     style: const TextStyle(
                       color: StudentTheme.mutedText,
                       fontSize: 11,
@@ -241,7 +243,7 @@ class StudentHydrationCard extends StatelessWidget {
                     foregroundColor: StudentTheme.mutedText,
                     padding: EdgeInsets.zero,
                   ),
-                  child: const Text('Zerar'),
+                  child: Text(l10n.resetAction),
                 ),
               ],
             ),
@@ -259,9 +261,9 @@ class StudentHydrationCard extends StatelessWidget {
     return '$value ml';
   }
 
-  static String _formatCups(int value) {
+  static String _formatCups(int value, AppLocalizations l10n) {
     final cups = math.max((value / 250).round(), 1);
-    return cups == 1 ? '1 copo' : '$cups copos';
+    return cups == 1 ? l10n.cupSingularLabel : l10n.cupsPluralLabel(cups.toString());
   }
 
   static int _targetMlForCurrentTime(int goalMl) {
@@ -274,7 +276,7 @@ class StudentHydrationCard extends StatelessWidget {
     return ((goalMl * elapsed) / activeMinutes).round();
   }
 
-  static String _nextReminderLabel() {
+  static String _nextReminderLabel(AppLocalizations l10n) {
     final now = DateTime.now();
     const reminderHours = [8, 10, 12, 14, 16, 18, 20, 22];
     final nextHour = reminderHours.firstWhere(
@@ -283,7 +285,7 @@ class StudentHydrationCard extends StatelessWidget {
     );
 
     if (nextHour == reminderHours.first && now.hour >= reminderHours.last) {
-      return 'amanha 08:00';
+      return l10n.tomorrowAtLabel('08:00');
     }
 
     return '${nextHour.toString().padLeft(2, '0')}:00';

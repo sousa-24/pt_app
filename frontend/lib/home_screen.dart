@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'l10n/gen/app_localizations.dart';
 import 'workout_plans_screen.dart';
 import 'chat_screen.dart';
 import 'feed_screen.dart';
@@ -15,6 +16,7 @@ import 'screens/student/student_home_screen.dart';
 import 'trainer_evaluations_screen.dart';
 import 'trainer_payments_screen.dart';
 import 'trainer_progress_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String token;
@@ -32,9 +34,10 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PT App'),
+        title: Text(l10n.homeAppBarTitle),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -59,7 +62,7 @@ class HomeScreen extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
               ),
               child: Text(
-                role == 'trainer' ? 'Menu do Treinador' : 'Menu do Aluno',
+                role == 'trainer' ? l10n.trainerMenuTitle : l10n.studentMenuTitle,
                 style: const TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
@@ -68,7 +71,7 @@ class HomeScreen extends StatelessWidget {
             if (role == 'trainer') ...[
               ListTile(
                 leading: const Icon(Icons.fitness_center),
-                title: const Text('Ver Planos de Treino'),
+                title: Text(l10n.viewWorkoutPlansMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -82,7 +85,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.add_circle),
-                title: const Text('Criar Plano de Treino'),
+                title: Text(l10n.createWorkoutPlanMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -96,7 +99,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.calendar_today),
-                title: const Text('Sessões Agendadas'),
+                title: Text(l10n.scheduledSessionsMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -110,7 +113,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.calendar_today),
-                title: const Text('Agendar Sessão'),
+                title: Text(l10n.scheduleSessionMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -123,7 +126,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.qr_code),
-                title: const Text('Gerar Código de Convite'),
+                title: Text(l10n.generateInviteCodeMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -136,7 +139,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.restaurant_menu),
-                title: const Text('Ver Planos Nutricionais'),
+                title: Text(l10n.viewNutriPlansMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -150,7 +153,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.star, color: Color(0xFFD0FD3E)),
-                title: const Text('Feed & Desafios'),
+                title: Text(l10n.feedChallengesMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -163,7 +166,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.trending_up),
-                title: const Text('Progresso dos Alunos'),
+                title: Text(l10n.studentsProgressMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -176,7 +179,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.receipt_long),
-                title: const Text('Faturas'),
+                title: Text(l10n.invoicesTitle),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -189,7 +192,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.assignment_outlined),
-                title: const Text('Avaliações'),
+                title: Text(l10n.evaluationsMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -203,7 +206,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.add_circle),
-                title: const Text('Criar Plano Nutricional'),
+                title: Text(l10n.createNutriPlanMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -216,7 +219,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.chat, color: Color(0xFFD0FD3E)),
-                title: const Text('Chat com Alunos'),
+                title: Text(l10n.chatWithStudentsMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -232,7 +235,7 @@ class HomeScreen extends StatelessWidget {
               // MENU DO ALUNO (CLIENT)
               ListTile(
                 leading: const Icon(Icons.fitness_center),
-                title: const Text('Planos de Treino'),
+                title: Text(l10n.workoutPlansMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -246,7 +249,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.trending_up),
-                title: const Text('O Meu Progresso'),
+                title: Text(l10n.myProgressMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -259,7 +262,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.calendar_today),
-                title: const Text('As Minhas Sessões'),
+                title: Text(l10n.mySessionsTitle),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -273,7 +276,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.restaurant_menu),
-                title: const Text('Planos Alimentares'),
+                title: Text(l10n.mealPlansMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -287,7 +290,7 @@ class HomeScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.chat, color: Color(0xFFD0FD3E)),
-                title: const Text('Chat com o PT'),
+                title: Text(l10n.chatWithTrainerMenu),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -302,8 +305,21 @@ class HomeScreen extends StatelessWidget {
             ],
             const Divider(),
             ListTile(
+              leading: const Icon(Icons.account_circle_outlined),
+              title: Text(l10n.myProfileMenu),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(token: token),
+                  ),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Sair da Conta'),
+              title: Text(l10n.logoutMenu),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -326,35 +342,33 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                role == 'trainer' ? 'Bem-vindo, Treinador!' : 'Bem-vindo!',
+                role == 'trainer' ? l10n.welcomeTrainerMessage : l10n.welcomeMessage,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Utiliza o menu no canto superior esquerdo para navegar.',
-              ),
+              Text(l10n.useMenuHint),
               const SizedBox(height: 24),
 
               if (role == 'trainer') ...[
-                const Text(
-                  'Área do Personal',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.trainerAreaTitle,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 _TrainerDashboard(token: token),
                 const SizedBox(height: 20),
-                const Text(
-                  'Acoes rapidas',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.quickActionsTitle,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 _TrainerShortcutCard(
                   icon: Icons.trending_up,
-                  title: 'Progresso dos Alunos',
-                  subtitle: 'Escolhe um aluno, vê o gráfico e regista medidas.',
+                  title: l10n.studentsProgressMenu,
+                  subtitle: l10n.progressShortcutSubtitle,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -364,8 +378,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _TrainerShortcutCard(
                   icon: Icons.receipt_long,
-                  title: 'Faturas',
-                  subtitle: 'Cria faturas e consulta pagamentos registados.',
+                  title: l10n.invoicesTitle,
+                  subtitle: l10n.invoicesShortcutSubtitle,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -375,8 +389,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _TrainerShortcutCard(
                   icon: Icons.assignment_outlined,
-                  title: 'Avaliações',
-                  subtitle: 'Avalia a performance dos alunos nas sessões.',
+                  title: l10n.evaluationsMenu,
+                  subtitle: l10n.evaluationsShortcutSubtitle,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -408,14 +422,14 @@ class HomeScreen extends StatelessWidget {
                         }
                       : null,
                   icon: const Icon(Icons.school_outlined),
-                  label: const Text('Abrir área do aluno'),
+                  label: Text(l10n.openStudentAreaButton),
                 ),
               ),
               if (role == 'trainer') ...[
                 const SizedBox(height: 8),
-                const Text(
-                  'Disponível apenas para utilizadores do tipo aluno (client).',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  l10n.onlyForClientUsersMessage,
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ],
@@ -442,8 +456,8 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
   int _upcomingSessions = 0;
   int _pendingInvoices = 0;
   double _pendingAmount = 0;
-  String _nextSession = 'Sem sessoes marcadas';
-  String _latestProgress = 'Sem registos recentes';
+  String _nextSession = '';
+  String _latestProgress = '';
 
   @override
   void initState() {
@@ -467,6 +481,7 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
       ]);
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       final contacts = _asMaps(results[0]);
       final sessions = [..._asMaps(results[1]), ..._asMaps(results[2])];
       final payments = _asMaps(results[3]);
@@ -512,17 +527,17 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
           return sum + amount;
         });
         _nextSession = upcoming.isEmpty
-            ? 'Sem sessoes marcadas'
-            : _formatDate(upcoming.first['date']);
+            ? l10n.noSessionsScheduledLabel
+            : _formatDate(upcoming.first['date'], l10n);
         _latestProgress = progression.isEmpty
-            ? 'Sem registos recentes'
-            : _formatDate(progression.first['date']);
+            ? l10n.noRecentRecordsLabel
+            : _formatDate(progression.first['date'], l10n);
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Nao foi possivel carregar o resumo.';
+        _error = AppLocalizations.of(context)!.summaryLoadError;
         _isLoading = false;
       });
     }
@@ -530,6 +545,7 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -540,7 +556,7 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
           leading: const Icon(Icons.info_outline),
           title: Text(_error!),
           trailing: IconButton(
-            tooltip: 'Atualizar',
+            tooltip: l10n.refreshTooltip,
             onPressed: _loadSummary,
             icon: const Icon(Icons.refresh),
           ),
@@ -554,27 +570,27 @@ class _TrainerDashboardState extends State<_TrainerDashboard> {
         final cards = [
           _DashboardStatCard(
             icon: Icons.people_outline,
-            title: 'Alunos ativos',
+            title: l10n.activeStudentsLabel,
             value: _activeClients.toString(),
-            detail: 'Ligados a esta conta',
+            detail: l10n.linkedToAccountLabel,
           ),
           _DashboardStatCard(
             icon: Icons.event_available_outlined,
-            title: 'Proximas sessoes',
+            title: l10n.upcomingSessionsLabel,
             value: _upcomingSessions.toString(),
             detail: _nextSession,
           ),
           _DashboardStatCard(
             icon: Icons.receipt_long_outlined,
-            title: 'Faturas pendentes',
+            title: l10n.pendingInvoicesLabel,
             value: _pendingInvoices.toString(),
             detail: _formatMoney(_pendingAmount),
           ),
           _DashboardStatCard(
             icon: Icons.trending_up,
-            title: 'Ultimo progresso',
+            title: l10n.lastProgressLabel,
             value: _latestProgress,
-            detail: 'Registo mais recente',
+            detail: l10n.mostRecentRecordLabel,
           ),
         ];
 
@@ -602,14 +618,14 @@ List<Map<String, dynamic>> _asMaps(dynamic value) {
       .toList();
 }
 
-String _formatDate(dynamic value) {
+String _formatDate(dynamic value, AppLocalizations l10n) {
   final parsed = DateTime.tryParse(value?.toString() ?? '');
-  if (parsed == null) return 'Sem data';
+  if (parsed == null) return l10n.noDate;
   final day = parsed.day.toString().padLeft(2, '0');
   final month = parsed.month.toString().padLeft(2, '0');
   final hour = parsed.hour.toString().padLeft(2, '0');
   final minute = parsed.minute.toString().padLeft(2, '0');
-  return '$day/$month/${parsed.year} as $hour:$minute';
+  return l10n.dateTimeAt('$day/$month/${parsed.year}', '$hour:$minute');
 }
 
 String _formatMoney(num value) {
