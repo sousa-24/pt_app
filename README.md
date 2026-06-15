@@ -15,52 +15,21 @@ app_pt/
 
 - Python 3.10+
 - Flutter 3.0+
-- MySQL 8.0+
+
+The app uses a shared MySQL database hosted on Railway — no local database setup is needed.
 
 ---
 
 ## Backend Setup
 
-### 1 — Install MySQL
-
-**Linux:**
-```bash
-sudo apt install mysql-server
-sudo systemctl start mysql
-sudo mysql_secure_installation
-```
-
-**Windows:**
-Download and install from [mysql.com](https://dev.mysql.com/downloads/installer/)
-
-### 2 — Create the database
-
-**Linux:**
-```bash
-sudo mysql -u root -p
-```
-
-**Windows:**
-```bash
-mysql -u root -p
-```
-
-```sql
-CREATE DATABASE pt_app;
-CREATE USER 'ptuser'@'localhost' IDENTIFIED BY 'yourpassword';
-GRANT ALL PRIVILEGES ON pt_app.* TO 'ptuser'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 3 — Clone the repository
+### 1 — Clone the repository
 
 ```bash
 git clone https://github.com/sousa-24/pt_app.git
 cd pt_app
 ```
 
-### 4 — Create virtual environment
+### 2 — Create virtual environment
 
 **Linux:**
 ```bash
@@ -76,15 +45,15 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### 5 — Install dependencies
+### 3 — Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 6 — Create .env file
+### 4 — Create .env file
 
-Create a file called `.env` inside the `backend/` folder with the following keys (ask the project owner for the actual values):
+Create a file called `.env` inside the `backend/` folder with the following keys (ask the project owner for the actual values — these point to the shared Railway database):
 
 ```
 DB_HOST=
@@ -98,7 +67,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-### 7 — Run the backend
+### 5 — Run the backend
 
 ```bash
 uvicorn app.main:app --reload
@@ -188,5 +157,5 @@ Then create a Pull Request on GitHub for the team to review before merging.
 ## Notes
 
 - The `.env` file is not included in the repository for security reasons. Ask the project owner for the credentials.
-- Each developer runs their own local MySQL database.
+- The database is shared (hosted on Railway) — be careful with destructive operations, they affect everyone.
 - Always pull before starting work to avoid conflicts.
