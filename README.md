@@ -1,11 +1,15 @@
-# PT App
+# FITPRO
 
-Personal Trainer app built with Flutter + FastAPI + MySQL.
+Personal Trainer management app built with Flutter + FastAPI + MySQL.
+
+Trainers can manage clients, workout plans, group sessions, nutrition plans, progress tracking, chat and payments/invoices. Clients get their own personal area with their plans, sessions, progress and notifications.
 
 ## Project Structure
+```
 app_pt/
-├── backend/    → FastAPI backend
-└── frontend/   → Flutter frontend
+├── backend/    → FastAPI backend (app/main.py)
+└── frontend/   → Flutter frontend (web/mobile)
+```
 
 ## Requirements
 
@@ -80,7 +84,19 @@ pip install -r requirements.txt
 
 ### 6 — Create .env file
 
-Create a file called `.env` inside the `backend/` folder. Ask the project owner for the actual values:
+Create a file called `.env` inside the `backend/` folder with the following keys (ask the project owner for the actual values):
+
+```
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+SECRET_KEY=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
 
 ### 7 — Run the backend
 
@@ -112,6 +128,21 @@ flutter pub get
 flutter run -d chrome
 ```
 
+By default the app points to the production backend on Railway
+(`https://backend-production-d7c3c.up.railway.app`). To point it at a local
+backend instead, run:
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
+
+---
+
+## Deployment
+
+- **Backend:** deployed on [Railway](https://railway.app) (project `protective-courtesy`, service `backend`), together with the MySQL database. Deploy with `railway up --service backend` from the `backend/` folder.
+- **Frontend:** built locally (web / Android APK). The API base URL is controlled via the `API_BASE_URL` dart-define in `frontend/lib/app_config.dart`.
+
 ---
 
 ## Team Workflow
@@ -141,13 +172,16 @@ Then create a Pull Request on GitHub for the team to review before merging.
 ## Current Features
 
 - ✅ Authentication (register + login + JWT tokens)
+- ✅ Trainer / client profiles with profile picture upload (Cloudinary)
+- ✅ Invite codes to link clients with trainers
 - ✅ Workout plans with exercises
-- ✅ Training sessions
+- ✅ Individual and group training sessions
+- ✅ Session feedback
 - ✅ Progress tracking
-- ⬜ Nutrition plans
-- ⬜ Real-time chat
-- ⬜ Trainer dashboard
-- ⬜ Client dashboard
+- ✅ Nutrition plans
+- ✅ Real-time chat (WebSocket) and contacts
+- ✅ Notifications
+- ✅ Payments / invoices management
 
 ---
 
