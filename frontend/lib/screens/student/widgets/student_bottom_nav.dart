@@ -17,10 +17,9 @@ class StudentBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = [
-      _NavConfig(Icons.home_rounded, 'Inicio'),
-      _NavConfig(Icons.fitness_center, 'Treinos'),
-      _NavConfig(Icons.chat_bubble_outline, 'Chat'),
-      _NavConfig(Icons.menu_rounded, 'Menu'),
+      _NavConfig(Icons.home_rounded, 'Inicio', 0),
+      _NavConfig(Icons.chat_bubble_outline, 'Chat', null),
+      _NavConfig(Icons.menu_rounded, 'Menu', 3),
     ];
 
     return Container(
@@ -30,10 +29,13 @@ class StudentBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(items.length, (index) {
           final item = items[index];
-          final isActive = selectedIndex == index;
+          final isActive = item.targetIndex != null &&
+              selectedIndex == item.targetIndex;
 
           return InkWell(
-            onTap: index == 2 ? onOpenChat : () => onChanged(index),
+            onTap: item.targetIndex == null
+                ? onOpenChat
+                : () => onChanged(item.targetIndex!),
             child: SizedBox(
               width: 82,
               child: Column(
@@ -72,6 +74,7 @@ class StudentBottomNav extends StatelessWidget {
 class _NavConfig {
   final IconData icon;
   final String label;
+  final int? targetIndex;
 
-  const _NavConfig(this.icon, this.label);
+  const _NavConfig(this.icon, this.label, this.targetIndex);
 }
