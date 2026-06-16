@@ -7,6 +7,7 @@ from app.database import get_db
 from app import models, schemas
 from app.dependencies import require_trainer, get_user_items
 from app.auth import get_current_user
+from app.services.notification_services import create_notification
 
 router = APIRouter(prefix="/api/v1", tags=["nutri_plans"])
 
@@ -45,6 +46,16 @@ def create_nutri_plan(
 
     db.commit()
     db.refresh(new_plan)
+
+    if plan.client_id:
+        create_notification(
+            db=db,
+            user_id=plan.client_id,
+            title="Novo Plano Nutricional",
+            message=f"O treinador {current_user.name} atribuiu-lhe um novo plano nutricional: {plan.title}.",
+            type="nutri_plan",
+        )
+
     return new_plan
 
 

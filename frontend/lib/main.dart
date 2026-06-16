@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app_config.dart';
 import 'home_screen.dart';
 import 'l10n/gen/app_localizations.dart';
@@ -23,12 +24,25 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.dark;
   final _localeController = LocaleController();
+  String? _savedToken;
+  String? _savedRole;
+  bool _sessionChecked = false;
 
   @override
   void initState() {
     super.initState();
     _localeController.load();
     _localeController.addListener(_onLocaleChanged);
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _savedToken = prefs.getString('auth_token');
+      _savedRole = prefs.getString('auth_role');
+      _sessionChecked = true;
+    });
   }
 
   @override
@@ -94,11 +108,27 @@ class _MyAppState extends State<MyApp> {
       ),
 
       themeMode: _themeMode,
-      home: LoginScreen(
-        onToggleTheme: toggleTheme,
-        themeMode: _themeMode,
-        localeController: _localeController,
-      ),
+      home: !_sessionChecked
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : _savedToken != null && _savedRole != null
+              ? (_savedRole == 'client'
+                  ? StudentHomeScreen(
+                      token: _savedToken,
+                      role: _savedRole!,
+                      onToggleTheme: toggleTheme,
+                      themeMode: _themeMode,
+                    )
+                  : HomeScreen(
+                      token: _savedToken!,
+                      role: _savedRole!,
+                      onToggleTheme: toggleTheme,
+                      themeMode: _themeMode,
+                    ))
+              : LoginScreen(
+                  onToggleTheme: toggleTheme,
+                  themeMode: _themeMode,
+                  localeController: _localeController,
+                ),
     );
   }
 }
@@ -418,6 +448,12 @@ class _LoginScreenState extends State<LoginScreen> {
           });
           return;
         }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        await prefs.setString('auth_role', role);
+
+        if (!mounted) return;
 
         Navigator.pushReplacement(
           context,

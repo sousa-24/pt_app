@@ -331,6 +331,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   Widget _todayHighlightCard() {
+    final l10n = AppLocalizations.of(context)!;
     final nextSession = _nextSession();
     final todayWorkout = _plansForDate(DateTime.now()).isNotEmpty
         ? _plansForDate(DateTime.now()).first
@@ -339,10 +340,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final hasSession = nextSession != null;
     final title = hasSession ? 'Próxima sessão' : 'Treino em destaque';
     final mainText = hasSession
-        ? _sessionDateLabel(nextSession.date)
+        ? _sessionDateLabel(nextSession.date, l10n)
         : todayWorkout?.title ?? 'Sem treino atribuido';
     final subtitle = hasSession
-        ? _sessionSubtitle(nextSession)
+        ? _sessionSubtitle(nextSession, l10n)
         : todayWorkout?.focus ??
               'Quando a personal atribuir um treino, aparece aqui.';
     final icon = hasSession
@@ -1451,7 +1452,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return value;
   }
 
-  void _logout() {
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('auth_role');
+    if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'workout_plans_screen.dart';
@@ -320,7 +321,11 @@ class HomeScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: Text(l10n.logoutMenu),
-              onTap: () {
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('auth_token');
+                await prefs.remove('auth_role');
+                if (!context.mounted) return;
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
