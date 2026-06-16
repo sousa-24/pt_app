@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../api_service.dart';
@@ -154,19 +155,6 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        _ProgressFormCard(
-          formKey: _formKey,
-          selectedDate: _selectedDate,
-          weightController: _weightController,
-          bodyFatController: _bodyFatController,
-          muscleMassController: _muscleMassController,
-          notesController: _notesController,
-          isSaving: _isSaving,
-          successMessage: _successMessage,
-          onPickDate: _pickDate,
-          onSubmit: _saveProgress,
-        ),
-        const SizedBox(height: 14),
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else if (_errorMessage != null)
@@ -195,6 +183,32 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
         else ...[
           _LatestProgressCard(entry: _progress.last),
           const SizedBox(height: 14),
+          _WeightProgressChart(entries: _progress),
+          const SizedBox(height: 14),
+        ],
+        _ProgressFormCard(
+          formKey: _formKey,
+          selectedDate: _selectedDate,
+          weightController: _weightController,
+          bodyFatController: _bodyFatController,
+          muscleMassController: _muscleMassController,
+          notesController: _notesController,
+          isSaving: _isSaving,
+          successMessage: _successMessage,
+          onPickDate: _pickDate,
+          onSubmit: _saveProgress,
+        ),
+        const SizedBox(height: 14),
+        if (!_isLoading && _errorMessage == null && _progress.isNotEmpty) ...[
+          const Text(
+            'Historico',
+            style: TextStyle(
+              color: StudentTheme.darkText,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
           ..._progress.reversed.map(
             (entry) => _ProgressHistoryCard(entry: entry),
           ),
@@ -418,6 +432,174 @@ class _LatestProgressCard extends StatelessWidget {
   }
 }
 
+class _WeightProgressChart extends StatelessWidget {
+  final List<Map<String, dynamic>> entries;
+
+  const _WeightProgressChart({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...entries]..sort((a, b) {
+        final aDate = DateTime.tryParse(a['date']?.toString() ?? '');
+        final bDate = DateTime.tryParse(b['date']?.toString() ?? '');
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return aDate.compareTo(bDate);
+      });
+
+    final points = <FlSpot>[];
+    for (var i = 0; i < sorted.length; i++) {
+      final weight = _numValue(sorted[i]['weight']);
+      if (weight != null) {
+        points.add(FlSpot(i.toDouble(), weight.toDouble()));
+      }
+    }
+
+    if (points.length < 2) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: StudentTheme.cardDecoration(),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Evolucao do peso',
+              style: TextStyle(
+                color: StudentTheme.darkText,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Adicione pelo menos dois registos para ver o grafico.',
+              style: TextStyle(color: StudentTheme.mutedText),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final minWeight = points
+        .map((point) => point.y)
+        .reduce((a, b) => a < b ? a : b);
+    final maxWeight = points
+        .map((point) => point.y)
+        .reduce((a, b) => a > b ? a : b);
+    final minY = (minWeight - 2).clamp(0, double.infinity).toDouble();
+    final maxY = maxWeight + 2;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: StudentTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Evolucao do peso',
+            style: TextStyle(
+              color: StudentTheme.darkText,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Acompanhe a variacao dos ultimos registos.',
+            style: TextStyle(color: StudentTheme.mutedText, fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 210,
+            child: LineChart(
+              LineChartData(
+                minY: minY,
+                maxY: maxY,
+                gridData: FlGridData(
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => const FlLine(
+                    color: Color(0xFF3A3A3D),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                      getTitlesWidget: (value, meta) => Text(
+                        value.toStringAsFixed(0),
+                        style: const TextStyle(
+                          color: StudentTheme.mutedText,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 34,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= sorted.length) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            _shortDate(sorted[index]['date']),
+                            style: const TextStyle(
+                              color: StudentTheme.mutedText,
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: points,
+                    isCurved: true,
+                    color: StudentTheme.blue,
+                    barWidth: 4,
+                    dotData: FlDotData(
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                        radius: 4,
+                        color: StudentTheme.blue,
+                        strokeWidth: 2,
+                        strokeColor: const Color(0xFF1C1C1E),
+                      ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: StudentTheme.blue.withOpacity(0.16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProgressHistoryCard extends StatelessWidget {
   final Map<String, dynamic> entry;
 
@@ -506,6 +688,19 @@ String _formatDate(dynamic value) {
   final month = parsed.month.toString().padLeft(2, '0');
   final year = parsed.year.toString();
   return '$day/$month/$year';
+}
+
+String _shortDate(dynamic value) {
+  final parsed = DateTime.tryParse(value?.toString() ?? '');
+  if (parsed == null) return '';
+  final day = parsed.day.toString().padLeft(2, '0');
+  final month = parsed.month.toString().padLeft(2, '0');
+  return '$day/$month';
+}
+
+num? _numValue(dynamic value) {
+  if (value is num) return value;
+  return num.tryParse(value?.toString() ?? '');
 }
 
 double? _parseNumber(String value) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../api_service.dart';
@@ -7,13 +8,10 @@ import '../../main.dart';
 import 'student_models.dart';
 import 'student_theme.dart';
 import 'widgets/student_bottom_nav.dart';
-import 'widgets/student_calendar_card.dart';
 import 'widgets/student_floating_chat.dart';
-import 'widgets/student_frequency_card.dart';
 import 'widgets/student_header.dart';
 import 'widgets/student_hydration_card.dart';
 import 'widgets/student_invoices_screen.dart';
-import 'widgets/student_menu_grid.dart';
 import 'widgets/student_menu_screen.dart';
 import 'widgets/student_nutrition_plan_screen.dart';
 import 'widgets/student_progress_screen.dart';
@@ -49,7 +47,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   String? _workoutErrorMessage;
   int _selectedNavIndex = 0;
   String _studentName = '';
+  String _studentEmail = '';
   String? _profilePictureUrl;
+  bool _isProfileDetailView = false;
+  bool _isUploadingProfilePicture = false;
+  int _profileBackRequest = 0;
   late DateTime _selectedDate;
   bool _isChatOpen = false;
   int _waterMl = 0;
@@ -76,7 +78,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
     return Scaffold(
       backgroundColor: StudentTheme.lightBg,
-      bottomNavigationBar: isMenuArea ? null : _bottomNav(),
+      bottomNavigationBar: _bottomNav(),
       body: Stack(
         children: [
           _studentPage(isMenuArea, l10n),
@@ -95,7 +97,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ),
         child: StudentBottomNav(
           selectedIndex: _selectedNavIndex,
-          onChanged: (index) => setState(() => _selectedNavIndex = index),
+          onChanged: _openSection,
           onOpenChat: _openChat,
         ),
       ),
@@ -115,7 +117,32 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               if (!isMenuArea)
                 StudentHeader(
                   studentName: _studentName.isEmpty ? l10n.accountStudent : _studentName,
+                  profilePictureUrl: _profilePictureUrl,
                   token: widget.token,
+                  showGreeting: _selectedNavIndex != 6,
+                  showEditPhotoAction: _selectedNavIndex == 6,
+                  isUploadingProfilePicture: _isUploadingProfilePicture,
+                  onBack: _selectedNavIndex != 0
+                      ? () => setState(() {
+                            if (_selectedNavIndex == 6 &&
+                                _isProfileDetailView) {
+                              _profileBackRequest++;
+                              _isProfileDetailView = false;
+                            } else {
+                              _selectedNavIndex = 0;
+                            }
+                          })
+                      : null,
+                  onProfilePictureTap: () {
+                    if (_selectedNavIndex == 6) {
+                      _pickAndUploadProfilePicture();
+                    } else {
+                      setState(() {
+                        _selectedNavIndex = 6;
+                        _isProfileDetailView = false;
+                      });
+                    }
+                  },
                   onNotificationTap: (type) {
                     if (type == 'message') {
                       _openChat();
@@ -152,12 +179,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   List<Widget> _selectedContent(AppLocalizations l10n) {
     if (_selectedNavIndex == 0) {
       return [
-        StudentFrequencyCard(
-          workouts: _workouts,
-          trainingSessions: _trainingSessions,
-          selectedDate: _selectedDate,
-          onWeekdaySelected: _selectWeekday,
-        ),
+        _homeSummaryCards(),
+        const SizedBox(height: 18),
+        _todayHighlightCard(),
         const SizedBox(height: 18),
         StudentHydrationCard(
           currentMl: _waterMl,
@@ -166,10 +190,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           onAddMedium: () => _addWater(500),
           onRemoveSmall: () => _removeWater(250),
           onReset: _resetWater,
-        ),
-        const SizedBox(height: 18),
-        StudentMenuGrid(
-          onOpenSection: (index) => setState(() => _selectedNavIndex = index),
         ),
       ];
     }
@@ -192,19 +212,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ];
     }
 
-    if (_selectedNavIndex == 2) {
-      return [
-        StudentCalendarCard(
-          selectedDate: _selectedDate,
-          completedWorkoutIds: _completedWorkoutIds,
-          plansForDate: _plansForDate,
-          onDateSelected: _selectCalendarDate,
-        ),
-        const SizedBox(height: 20),
-        _selectedDayWorkouts(l10n),
-      ];
-    }
-
     if (_selectedNavIndex == 4) {
       return [StudentInvoicesScreen(token: widget.token)];
     }
@@ -214,7 +221,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
 
     if (_selectedNavIndex == 6) {
-      return [StudentProfileCard(token: widget.token)];
+      return [
+        StudentProfileCard(
+          token: widget.token,
+          name: _studentName,
+          email: _studentEmail,
+          onProfileUpdated: _applyProfileData,
+          backRequest: _profileBackRequest,
+          onDetailViewChanged: (isDetailView) {
+            setState(() => _isProfileDetailView = isDetailView);
+          },
+        ),
+      ];
     }
 
     if (_selectedNavIndex == 7) {
@@ -260,41 +278,172 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       StudentMenuScreen(
         studentName: _studentName.isEmpty ? l10n.accountStudent : _studentName,
         profilePictureUrl: _profilePictureUrl,
+        isUploadingProfilePicture: _isUploadingProfilePicture,
         onBack: () => setState(() => _selectedNavIndex = 0),
         onLogout: _logout,
         onOpenChat: _openChat,
-        onOpenSection: (index) => setState(() => _selectedNavIndex = index),
+        onEditPhoto: _pickAndUploadProfilePicture,
+        onOpenSection: _openSection,
       ),
     ];
   }
 
-  Widget _selectedDayWorkouts(AppLocalizations l10n) {
-    final plans = _plansForDate(_selectedDate);
+  Widget _homeSummaryCards() {
+    final scheduledSessions = [
+      ..._trainingSessions,
+      ..._enrolledGroupSessions,
+    ].where((session) => session.status == 'scheduled').length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return GridView.count(
+      crossAxisCount: 2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 1.65,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
-        StudentSectionTitle(
-          title: l10n.workoutsForWeekdayTitle(
-            StudentDateLabels.weekdayFull(_selectedDate.weekday),
-          ),
-          subtitle: StudentDateLabels.dateLabel(_selectedDate),
+        _SummaryTile(
+          icon: Icons.fitness_center,
+          value: _workouts.length.toString(),
+          label: 'Treinos',
+          onTap: () => _openSection(1),
         ),
-        const SizedBox(height: 12),
-        if (plans.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: StudentTheme.cardDecoration(),
-            child: Text(
-              l10n.noWorkoutScheduledMessage,
-              style: const TextStyle(color: StudentTheme.mutedText, fontSize: 14),
-            ),
-          )
-        else
-          ...plans.map(_workoutCard),
+        _SummaryTile(
+          icon: Icons.event_available_outlined,
+          value: scheduledSessions.toString(),
+          label: 'Sessões',
+          onTap: () => _openSection(8),
+        ),
+        _SummaryTile(
+          icon: Icons.water_drop_outlined,
+          value:
+              '${((_waterMl / _waterGoalMl) * 100).clamp(0, 100).round()}%',
+          label: 'Hidratação',
+        ),
+        _SummaryTile(
+          icon: Icons.trending_up,
+          value: 'Ver',
+          label: 'Progresso',
+          onTap: () => _openSection(5),
+        ),
       ],
     );
+  }
+
+  Widget _todayHighlightCard() {
+    final nextSession = _nextSession();
+    final todayWorkout = _plansForDate(DateTime.now()).isNotEmpty
+        ? _plansForDate(DateTime.now()).first
+        : (_workouts.isNotEmpty ? _workouts.first : null);
+
+    final hasSession = nextSession != null;
+    final title = hasSession ? 'Próxima sessão' : 'Treino em destaque';
+    final mainText = hasSession
+        ? _sessionDateLabel(nextSession.date)
+        : todayWorkout?.title ?? 'Sem treino atribuido';
+    final subtitle = hasSession
+        ? _sessionSubtitle(nextSession)
+        : todayWorkout?.focus ??
+              'Quando a personal atribuir um treino, aparece aqui.';
+    final icon = hasSession
+        ? Icons.event_available_outlined
+        : Icons.fitness_center_outlined;
+    final actionLabel = hasSession ? 'Ver sessões' : 'Ver treinos';
+    final targetIndex = hasSession ? 8 : 1;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: StudentTheme.cardDecoration(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: const BoxDecoration(
+              color: StudentTheme.blue,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.black, size: 28),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: StudentTheme.mutedText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  mainText,
+                  style: const TextStyle(
+                    color: StudentTheme.darkText,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: StudentTheme.mutedText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _openSection(targetIndex),
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(actionLabel),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: StudentTheme.blue,
+                      foregroundColor: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  StudentTrainingSession? _nextSession() {
+    final now = DateTime.now();
+    final sessions = [
+      ..._trainingSessions,
+      ..._enrolledGroupSessions,
+    ].where((session) {
+      return session.status == 'scheduled' && session.date.isAfter(now);
+    }).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    return sessions.isEmpty ? null : sessions.first;
+  }
+
+  void _openSection(int index) {
+    setState(() {
+      _selectedNavIndex = index;
+      if (index == 6) {
+        _isProfileDetailView = false;
+        _profileBackRequest++;
+      } else {
+        _isProfileDetailView = false;
+      }
+    });
   }
 
   Widget _workoutCard(StudentWorkoutPlan workout) {
@@ -589,22 +738,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }).toList();
   }
 
-  void _selectWeekday(int weekday) {
-    final now = DateTime.now();
-    final difference = weekday - now.weekday;
-
-    setState(() {
-      _selectedDate = _dateOnly(now.add(Duration(days: difference)));
-    });
-  }
-
-  void _selectCalendarDate(DateTime date) {
-    setState(() {
-      _selectedDate = _dateOnly(date);
-      _selectedNavIndex = 2;
-    });
-  }
-
   void _toggleWorkout(StudentWorkoutPlan workout) {
     setState(() {
       if (_completedWorkoutIds.contains(workout.id)) {
@@ -833,13 +966,59 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final userData = await ApiService.get(context, '/api/v1/profile/me', token);
     if (!mounted || userData == null) return;
 
+    _applyProfileData(userData);
+  }
+
+  Future<void> _pickAndUploadProfilePicture() async {
+    final token = widget.token;
+    if (token == null || token.isEmpty || _isUploadingProfilePicture) return;
+
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 100,
+    );
+    if (image == null) return;
+
+    setState(() => _isUploadingProfilePicture = true);
+
+    final result = await ApiService.uploadProfilePicture(context, token, image);
+
+    if (!mounted) return;
+    setState(() => _isUploadingProfilePicture = false);
+
+    if (result is Map<String, dynamic> && result['id'] != null) {
+      _applyProfileData(result);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto atualizada com sucesso.')),
+      );
+    } else {
+      final message = result is Map<String, dynamic> &&
+              result['detail'] is String &&
+              (result['detail'] as String).isNotEmpty
+          ? result['detail'] as String
+          : 'Nao foi possivel enviar a foto.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  void _applyProfileData(Map<String, dynamic> userData) {
     final name = userData['name'];
-    final pictureUrl = userData['profile_picture_url'];
+    final email = userData['email'];
+    final profilePictureUrl = userData['profile_picture_url'];
+
     setState(() {
       if (name is String && name.trim().isNotEmpty) {
         _studentName = name.trim();
       }
-      _profilePictureUrl = pictureUrl is String ? pictureUrl : null;
+      if (email is String) {
+        _studentEmail = email.trim();
+      }
+      _profilePictureUrl =
+          profilePictureUrl is String && profilePictureUrl.trim().isNotEmpty
+              ? profilePictureUrl.trim()
+              : null;
     });
   }
 
@@ -1220,19 +1399,36 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final screenWidth = media.size.width;
     final screenHeight = media.size.height;
     final isCompact = screenWidth < 700;
+    final isDesktop = screenWidth >= 1100;
     final sideMargin = isCompact ? 12.0 : 24.0;
     final bottomMargin = isCompact ? 92.0 : 96.0;
     final availableWidth = screenWidth - (sideMargin * 2);
     final availableHeight =
         screenHeight - media.padding.top - bottomMargin - 24;
-    final maxTabletWidth = availableWidth < 720.0 ? availableWidth : 720.0;
-    final maxChatHeight = availableHeight < 680.0 ? availableHeight : 680.0;
-    final chatWidth = isCompact
-        ? _boundedDouble(availableWidth, 300.0, 360.0)
-        : _boundedDouble(screenWidth * 0.78, 540.0, maxTabletWidth);
-    final chatHeight = isCompact
-        ? _boundedDouble(360.0, 320.0, availableHeight)
-        : _boundedDouble(screenHeight * 0.72, 560.0, maxChatHeight);
+    final maxChatWidth = isDesktop ? 520.0 : 680.0;
+    final minChatWidth = isCompact ? 300.0 : 420.0;
+    final targetChatWidth = isCompact
+        ? availableWidth
+        : isDesktop
+            ? 520.0
+            : screenWidth * 0.72;
+    final maxChatHeight = isDesktop ? 560.0 : 640.0;
+    final minChatHeight = isCompact ? 320.0 : 460.0;
+    final targetChatHeight = isCompact
+        ? 360.0
+        : isDesktop
+            ? 520.0
+            : screenHeight * 0.68;
+    final chatWidth = _boundedDouble(
+      targetChatWidth,
+      minChatWidth,
+      availableWidth < maxChatWidth ? availableWidth : maxChatWidth,
+    );
+    final chatHeight = _boundedDouble(
+      targetChatHeight,
+      minChatHeight,
+      availableHeight < maxChatHeight ? availableHeight : maxChatHeight,
+    );
 
     return Positioned(
       right: sideMargin,
@@ -1310,6 +1506,78 @@ class _StatusCard extends StatelessWidget {
       child: Text(
         message,
         style: const TextStyle(color: StudentTheme.mutedText, fontSize: 14),
+      ),
+    );
+  }
+}
+
+class _SummaryTile extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _SummaryTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: StudentTheme.navy,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: StudentTheme.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.black, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: StudentTheme.darkText,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: StudentTheme.mutedText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -18,11 +18,6 @@ class StudentMenuGrid extends StatelessWidget {
         onTap: () => onOpenSection(1),
       ),
       _MenuItem(
-        icon: Icons.assignment_outlined,
-        label: l10n.evaluationsMenu,
-        onTap: () {},
-      ),
-      _MenuItem(
         icon: Icons.fact_check_outlined,
         label: l10n.myProgressMenuShort,
         onTap: () => onOpenSection(5),
@@ -31,11 +26,6 @@ class StudentMenuGrid extends StatelessWidget {
         icon: Icons.restaurant_menu,
         label: l10n.mealPlanMenuShort,
         onTap: () => onOpenSection(7),
-      ),
-      _MenuItem(
-        icon: Icons.calendar_month,
-        label: l10n.calendarMenu,
-        onTap: () => onOpenSection(2),
       ),
       _MenuItem(
         icon: Icons.event_available_outlined,

@@ -6,19 +6,23 @@ import '../student_theme.dart';
 class StudentMenuScreen extends StatelessWidget {
   final String studentName;
   final String? profilePictureUrl;
+  final bool isUploadingProfilePicture;
   final ValueChanged<int> onOpenSection;
   final VoidCallback onBack;
   final VoidCallback onLogout;
   final VoidCallback onOpenChat;
+  final VoidCallback onEditPhoto;
 
   const StudentMenuScreen({
     super.key,
     required this.studentName,
     this.profilePictureUrl,
+    this.isUploadingProfilePicture = false,
     required this.onOpenSection,
     required this.onBack,
     required this.onLogout,
     required this.onOpenChat,
+    required this.onEditPhoto,
   });
 
   @override
@@ -34,11 +38,6 @@ class StudentMenuScreen extends StatelessWidget {
         icon: Icons.fitness_center,
         label: l10n.workoutsMenu,
         onTap: () => onOpenSection(1),
-      ),
-      _MenuRowItem(
-        icon: Icons.assignment_outlined,
-        label: l10n.evaluationsMenu,
-        onTap: () {},
       ),
       _MenuRowItem(
         icon: Icons.fact_check_outlined,
@@ -108,7 +107,7 @@ class StudentMenuScreen extends StatelessWidget {
             Center(
               child: InkWell(
                 borderRadius: BorderRadius.circular(58),
-                onTap: () => onOpenSection(6),
+                onTap: isUploadingProfilePicture ? null : onEditPhoto,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -126,13 +125,9 @@ class StudentMenuScreen extends StatelessWidget {
                               )
                             : null,
                       ),
-                      child: profilePictureUrl == null
-                          ? const Icon(
-                              Icons.person,
-                              color: StudentTheme.mutedText,
-                              size: 62,
-                            )
-                          : null,
+                      child: ClipOval(
+                        child: _profilePicture(),
+                      ),
                     ),
                     Positioned(
                       right: 0,
@@ -144,11 +139,19 @@ class StudentMenuScreen extends StatelessWidget {
                           color: StudentTheme.blue,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                          Icons.photo_camera_outlined,
-                          color: Colors.black,
-                          size: 19,
-                        ),
+                        child: isUploadingProfilePicture
+                            ? const Padding(
+                                padding: EdgeInsets.all(9),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.photo_camera_outlined,
+                                color: Colors.black,
+                                size: 19,
+                              ),
                       ),
                     ),
                   ],
@@ -202,6 +205,44 @@ class StudentMenuScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _profilePicture() {
+    final url = _avatarUrl(profilePictureUrl);
+    if (url != null && url.trim().isNotEmpty) {
+      return Image.network(
+        url,
+        width: 104,
+        height: 104,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, __, ___) => _defaultProfileIcon(),
+      );
+    }
+
+    return _defaultProfileIcon();
+  }
+
+  Widget _defaultProfileIcon() {
+    return const Icon(
+      Icons.person,
+      color: StudentTheme.mutedText,
+      size: 62,
+    );
+  }
+
+  String? _avatarUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final trimmed = url.trim();
+    if (!trimmed.contains('res.cloudinary.com') ||
+        !trimmed.contains('/upload/')) {
+      return trimmed;
+    }
+
+    return trimmed.replaceFirst(
+      '/upload/',
+      '/upload/c_fill,g_face,w_400,h_400,q_auto,f_auto/',
     );
   }
 }

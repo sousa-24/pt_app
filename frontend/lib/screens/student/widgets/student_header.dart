@@ -9,14 +9,26 @@ import '../../../l10n/gen/app_localizations.dart';
 
 class StudentHeader extends StatefulWidget {
   final String studentName;
+  final String? profilePictureUrl;
   final String? token;
   final void Function(String type)? onNotificationTap;
+  final VoidCallback? onProfilePictureTap;
+  final bool isUploadingProfilePicture;
+  final VoidCallback? onBack;
+  final bool showGreeting;
+  final bool showEditPhotoAction;
 
   const StudentHeader({
     super.key,
     required this.studentName,
+    this.profilePictureUrl,
     this.token,
     this.onNotificationTap,
+    this.onProfilePictureTap,
+    this.isUploadingProfilePicture = false,
+    this.onBack,
+    this.showGreeting = true,
+    this.showEditPhotoAction = false,
   });
 
   @override
@@ -181,6 +193,23 @@ class _StudentHeaderState extends State<StudentHeader> {
                   ],
                 ),
                 Align(
+                  alignment: Alignment.topLeft,
+                  child: widget.onBack == null
+                      ? const SizedBox.shrink()
+                      : TextButton.icon(
+                          onPressed: widget.onBack,
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 16,
+                          ),
+                          label: const Text('Voltar'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                ),
+                Align(
                   alignment: Alignment.topRight,
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -226,41 +255,62 @@ class _StudentHeaderState extends State<StudentHeader> {
               ],
             ),
             const SizedBox(height: 30),
-            Container(
-              width: 122,
-              height: 122,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: StudentTheme.blue, width: 4),
-                color: const Color(0xFF2C2C2E),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: Color(0xFFA7A7A0),
-                size: 74,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              widget.studentName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 28),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.goodAfternoonGreeting(_firstName(widget.studentName, l10n)),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w500,
+            GestureDetector(
+              onTap: widget.onProfilePictureTap,
+              child: Container(
+                width: 122,
+                height: 122,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: StudentTheme.blue, width: 4),
+                  color: const Color(0xFF2C2C2E),
+                ),
+                child: ClipOval(
+                  child: _profilePicture(),
                 ),
               ),
             ),
+            if (widget.showEditPhotoAction) ...[
+              const SizedBox(height: 14),
+              TextButton.icon(
+                onPressed: widget.isUploadingProfilePicture
+                    ? null
+                    : widget.onProfilePictureTap,
+                icon: widget.isUploadingProfilePicture
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: StudentTheme.blue,
+                        ),
+                      )
+                    : const Icon(Icons.photo_camera_outlined, size: 18),
+                label: Text(
+                  widget.isUploadingProfilePicture
+                      ? 'A enviar...'
+                      : 'Editar foto',
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: StudentTheme.blue,
+                  textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+            if (widget.showGreeting) ...[
+              const SizedBox(height: 28),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_greetingForNow()}, ${_firstName(widget.studentName, l10n)}!',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -271,6 +321,51 @@ class _StudentHeaderState extends State<StudentHeader> {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return l10n.accountStudent;
     return trimmed.split(' ').first;
+  }
+
+  String _greetingForNow() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  }
+
+  Widget _profilePicture() {
+    final url = _avatarUrl(widget.profilePictureUrl);
+    if (url != null && url.trim().isNotEmpty) {
+      return Image.network(
+        url,
+        width: 122,
+        height: 122,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, __, ___) => _defaultProfileIcon(),
+      );
+    }
+
+    return _defaultProfileIcon();
+  }
+
+  Widget _defaultProfileIcon() {
+    return const Icon(
+      Icons.person,
+      color: Color(0xFFA7A7A0),
+      size: 74,
+    );
+  }
+
+  String? _avatarUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final trimmed = url.trim();
+    if (!trimmed.contains('res.cloudinary.com') ||
+        !trimmed.contains('/upload/')) {
+      return trimmed;
+    }
+
+    return trimmed.replaceFirst(
+      '/upload/',
+      '/upload/c_fill,g_face,w_400,h_400,q_auto,f_auto/',
+    );
   }
 }
 
